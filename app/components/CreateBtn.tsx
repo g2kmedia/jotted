@@ -1,3 +1,6 @@
+"use client"
+
+import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,6 +11,24 @@ import {
 import { SquarePlus } from "lucide-react";
 
 export default function CreateBtn() {
+    const router = useRouter();
+
+    const handleCreateNote = async ():Promise<void> => {
+        try {
+            const res = await fetch("/api/notes", { method: "POST" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to create note: ${res.status}`)
+            }
+
+            const { noteId } = await res.json();
+
+            router.push(`/notes/${noteId}`);
+        } catch (error) {
+            // Show toast aka alert message
+        }
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -16,7 +37,7 @@ export default function CreateBtn() {
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center">
-                <DropdownMenuItem className="justify-center">Create Note</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateNote} className="justify-center">Create Note</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="justify-center">Create Task</DropdownMenuItem>
             </DropdownMenuContent>
