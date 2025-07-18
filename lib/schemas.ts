@@ -10,5 +10,12 @@ const NoteSchema = z.object({
     is_trashed: z.number().transform(n => Boolean(n))
 });
 
-export { NoteSchema };
+const NoteUpdateSchema = NoteSchema.pick({
+    title: true,
+    content: true
+}).partial();
+
+export { NoteSchema, NoteUpdateSchema };
+
 export type Note = z.infer<typeof NoteSchema>;
+export type NoteUpdate = z.infer<typeof NoteUpdateSchema>;
