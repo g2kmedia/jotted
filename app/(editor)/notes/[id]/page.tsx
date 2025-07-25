@@ -2,23 +2,25 @@
 
 import { useCallback, useEffect, useState } from "react";
 import debounce from "lodash.debounce";
-import { NoteUpdate, type Note } from "@/lib/schemas";
+import { type NoteUpdate, type Note } from "@/lib/schemas";
+import { Editor } from "@/app/components/DynamicEditor";
+import type { Block } from "@blocknote/core";
 
 export default function Note({
   params
 }: {
   params: Promise<{ id: string }>
 }) {
-  const [note, setNote] = useState<Note | null>(null);
   const [route, setRoute] = useState<string | null>(null);
+  const [note, setNote] = useState<Note | undefined>(undefined);
 
   useEffect(() => {
-    const getRouteId = async () => {
-      const route = await params;
-      setRoute(route.id);
-    }
+    const getParams = async (): Promise<void> => {
+      const { id } = await params;
+      setRoute(id);
+    };
 
-    getRouteId();
+    getParams();
   }, [params]);
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export default function Note({
       }
 
       const { note } = await res.json();
+
       setNote(note);
     };
 
@@ -52,6 +55,8 @@ export default function Note({
         if (!res.ok) {
           throw new Error(`Failed to update note: ${res.status}`)
         }
+        // Add notifications here also ?
+
       } catch (error) {
         console.error("Failed to update note:", error);
         // Add notifications for the user
@@ -62,15 +67,13 @@ export default function Note({
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
 
-    setNote(prev => prev ? { ...prev, title: newTitle } : null);
+    setNote(prev => prev ? { ...prev, title: newTitle } : undefined);
     debouncedSave({ title: newTitle }, route);
   }
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-
-    setNote(prev => prev ? { ...prev, content: newContent } : null);
-    debouncedSave({ content: newContent }, route);
+  const handleContentChange = (updates: Block[]) => {
+    setNote(prev => prev ? { ...prev, content: updates } : undefined);
+    debouncedSave({ content: updates }, route)
   }
 
   if (!note) return null;
@@ -83,12 +86,21 @@ export default function Note({
         onChange={handleTitleChange}
         className="w-full"
       />
-      <textarea
+      {/* <textarea
         value={note.content || ""}
         placeholder="What's on your mind? Start writing..."
-        onChange={handleContentChange}
+        readOnly
         className="w-full h-2/3">
-      </textarea>
+      </textarea> */}
+      {/* <MilkdownProvider>
+        <CrepeEditor
+        defaultValue={note.content || ""}
+        onContentChange={handleContentChange}
+        />
+      </MilkdownProvider> */}
+      <div>
+        <Editor initialContent={note.content} onChange={handleContentChange} />
+      </div>
     </article>
   )
 }

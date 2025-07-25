@@ -6,7 +6,7 @@ export default function OverviewLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <main className="flex flex-col h-screen ">
+        <main className="flex flex-col h-[100dvh] "> {/* 100dvh to fix mobile rendering */}
             {children}
             <nav>
                 <Navbar />

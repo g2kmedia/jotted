@@ -8,7 +8,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="flex flex-col h-screen bg-[var(--theme-light)] dark:bg-[var(--theme-dark)]">
+      <body className="flex flex-col bg-[var(--theme-light)] dark:bg-[var(--theme-dark)]">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

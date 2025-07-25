@@ -1,4 +1,3 @@
-import { NoteUpdateSchema } from "@/lib/schemas";
 import { getNote, updateNote } from "@/lib/notes";
 
 export async function GET(
@@ -25,10 +24,8 @@ export async function PATCH(
     try {
         const route = await params;
         const body = await request.json()
-
-        const updates = NoteUpdateSchema.parse(body);
         
-        const updatesResult = updateNote(route.id, updates)
+        const updatesResult = updateNote(route.id, body)
 
         if (updatesResult === 0) {
             return Response.json({

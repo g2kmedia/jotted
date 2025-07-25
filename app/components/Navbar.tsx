@@ -6,6 +6,7 @@ import { Recursive } from "next/font/google";
 import CreateBtn from "./CreateBtn";
 
 const recursiveFont = Recursive({
+    subsets: ["latin-ext"],
     weight: "800",
 });
 
