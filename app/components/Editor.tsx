@@ -1,11 +1,12 @@
 "use client";
 
 import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote, useEditorChange } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import type { Block, BlockNoteEditor } from "@blocknote/core";
 import { en } from "@blocknote/core/locales";
+import { customTheme, deleteUploadedFile, uploadFile } from "@/lib/editor";
 
 export default function Editor({
     initialContent,
@@ -18,6 +19,7 @@ export default function Editor({
 
     const editor = useCreateBlockNote({
         initialContent,
+        uploadFile,
         dictionary: {
             ...locale,
             placeholders: {
@@ -28,11 +30,36 @@ export default function Editor({
         }
     }) as BlockNoteEditor;
 
-    useEditorChange((editor) => {
-        const updates = editor.document as Block[];
+    editor.onChange((editor, { getChanges }) => {
+        // Detect & handle file (image, video, audio, file) deletion
+        const changes = getChanges();
 
-        onChange(updates);
-    }, editor);
+        const deletedFileBlocks = changes.filter(change => {
+            if (change.type !== "delete") {
+                return;
+            }
 
-    return <BlockNoteView editor={editor} />;
+            const targetTypes = ["image", "video", "audio", "file"];
+
+            return targetTypes.includes(change.block.type)
+        });
+
+        const deletedFileUrls = deletedFileBlocks.map(change => {
+            const fileBlock = change.block as { props: { url: string } };
+            return fileBlock.props.url;
+        }).filter(url => url !== undefined);;
+
+        deleteUploadedFile(deletedFileUrls);
+
+        // Handle content change
+        const newDocument = editor.document as Block[];
+        onChange(newDocument);
+    });
+
+    return (
+        <BlockNoteView
+            editor={editor}
+            theme={customTheme}
+        />
+    );
 }

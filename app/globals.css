@@ -9,14 +9,15 @@
   /* START: Custom colors for theming*/
   --theme-light: #FEFCF6;
   --theme-dark: #121212;
-  --theme-highlight: #2d828a;
+  --theme-highlight-light: #70b6bb;
+  --theme-highlight-dark: #2d828a;
   /* END: Custom colors for theming */
   --radius: 0.625rem;
-  --background: oklch(29.04% 0.02268 18.468);
+  --background: oklch(0.9909 0.0082 91.48);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.9909 0.0082 91.48);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
@@ -24,7 +25,7 @@
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.7319 0.0709 201.56);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -84,11 +85,11 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.1822 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.1822 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -96,7 +97,7 @@
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.5598 0.0802 204.01);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -124,5 +125,23 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Improve Slash Menu rendering for mobile */
+  div:has(#bn-suggestion-menu) {
+    @apply !transform-none !left-6 !top-8 !min-h-[50vh] !max-h-[50vh];
+  }
+
+  /* Improve File Panel width for mobile */
+  [data-floating-ui-focusable] {
+    @apply max-w-screen fixed transform-none;
+  }
+
+  /* Code block theme  */
+  [data-content-type="codeBlock"],
+  [data-content-type="codeBlock"] pre {
+    @apply bg-[var(--foreground)] text-[var(--background)] rounded-md;
   }
 }

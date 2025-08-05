@@ -12,6 +12,6 @@ export default function Error({
     }, [error]);
 
     return (
-        <h2 className="flex justify-center items-center h-screen text-red-500">Something went wrong!</h2>
+        <h2 className="flex justify-center items-center h-screen text-[var(--destructive)]">Something went wrong!</h2>
     );
 }

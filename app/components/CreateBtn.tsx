@@ -32,7 +32,7 @@ export default function CreateBtn() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="flex justify-center items-center h-full w-1/4 border-t-3 border-t-transparent hover:border-t-[var(--theme-highlight)] hover:cursor-pointer outline-hidden">
+                <button className="flex justify-center items-center h-full w-1/4 border-t-3 border-t-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-t-[var(--accent)] hover:cursor-pointer outline-hidden">
                     <SquarePlus size={32} />
                 </button>
             </DropdownMenuTrigger>

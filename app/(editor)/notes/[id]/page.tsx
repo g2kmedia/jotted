@@ -42,14 +42,14 @@ export default function Note({
   }, [route]);
 
   const debouncedSave = useCallback(
-    debounce(async (updates: NoteUpdate, currentRoute: string | null) => {
+    debounce(async (newDocument: NoteUpdate, currentRoute: string | null) => {
       if (!currentRoute) return;
 
       try {
         const res = await fetch(`/api/notes/${currentRoute}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updates)
+          body: JSON.stringify(newDocument)
         })
 
         if (!res.ok) {
@@ -71,9 +71,8 @@ export default function Note({
     debouncedSave({ title: newTitle }, route);
   }
 
-  const handleContentChange = (updates: Block[]) => {
-    setNote(prev => prev ? { ...prev, content: updates } : undefined);
-    debouncedSave({ content: updates }, route)
+  const handleContentChange = (newDocument: Block[]) => {
+    debouncedSave({ content: newDocument }, route)
   }
 
   if (!note) return null;
@@ -86,20 +85,8 @@ export default function Note({
         onChange={handleTitleChange}
         className="w-full"
       />
-      {/* <textarea
-        value={note.content || ""}
-        placeholder="What's on your mind? Start writing..."
-        readOnly
-        className="w-full h-2/3">
-      </textarea> */}
-      {/* <MilkdownProvider>
-        <CrepeEditor
-        defaultValue={note.content || ""}
-        onContentChange={handleContentChange}
-        />
-      </MilkdownProvider> */}
       <div>
-        <Editor initialContent={note.content} onChange={handleContentChange} />
+        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
       </div>
     </article>
   )
