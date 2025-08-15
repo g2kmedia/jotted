@@ -1,4 +1,4 @@
-import { readFile, rm } from "fs/promises";
+import { readFile } from "fs/promises";
 
 export async function GET(
     request: Request,
@@ -17,7 +17,7 @@ export async function GET(
     try {
         const file = await readFile(filePath);
 
-        return new Response(file);
+        return new Response(new Uint8Array(file));
     } catch (error) {
         return Response.json({
             error: "File not found"

@@ -2,17 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import debounce from "lodash.debounce";
-import { type NoteUpdate, type Note } from "@/lib/schemas";
+import { type NoteUpdate, type EditorNote } from "@/lib/schemas";
 import { Editor } from "@/app/components/DynamicEditor";
 import type { Block } from "@blocknote/core";
 
-export default function Note({
-  params
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function Note(
+  { params }: { params: Promise<{ id: string }> }
+) {
   const [route, setRoute] = useState<string | null>(null);
-  const [note, setNote] = useState<Note | undefined>(undefined);
+  const [note, setNote] = useState<EditorNote | undefined>(undefined);
 
   useEffect(() => {
     const getParams = async (): Promise<void> => {
@@ -27,7 +25,7 @@ export default function Note({
     if (!route) return;
 
     const loadNote = async (): Promise<void> => {
-      const res = await fetch(`/api/notes/${route}`, { method: "GET" });
+      const res = await fetch(`/api/notes/${route}?columns=title,content`, { method: "GET" });
 
       if (!res.ok) {
         throw new Error(`Failed to fetch note: ${res.status}`);
@@ -50,7 +48,7 @@ export default function Note({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newDocument)
-        })
+        });
 
         if (!res.ok) {
           throw new Error(`Failed to update note: ${res.status}`)
@@ -64,30 +62,29 @@ export default function Note({
     }, 500), []
   );
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newTitle = e.target.value;
 
     setNote(prev => prev ? { ...prev, title: newTitle } : undefined);
     debouncedSave({ title: newTitle }, route);
   }
 
-  const handleContentChange = (newDocument: Block[]) => {
+  const handleContentChange = (newDocument: Block[]): void => {
     debouncedSave({ content: newDocument }, route)
   }
 
   if (!note) return null;
 
   return (
-    <article className="h-screen w-screen">
+    <article>
       <input
         type="text"
         value={note.title}
         onChange={handleTitleChange}
-        className="w-full"
+        className="w-full text-center overflow-hidden text-ellipsis focus-visible:outline-none"
       />
-      <div>
-        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
-      </div>
+      <hr className="m-1" />
+      <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
     </article>
   )
 }
