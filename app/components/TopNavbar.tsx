@@ -1,16 +1,15 @@
 import Link from "next/link";
-import MeatballMenu from "./MeatballMenu";
-import { ChevronLeft } from "lucide-react";
+import { Search } from 'lucide-react';
 
 export default function TopNavbar() {
     return (
-        <nav className="p-2 flex justify-between items-center h-14 text-accent">
-            <Link href={"/notes"} className="flex">
-                <button className="flex hover:cursor-pointer items-center">
-                    <ChevronLeft size={32} /> Notes
+        <nav className="h-14 flex justify-between items-center text-foreground border-b-1 border-foreground">
+            <Link href={"/"}>
+                <button className="hover:cursor-pointer">
+                    Jotted
                 </button>
             </Link>
-            <MeatballMenu />
+            <Search />
         </nav>
     );
 }

@@ -8,7 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SquarePlus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 export default function CreateBtn() {
     const router = useRouter();
@@ -32,8 +32,8 @@ export default function CreateBtn() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="flex justify-center items-center h-full w-1/4 border-t-3 border-t-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-t-[var(--accent)] hover:cursor-pointer outline-hidden">
-                    <SquarePlus size={32} />
+                <button className="text-muted-foreground hover:text-accent hover:cursor-pointer outline-hidden">
+                    <Plus size={36} />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center">

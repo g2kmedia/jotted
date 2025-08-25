@@ -1,3 +1,4 @@
+import TopNavbar from "../components/TopNavbar";
 import BottomNavbar from "../components/BottomNavbar";
 
 export default function OverviewLayout({
@@ -6,13 +7,16 @@ export default function OverviewLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <main className="grid grid-rows-[1fr_auto] h-full"> {/* add back, if needed the 100dvh to fix mobile rendering. Currently in the globals.css */}
-            {children}
-            <nav>
+        <>
+            <header className="m-2">
+                <TopNavbar />
+            </header>
+            <main className="flex-1 overflow-y-auto m-2">
+                {children}
+            </main>
+            <footer className="fixed bottom-0 left-0 right-0 m-2 mb-4 bg-transparent">
                 <BottomNavbar />
-            </nav>
-        </main>
+            </footer>
+        </>
     );
 }
-
-// TODO: Make the Navbar component use the nav tag in the component and just import component directly here

@@ -3,33 +3,55 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CreateBtn from "./CreateBtn";
+import { House } from "lucide-react";
+import { File } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 export default function BottomNavbar() {
     const pathname = usePathname();
 
-    const highlightNavbarItem = (path: string):string => {
+    // const highlightNavbarItem = (path: string): string => {
+    //     return path === pathname
+    //         ? "border-t-[var(--accent)]"
+    //         : "border-t-transparent"
+    // }
+
+    const highlightNavbarItem = (path: string): string => {
         return path === pathname
-        ? "border-t-[var(--accent)]"
-        : "border-t-transparent"
+            ? "text-foreground hover:text-foreground"
+            : "text-muted-foreground hover:text-accent"
     }
 
-    const unmuteNavbarItemText = (path: string):string => {
+    const unmuteNavbarItemText = (path: string): string => {
         return path === pathname
-        ? "text-foreground"
-        : "text-muted-foreground"
+            ? "text-foreground"
+            : "text-muted-foreground"
     }
 
     return (
-        <div className="flex flex-row justify-center items-center px-3 bottom-0 h-14 border-t-1">
-            <div className="flex flex-row justify-center items-center h-full w-full space-x-16 text-2xl">
-                <Link href={"/notes"} className="h-full w-1/4">
-                    <button className={`flex justify-center items-center h-full w-full border-t-3 ${highlightNavbarItem("/notes")} hover:border-t-[var(--accent)] ${unmuteNavbarItemText("/notes")} rounded-t-xs hover:cursor-pointers`}>NOTES</button>
+        <nav className="flex justify-between px-6 bottom-0 h-14 border-1 rounded-4xl backdrop-blur-md" aria-label="Bottom navigation">
+                <Link href={"/"}>
+                    <button className={`${highlightNavbarItem("/")} h-full hover:cursor-pointers`}>
+                        <House />
+                    </button>
+                </Link>
+                <Link href={"/notes"}>
+                    <button className={`${highlightNavbarItem("/notes")} h-full hover:cursor-pointer`}>
+                        <File />
+                    </button>
                 </Link>
                 <CreateBtn />
-                <Link href={"/tasks"} className="h-full w-1/4">
-                    <button className={`flex justify-center items-center h-full w-full border-t-3 ${highlightNavbarItem("/tasks")} hover:border-t-[var(--accent)] ${unmuteNavbarItemText("/tasks")} rounded-t-xs hover:cursor-pointer`}>TASKS</button>
+                <Link href={"/tasks"}>
+                    <button className={`${highlightNavbarItem("/tasks")} h-full hover:cursor-pointer`}>
+                        <Check />
+                    </button>
                 </Link>
-            </div>
-        </div>
+                <Link href={"/"}>
+                    <button className={`${highlightNavbarItem("/")} h-full hover:cursor-pointer`}>
+                        <Settings />
+                    </button>
+                </Link>
+        </nav>
     );
 }

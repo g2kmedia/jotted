@@ -1,4 +1,4 @@
-import TopNavbar from "../components/TopNavbar";
+import EditorPageNavbar from "../components/EditorPageNavbar";
 
 export default function EditorLayout({
     children,
@@ -6,8 +6,8 @@ export default function EditorLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <main className="grid grid-rows-[auto_1fr] h-full">
-            <TopNavbar />
+        <main className="grid grid-rows-[auto_1fr]">
+            <EditorPageNavbar />
             {children}
         </main>
     );
