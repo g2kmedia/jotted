@@ -1,4 +1,5 @@
 import { deleteNote, getNote, updateNote } from "@/lib/notes";
+import { getNoteTags } from "@/lib/tags";
 import { NextRequest } from "next/server";
 
 export async function GET(
@@ -11,8 +12,9 @@ export async function GET(
         const columns = searchParams.get("columns")?.split(",");
 
         const note = getNote(route.id, columns);
+        const tags = getNoteTags(route.id);
 
-        return Response.json({ note });
+        return Response.json({ note, tags });
     } catch (error) {
         return Response.json({
             error: "Note not found"

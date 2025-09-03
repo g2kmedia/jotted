@@ -32,8 +32,8 @@ import {
 import { NoteInfo } from "@/lib/schemas";
 
 export default function MeatballMenu() {
-    const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
     const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+    const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
     const [noteInfos, setNoteInfos] = useState<NoteInfo | undefined>(undefined);
 
     const params = useParams<{ id: string }>();
@@ -83,26 +83,11 @@ export default function MeatballMenu() {
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)}>Delete</DropdownMenuItem>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={() => setIsInfoDialogOpen(true)}>Info</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)}>Delete</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-
-            <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your note.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
 
             <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
                 <DialogContent>
@@ -135,6 +120,21 @@ export default function MeatballMenu() {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your note.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

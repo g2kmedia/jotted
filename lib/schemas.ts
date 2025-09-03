@@ -30,6 +30,8 @@ const NoteInfoDialogSchema = z.object({
     updated_at: z.string()
 });
 
+// -> Replace the smaller Note Schemas and types with Patial<Note>
+
 export {NoteSchema, EditorNoteSchema, NoteUpdateSchema, NoteInfoDialogSchema };
 
 export type Note = z.infer<typeof NoteSchema>;
