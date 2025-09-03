@@ -20,7 +20,7 @@ export function GET(
     try {
         const { searchParams } = request.nextUrl;
         const columns = searchParams.get("columns")?.split(",");
-
+        
         const notes = getAllNotes(columns);
 
         return Response.json({ notes }, { status: 200 });

@@ -1,5 +1,5 @@
 import { db } from "@/lib/database";
-import { Note, NoteSchema, NoteUpdate } from "./schemas";
+import { Note, NoteWithTag, NoteSchema, NoteUpdate } from "./schemas";
 import { z } from "zod";
 
 const ALLOWED_COLUMNS = Object.keys(NoteSchema.shape);
@@ -31,21 +31,35 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
     return PartialNoteSchema.parse(note);
 }
 
-export function getAllNotes(columns?: string[]): Partial<Note>[] | null {
+interface NoteWithTagRow extends Partial<Note> {
+    tags: string
+}
+
+export function getAllNotes(columns?: string[]): Partial<NoteWithTag>[] | null {
     if (columns &&
         !columns.every(col => ALLOWED_COLUMNS.includes(col))
     ) {
         throw new Error("Invalid column name");
     }
 
-    const selectedColumns = columns ? columns.join(", ") : " * ";
+    const selectedColumns = columns ? columns.map(col => "n." + col).join(", ") : " * ";
 
-    const stmt = db.prepare(`SELECT ${selectedColumns} FROM note`);
-    const notesArr = stmt.all();
-
-    const validatedNotes = z.array(PartialNoteSchema).safeParse(notesArr);
-
-    return validatedNotes.success ? validatedNotes.data : null;
+    const stmt = db.prepare<[], NoteWithTagRow>(`
+        SELECT ${selectedColumns}, COALESCE(
+            json_group_array(t.name) FILTER (WHERE t.name IS NOT NULL),
+            json_array()
+            ) as tags
+        FROM note n
+        LEFT JOIN note_tag nt ON n.id = nt.note_id
+        LEFT JOIN tag t ON nt.tag_id = t.id
+        GROUP BY n.id
+        `);
+    const notesArr = stmt.all().map(row => ({
+        ...row,
+        tags: JSON.parse(row.tags) as string[]
+    }));
+    
+    return notesArr;
 }
 
 export function updateNote(id: string, updates: NoteUpdate): number {

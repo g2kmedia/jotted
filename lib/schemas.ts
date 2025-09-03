@@ -30,6 +30,10 @@ const NoteInfoDialogSchema = z.object({
     updated_at: z.string()
 });
 
+export type NoteWithTag = Partial<Note> & {
+    tags: string[]
+}
+
 // -> Replace the smaller Note Schemas and types with Patial<Note>
 
 export {NoteSchema, EditorNoteSchema, NoteUpdateSchema, NoteInfoDialogSchema };
