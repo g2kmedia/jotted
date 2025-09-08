@@ -19,9 +19,13 @@ export function GET(
 ) {
     try {
         const { searchParams } = request.nextUrl;
-        const columns = searchParams.get("columns")?.split(",");
+        const columns = searchParams.get("columns")?.split(",") || [];
+        const limit = Number(searchParams.get("limit")) || 20;
+        const idBefore = Number(searchParams.get("id_before")) || undefined;
+
+        const queryParams = { columns, limit, idBefore };
         
-        const notes = getAllNotes(columns);
+        const notes = getAllNotes(queryParams);
 
         return Response.json({ notes }, { status: 200 });
     } catch (error) {

@@ -1,6 +1,5 @@
 import { db } from "@/lib/database";
 import { Note, NoteWithTag, NoteSchema, NoteUpdate } from "./schemas";
-import { z } from "zod";
 
 const ALLOWED_COLUMNS = Object.keys(NoteSchema.shape);
 const PartialNoteSchema = NoteSchema.partial();
@@ -31,20 +30,28 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
     return PartialNoteSchema.parse(note);
 }
 
-interface NoteWithTagRow extends Partial<Note> {
+type notesApiParams = {
+    columns: string[],
+    limit: number
+    idBefore?: number
+}
+
+type NoteWithTagRow = Partial<Note> & {
     tags: string
 }
 
-export function getAllNotes(columns?: string[]): Partial<NoteWithTag>[] | null {
-    if (columns &&
-        !columns.every(col => ALLOWED_COLUMNS.includes(col))
+export function getAllNotes(params: notesApiParams): Partial<NoteWithTag>[] | null {
+    if (params.columns &&
+        !params.columns.every(col => ALLOWED_COLUMNS.includes(col))
     ) {
         throw new Error("Invalid column name");
     }
 
-    const selectedColumns = columns ? columns.map(col => "n." + col).join(", ") : " * ";
+    const selectedColumns = params.columns
+        ? params.columns.map(col => "n." + col).join(", ")
+        : " * ";
 
-    const stmt = db.prepare<[], NoteWithTagRow>(`
+    const baseQuery = `
         SELECT ${selectedColumns}, COALESCE(
             json_group_array(t.name) FILTER (WHERE t.name IS NOT NULL),
             json_array()
@@ -52,14 +59,29 @@ export function getAllNotes(columns?: string[]): Partial<NoteWithTag>[] | null {
         FROM note n
         LEFT JOIN note_tag nt ON n.id = nt.note_id
         LEFT JOIN tag t ON nt.tag_id = t.id
+        `;
+
+    const whereClause = params.idBefore ? 'WHERE n.id < ?' : '';
+
+    const groupOrderLimit = `
         GROUP BY n.id
-        `);
-    const notesArr = stmt.all().map(row => ({
+        ORDER BY n.updated_at DESC, n.id DESC
+        LIMIT ?`;
+
+    const stmt = db.prepare(baseQuery + whereClause + groupOrderLimit);
+
+    let notesArr;
+
+    if (params.idBefore) {
+        notesArr = stmt.all(params.idBefore, params.limit);
+    } else {
+        notesArr = stmt.all(params.limit);
+    }
+
+    return (notesArr as NoteWithTagRow[]).map(row => ({
         ...row,
         tags: JSON.parse(row.tags) as string[]
     }));
-    
-    return notesArr;
 }
 
 export function updateNote(id: string, updates: NoteUpdate): number {
