@@ -1,25 +1,43 @@
 "use client"
 
-import { NoteWithTag } from "@/lib/schemas";
+import { NoteWithTag, Tag } from "@/lib/schemas";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from 'lucide-react';
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
+  const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
+  const [activeTags, setActiveTags] = useState<number[]>([]);
   const [notes, setNotes] = useState<Partial<NoteWithTag>[] | undefined>(undefined);
   const [lastNoteId, setLastNoteId] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
-  const loadNotes = async () => {
-    if (!hasMore) return;
+  const loadNotes = async (resetStates = false): Promise<void> => {
+    if (resetStates) {
+      setNotes(undefined);
+      setLastNoteId(null);
+      setHasMore(true);
+    }
+
+    if (!hasMore && !resetStates) return;
+
+    const url = new URL("/api/notes", window.location.origin);
+
+    url.searchParams.set("columns", "id,title,updated_at");
+
+    if (lastNoteId && !resetStates) {
+      url.searchParams.set("id_before", lastNoteId.toString())
+    }
+
+    if (activeTags.length > 0) {
+      url.searchParams.set("tags", activeTags.join());
+    }
+
+    const finalUrl = url.pathname + url.search;
 
     try {
-      const url = lastNoteId
-        ? `/api/notes?columns=id,title,updated_at&limit=20&id_before=${lastNoteId}`
-        : "/api/notes?columns=id,title,updated_at&limit=20";
-
-      const res = await fetch(url, { method: "GET" });
+      const res = await fetch(finalUrl, { method: "GET" });
 
       if (!res.ok) {
         throw new Error(`Failed to fetch notes: ${res.status}`);
@@ -33,24 +51,57 @@ export default function NotesOverview() {
       }
 
       setNotes(prev => {
-        if (!prev) return newNotes;
+        if (resetStates || !prev) return newNotes;
 
         const existingIds = new Set(prev.map(note => note.id));
-        const uniqueNewNotes = newNotes.filter ((note: Partial<NoteWithTag>) => !existingIds.has(note.id));
+        const uniqueNewNotes = newNotes.filter((note: Partial<NoteWithTag>) => !existingIds.has(note.id));
 
         return [...prev, ...uniqueNewNotes];
       });
-      
+
       setLastNoteId(newNotes[newNotes.length - 1].id);
 
     } catch (error) {
-      console.error("Failed to load notes:", error)
+      console.error("Failed to load notes:", error);
     }
   }
 
+  const loadTags = async (): Promise<void> => {
+    try {
+      const url = "/api/notes/tags";
+
+      const res = await fetch(url, { method: "GET" });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch tags: ${res.status}`);
+      }
+
+      const { tags } = await res.json();
+
+      setTags(tags);
+
+    } catch (error) {
+      console.error("Failed to load tags:", error);
+    }
+  }
+
+  const handleTagsSelection = (tag: number): void => {
+    setActiveTags(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag);
+      } else {
+        return [...prev, tag];
+      }
+    });
+  }
+
   useEffect(() => {
-    loadNotes();
+    loadTags();
   }, []);
+
+  useEffect(() => {
+    loadNotes(true); // Reset states/query params
+  }, [activeTags])
 
   if (!notes) return null;
 
@@ -61,35 +112,50 @@ export default function NotesOverview() {
   }
 
   return (
-    <section>
+    <>
       <h1 className="mb-6 pl-4 text-2xl flex flex-col">
         <span>your</span>
         <span className="pl-4">notes
         </span>
       </h1>
-      <InfiniteScroll
-        dataLength={notes.length}
-        next={loadNotes}
-        hasMore={hasMore}
-        loader={""}
-        scrollableTarget="main-scrollable-target" // id of main tag for scroll detection
-      >
-        {notes.map((note) => {
-          return (
-            <Link href={`/notes/${note.id}`} key={note.id}>
-              <article className="h-16 mb-6 p-2 border-t-1 border-foreground">
-                <h1 className="flex justify-between text-lg mb-1">{note.title} <ArrowUpRight size={20} /></h1>
-                <ul className="flex gap-2 text-sm text-muted-foreground">
-                  {note.tags?.map((tag, index) => (
-                    <li key={index} className="pl-2">#{tag}</li>
-                  ))}
-                </ul>
-              </article>
-            </Link>
-          );
-        })}
-      </InfiniteScroll>
-      <div className="h-16"></div>
-    </section>
+      <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {tags.map((tag) => (
+          <button
+            key={tag.id}
+            className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-4xl whitespace-nowrap cursor-pointer`}
+            onClick={() => handleTagsSelection(tag.id)}
+          >
+            #{tag.name}
+          </button>
+        ))}
+      </section>
+      <section>
+        <InfiniteScroll
+          dataLength={notes.length}
+          next={loadNotes}
+          hasMore={hasMore}
+          loader={""}
+          scrollableTarget="main-scrollable-target" // id of main tag for scroll detection
+        >
+          {notes.map((note) => {
+            return (
+              <Link href={`/notes/${note.id}`} key={note.id}>
+                <article className="h-16 mb-6 p-2 border-t-1 border-foreground">
+                  <h3 className="flex justify-between text-lg mb-1">{note.title} <ArrowUpRight size={20} /></h3>
+                  <ul className="flex gap-2 text-sm text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {note.tags?.map((tag, index) => (
+                      <li key={index} className="pl-2">#{tag}</li>
+                    ))}
+                  </ul>
+                </article>
+              </Link>
+            );
+          })}
+        </InfiniteScroll>
+        <div className="h-16"></div>
+      </section>
+    </>
   );
 }
+
+// Add pagination to the tags as well and sort them by last used

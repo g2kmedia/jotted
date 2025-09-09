@@ -1,4 +1,5 @@
 import { db } from "@/lib/database";
+import { Tag } from "./schemas";
 
 export function updateNoteTags(id: string, updates: string[], currentTags: string[]): { success: boolean } {
     // slice to remove "#" from the tags
@@ -61,4 +62,16 @@ export function getNoteTags(noteId: string): string[] {
     const result = stmt.all(noteId) as Array<{ name: string }>;
 
     return result.map(row => row.name);
+}
+
+export function getAllNotesTags(): Partial<Tag>[] {
+    const stmt = db.prepare(`
+        SELECT id, name
+        FROM tag
+        ORDER BY name ASC    
+    `);
+
+    const result = stmt.all() as Partial<Tag>[];
+
+    return result;
 }

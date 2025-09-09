@@ -31,9 +31,10 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
 }
 
 type notesApiParams = {
-    columns: string[],
-    limit: number
+    columns?: string[],
     idBefore?: number
+    tags?: string[]
+    limit?: number
 }
 
 type NoteWithTagRow = Partial<Note> & {
@@ -41,42 +42,58 @@ type NoteWithTagRow = Partial<Note> & {
 }
 
 export function getAllNotes(params: notesApiParams): Partial<NoteWithTag>[] | null {
-    if (params.columns &&
-        !params.columns.every(col => ALLOWED_COLUMNS.includes(col))
-    ) {
+    const {
+        columns = [],
+        idBefore,
+        tags = [],
+        limit = 20
+    } = params;
+
+    if (columns.length > 0 && !columns.every(col => ALLOWED_COLUMNS.includes(col))) {
         throw new Error("Invalid column name");
     }
 
-    const selectedColumns = params.columns
-        ? params.columns.map(col => "n." + col).join(", ")
-        : " * ";
+    const selectedColumns = columns.length > 0
+        ? columns.map(col => `n.${col}`).join(",")
+        : "n.*";
 
-    const baseQuery = `
-        SELECT ${selectedColumns}, COALESCE(
-            json_group_array(t.name) FILTER (WHERE t.name IS NOT NULL),
-            json_array()
+    const whereClauses: string[] = [];
+    const queryParams: (string | number)[] = [];
+
+    if (idBefore) {
+        whereClauses.push('n.id < ?');
+        queryParams.push(idBefore);
+    }
+
+    if (tags.length > 0) {
+        const placeholders = tags.map(() => '?').join();
+        whereClauses.push(`t.id IN (${placeholders})`);
+        queryParams.push(...tags);
+    }
+
+    const finalWhereClause = whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(' AND ')}`
+        : '';
+
+    const query = `
+        SELECT ${selectedColumns},
+            COALESCE(
+                json_group_array(t.name) FILTER (WHERE t.name IS NOT NULL),
+                json_array()
             ) as tags
         FROM note n
         LEFT JOIN note_tag nt ON n.id = nt.note_id
         LEFT JOIN tag t ON nt.tag_id = t.id
-        `;
-
-    const whereClause = params.idBefore ? 'WHERE n.id < ?' : '';
-
-    const groupOrderLimit = `
+        ${finalWhereClause}
         GROUP BY n.id
         ORDER BY n.updated_at DESC, n.id DESC
-        LIMIT ?`;
+        LIMIT ?
+    `;
 
-    const stmt = db.prepare(baseQuery + whereClause + groupOrderLimit);
+    queryParams.push(limit);
 
-    let notesArr;
-
-    if (params.idBefore) {
-        notesArr = stmt.all(params.idBefore, params.limit);
-    } else {
-        notesArr = stmt.all(params.limit);
-    }
+    const stmt = db.prepare(query);
+    const notesArr = stmt.all(...queryParams);
 
     return (notesArr as NoteWithTagRow[]).map(row => ({
         ...row,
