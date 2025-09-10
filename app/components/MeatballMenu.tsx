@@ -18,7 +18,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { CircleEllipsis } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { redirect, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -79,7 +79,7 @@ export default function MeatballMenu() {
             <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                     <button className="hover:cursor-pointer outline-none">
-                        <CircleEllipsis size={32} />
+                        <Ellipsis size={32} />
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>

@@ -151,7 +151,7 @@ export default function Note(
         type="text"
         value={note.title}
         onChange={handleTitleChange}
-        className="w-full text-center text-3xl focus-visible:outline-none"
+        className="w-full text-center text-3xl font-bold focus-visible:outline-none"
       /></h1>
       <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
     </article >

@@ -3,10 +3,7 @@ import { ThemeProvider } from "../components/theme-provider";
 import "./globals.css";
 import { Recursive } from "next/font/google";
 
-const recursiveFont = Recursive({
-  subsets: ["latin-ext"],
-  weight: "800",
-});
+const recursiveFont = Recursive();
 
 export default function RootLayout({
   children,

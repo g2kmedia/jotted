@@ -113,7 +113,7 @@ export default function NotesOverview() {
 
   return (
     <>
-      <h1 className="mb-6 pl-4 text-2xl flex flex-col">
+      <h1 className="mb-6 pl-4 text-3xl font-extrabold flex flex-col">
         <span>your</span>
         <span className="pl-4">notes
         </span>
@@ -142,7 +142,7 @@ export default function NotesOverview() {
               <Link href={`/notes/${note.id}`} key={note.id}>
                 <article className="h-16 mb-6 p-2 border-t-1 border-foreground">
                   <h3 className="flex justify-between text-lg mb-1">{note.title} <ArrowUpRight size={20} /></h3>
-                  <ul className="flex gap-2 text-sm text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {note.tags?.map((tag, index) => (
                       <li key={index} className="pl-2">#{tag}</li>
                     ))}
