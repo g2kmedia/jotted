@@ -2,7 +2,7 @@
 
 import { NoteWithTag, Tag } from "@/lib/schemas";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight } from 'lucide-react';
 import InfiniteScroll from "react-infinite-scroll-component";
 
@@ -103,6 +103,18 @@ export default function NotesOverview() {
     loadNotes(true); // Reset states/query params
   }, [activeTags])
 
+  const sortedTags = useMemo(() => {
+    return [...tags].sort((a, b) => {
+      const aIsActive = activeTags.includes(a.id);
+      const bIsActive = activeTags.includes(b.id);
+
+      if (aIsActive && !bIsActive) return -1;
+      if (!aIsActive && bIsActive) return 1;
+
+      return 0;
+    });
+  }, [tags, activeTags]);
+
   if (!notes) return null;
 
   if (notes.length === 0) {
@@ -119,7 +131,7 @@ export default function NotesOverview() {
         </span>
       </h1>
       <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {tags.map((tag) => (
+        {sortedTags.map((tag) => (
           <button
             key={tag.id}
             className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-4xl whitespace-nowrap cursor-pointer`}
@@ -157,5 +169,3 @@ export default function NotesOverview() {
     </>
   );
 }
-
-// Add pagination to the tags as well and sort them by last used

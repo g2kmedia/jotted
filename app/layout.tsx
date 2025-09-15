@@ -5,6 +5,23 @@ import { Recursive } from "next/font/google";
 
 const recursiveFont = Recursive();
 
+export const metadata = {
+  title: "Jotted",
+  description: "One place for everything on your mind. Think it, jot it, keep it.",
+  icons: {
+    icon: [
+      {
+        url: "/favicon-dark.ico",
+        media: "(prefers-color-scheme: light)"
+      },
+      {
+        url: "/favicon-light.ico",
+        media: "(prefers-color-scheme: dark)"
+      }
+    ]
+  }
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

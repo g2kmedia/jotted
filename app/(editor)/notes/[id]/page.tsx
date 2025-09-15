@@ -141,7 +141,7 @@ export default function Note(
           type="text"
           defaultValue={tags?.join(" ")}
           placeholder="add tags..."
-          className="w-full text-right text-muted-foreground outline-hidden peer"
+          className="w-full text-right font-light text-muted-foreground outline-hidden peer"
         />
         <button onMouseDown={handleTagsChange} className="w-0 peer-focus:w-auto peer-focus:px-2 opacity-0 peer-focus:opacity-100 overflow-hidden transition-opacity cursor-pointer hover:text-accent">
           <Check />
