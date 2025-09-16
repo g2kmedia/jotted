@@ -11,6 +11,9 @@ export const metadata = {
   icons: {
     icon: [
       {
+        url: "/favicon-dark.ico"
+      },
+      {
         url: "/favicon-dark.ico",
         media: "(prefers-color-scheme: light)"
       },
@@ -37,7 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster position="top-center" richColors/>
+          <Toaster position="top-center" richColors />
         </ThemeProvider>
       </body>
     </html>
