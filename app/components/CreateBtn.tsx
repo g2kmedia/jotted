@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Plus } from "lucide-react";
 
-export default function CreateBtn() {
+export default function CreateBtn({ className} : { className?: string }) {
     const router = useRouter();
 
     const handleCreateNote = async ():Promise<void> => {
@@ -32,8 +32,8 @@ export default function CreateBtn() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="text-muted-foreground hover:text-accent hover:cursor-pointer outline-hidden">
-                    <Plus size={36} />
+                <button className={className}>
+                    <Plus className="scale-125"/> {/* scale to compensate empty space around & match other icons on navbar */}
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center">

@@ -19,36 +19,30 @@ export default function BottomNavbar() {
 
     const highlightNavbarItem = (path: string): string => {
         return path === pathname
-            ? "text-foreground hover:text-foreground"
-            : "text-muted-foreground hover:text-accent"
-    }
-
-    const unmuteNavbarItemText = (path: string): string => {
-        return path === pathname
-            ? "text-foreground"
-            : "text-muted-foreground"
+            ? "text-foreground bg-accent rounded-2xl"
+            : "text-muted-foreground hover:bg-accent hover:text-foreground hover:rounded-2xl"
     }
 
     return (
-        <nav className="flex justify-between px-6 bottom-0 h-14 border-1 rounded-4xl backdrop-blur-lg" aria-label="Bottom navigation">
+        <nav className="flex justify-center items-center h-14 border-1 rounded-2xl backdrop-blur-lg" aria-label="Bottom navigation">
                 <Link href={"/"}>
-                    <button className={`${highlightNavbarItem("/")} h-full hover:cursor-pointers`}>
+                    <button className={`${highlightNavbarItem("/")} p-3 mx-2.5 hover:cursor-pointers`}>
                         <House />
                     </button>
                 </Link>
                 <Link href={"/notes"}>
-                    <button className={`${highlightNavbarItem("/notes")} h-full hover:cursor-pointer`}>
+                    <button className={`${highlightNavbarItem("/notes")} p-3 mx-2.5 hover:cursor-pointer`}>
                         <File />
                     </button>
                 </Link>
-                <CreateBtn />
+                <CreateBtn className="text-muted-foreground p-3 mx-2.5 outline-hidden hover:bg-accent hover:text-foreground hover:rounded-2xl"/>
                 <Link href={"/tasks"}>
-                    <button className={`${highlightNavbarItem("/tasks")} h-full hover:cursor-pointer`}>
+                    <button className={`${highlightNavbarItem("/tasks")} p-3 mx-2.5 hover:cursor-pointer`}>
                         <Check />
                     </button>
                 </Link>
                 <Link href={"/"}>
-                    <button className={`${highlightNavbarItem("/")} h-full hover:cursor-pointer`}>
+                    <button className={`${highlightNavbarItem("/")} p-3 mx-2.5 hover:cursor-pointer`}>
                         <Settings />
                     </button>
                 </Link>

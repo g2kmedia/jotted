@@ -134,7 +134,7 @@ export default function NotesOverview() {
         {sortedTags.map((tag) => (
           <button
             key={tag.id}
-            className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-4xl whitespace-nowrap cursor-pointer`}
+            className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-full whitespace-nowrap cursor-pointer`}
             onClick={() => handleTagsSelection(tag.id)}
           >
             #{tag.name}
@@ -152,8 +152,8 @@ export default function NotesOverview() {
           {notes.map((note) => {
             return (
               <Link href={`/notes/${note.id}`} key={note.id}>
-                <article className="h-16 mb-6 p-2 border-t-1 border-foreground">
-                  <h3 className="flex justify-between text-lg mb-1">{note.title} <ArrowUpRight size={20} /></h3>
+                <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
+                  <h3 className="text-lg mb-1">{note.title}</h3>
                   <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {note.tags?.map((tag, index) => (
                       <li key={index} className="pl-2">#{tag}</li>
