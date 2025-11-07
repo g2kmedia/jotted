@@ -67,7 +67,11 @@ export function getAllNotes(params: notesApiParams): Partial<NoteWithTag>[] | nu
 
     if (tags.length > 0) {
         const placeholders = tags.map(() => '?').join();
-        whereClauses.push(`t.id IN (${placeholders})`);
+        whereClauses.push(`n.id IN (
+            SELECT DISTINCT nt2.note_id 
+            FROM note_tag nt2 
+            WHERE nt2.tag_id IN (${placeholders})
+        )`);
         queryParams.push(...tags);
     }
 

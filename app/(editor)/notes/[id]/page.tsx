@@ -147,7 +147,7 @@ export default function Note(
           <Check />
         </button>
       </div>
-      <h1><input
+      <h1 className="my-3"><input
         type="text"
         value={note.title}
         onChange={handleTitleChange}
