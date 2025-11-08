@@ -13,19 +13,35 @@ import { Plus } from "lucide-react";
 export default function CreateBtn({ className} : { className?: string }) {
     const router = useRouter();
 
-    const handleCreateNote = async ():Promise<void> => {
+    const handleCreateNote = async (): Promise<void> => {
         try {
             const res = await fetch("/api/notes", { method: "POST" });
 
             if (!res.ok) {
-                throw new Error(`Failed to create note: ${res.status}`)
+                throw new Error(`Failed to create note: ${res.status}`);
             }
 
             const { noteId } = await res.json();
 
             router.push(`/notes/${noteId}`);
         } catch (error) {
-            // Show toast aka alert message
+            // handle error & Show toast aka alert message
+        }
+    }
+
+    const handleCreateTask = async (): Promise<void> => {
+        try {
+            const res = await fetch("/api/tasks", { method: "POST" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to create task: ${res.status}`);
+            }
+
+            const { taskId } = await res.json();
+
+            router.push(`/tasks/${taskId}`);
+        } catch (error) {
+            // handle error & show alert message
         }
     }
 
@@ -39,7 +55,7 @@ export default function CreateBtn({ className} : { className?: string }) {
             <DropdownMenuContent align="center">
                 <DropdownMenuItem onSelect={handleCreateNote} className="justify-center">Create Note</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="justify-center">Create Task</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateTask} className="justify-center">Create Task</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
