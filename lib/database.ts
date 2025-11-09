@@ -40,7 +40,7 @@ const initDd = (): void => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             due_date DATETIME,
-            priority TEXT CHECK(priority IN ('low', 'medium', 'high') OR priority IS NULL),
+            priority INTEGER CHECK((priority >= 0 AND priority <= 3) OR priority IS NULL),
             is_completed BOOLEAN DEFAULT 0,
             is_trashed BOOLEAN DEFAULT 0
         )

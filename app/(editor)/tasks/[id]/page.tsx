@@ -55,10 +55,10 @@ export default function Task() {
                     id="priority"
                     className="w-40 self-center text-center p-2 border rounded-2xl"
                 >
-                    <option value="0">-</option>
-                    <option value="1">Low</option>
-                    <option value="2">Medium</option>
-                    <option value="3">High</option>
+                    <option value="">-</option>
+                    <option value="2">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="0">High</option>
                 </select>
             </fieldset>
         </section>
