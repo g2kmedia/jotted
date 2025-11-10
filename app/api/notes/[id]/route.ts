@@ -34,7 +34,7 @@ export async function PATCH(
 
         if (updatesResult === 0) {
             return Response.json({
-                error: "0 updates were made"
+                msg: "0 updates were made"
             }, { status: 200 });
         }
 

@@ -31,7 +31,7 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
 }
 
 type notesApiParams = {
-    columns?: string[],
+    columns?: string[]
     idBefore?: number
     tags?: string[]
     limit?: number
