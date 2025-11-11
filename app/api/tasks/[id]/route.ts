@@ -1,4 +1,25 @@
-import { updateTask } from "@/lib/tasks";
+import { NextRequest } from 'next/server';
+import { getTask, updateTask } from "@/lib/tasks";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const route = await params;
+        const { searchParams } = request.nextUrl;
+        const columns = searchParams.get("columns")?.split(",");
+
+        const task = getTask(route.id, columns);
+        // add getTaskTags
+        
+        return Response.json({ task });
+    } catch (error) {
+        return Response.json({
+            error: "Could not get task"
+        }, { status: 404 });
+    }
+}
 
 export async function PATCH(
     request: Request,

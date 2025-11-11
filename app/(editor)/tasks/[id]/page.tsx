@@ -1,5 +1,6 @@
 "use client"
 
+import { TaskSchema } from "@/lib/schemas";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ export default function Task(
     { params }: { params: Promise<{ id: string }> }
 ) {
     const [route, setRoute] = useState<string | null>(null);
+    const [task, setTask] = useState<TaskSchema | undefined>(undefined);
 
     useEffect(() => {
         const getParams = async () => {
@@ -17,24 +19,42 @@ export default function Task(
 
         getParams();
     }, [params]);
+
+    useEffect(() => {
+        if (!route) return;
+
+        const loadTask = async () => {
+            const res = await fetch(`/api/tasks/${route}?columns=title,content,due_date,priority`, { method: "GET" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch task: ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            // process hashtags later here
+
+            setTask(data.task);
+            // setTags here
+        }
+
+        loadTask();
+    }, [route]);
     
     const handleAddTask = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const formData = new FormData(e.currentTarget);
-        const description = formData.get("description");
         const date = formData.get("date");
         const time = formData.get("time") || "00:00";
         const priority = formData.get("priority");
 
         const taskData = {
             title: formData.get("title"),
-            ...(description && { content: description }),
-            ...(date && { dueDate: new Date(`${date}T${time}`).toISOString() }),
+            content: formData.get("description"),
+            due_date: date ? new Date(`${date}T${time}`).toISOString() : null,
             ...(priority !== null && { priority: priority === "" ? null : Number(priority) })
         };
-
-        console.log(taskData)
 
         try {
             const res = await fetch(`/api/tasks/${route}`, {
@@ -54,12 +74,14 @@ export default function Task(
         }
     }
 
+    if (!task) return null;
+
     return (
         <section className="p-2">
-            <div>
+            <div className="flex">
                 <input
                     type="text"
-                    defaultValue="tbd tags"
+                    defaultValue="TO_BE_REPLACED - tags"
                     placeholder="add tags..."
                     className="w-full text-right font-light text-muted-foreground outline-hidden peer"
                 />
@@ -73,6 +95,7 @@ export default function Task(
                     id="title"
                     name="title"
                     type="text"
+                    defaultValue={task.title}
                     placeholder="Title"
                     className="w-full my-2 p-2 border rounded-2xl outline-none"
                 />
@@ -81,6 +104,7 @@ export default function Task(
                 <textarea
                     id="description"
                     name="description"
+                    defaultValue={task.content}
                     placeholder="Description"
                     className="h-20 w-full my-2 p-2 border rounded-2xl resize-none outline-none"
                 />
@@ -93,6 +117,7 @@ export default function Task(
                         id="date"
                         name="date"
                         type="date"
+                        defaultValue={task.due_date ? new Date(task.due_date).toLocaleDateString("en-CA") : ""} // en-CA for formatting purposes
                         className="w-40 my-2 p-2 text-center border rounded-2xl outline-none"
                     />
 
@@ -100,6 +125,7 @@ export default function Task(
                         id="time"
                         name="time"
                         type="time"
+                        defaultValue={task.due_date ? new Date(task.due_date).toTimeString().slice(0, 5) : ""}
                         className="w-40 my-2 p-2 text-center border rounded-2xl outline-none"
                     />
                 </fieldset>
@@ -108,6 +134,7 @@ export default function Task(
                 <select
                     id="priority"
                     name="priority"
+                    defaultValue={task.priority}
                     className="w-40 self-center text-center p-2 border rounded-2xl"
                 >
                     <option value="">-</option>

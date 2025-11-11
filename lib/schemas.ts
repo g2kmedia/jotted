@@ -50,3 +50,15 @@ export type Tag = z.infer<typeof TagSchema>;
 export type EditorNote = z.infer<typeof EditorNoteSchema>;
 export type NoteUpdate = z.infer<typeof NoteUpdateSchema>;
 export type NoteInfo = z.infer<typeof NoteInfoDialogSchema>;
+
+export type TaskSchema = {
+    id: number
+    title: string
+    content: string
+    created_at: Date
+    updated_at: Date
+    due_date: Date
+    priority: number
+    is_completed: boolean
+    is_trashed: boolean
+}
