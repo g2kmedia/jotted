@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getTask, updateTask } from "@/lib/tasks";
+import { getTaskTags } from '@/lib/tags';
 
 export async function GET(
     request: NextRequest,
@@ -11,9 +12,9 @@ export async function GET(
         const columns = searchParams.get("columns")?.split(",");
 
         const task = getTask(route.id, columns);
-        // add getTaskTags
+        const tags = getTaskTags(route.id);
         
-        return Response.json({ task });
+        return Response.json({ task, tags });
     } catch (error) {
         return Response.json({
             error: "Could not get task"

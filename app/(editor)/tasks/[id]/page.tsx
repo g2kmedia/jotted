@@ -2,7 +2,7 @@
 
 import { TaskSchema } from "@/lib/schemas";
 import { Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function Task(
@@ -10,6 +10,8 @@ export default function Task(
 ) {
     const [route, setRoute] = useState<string | null>(null);
     const [task, setTask] = useState<TaskSchema | undefined>(undefined);
+    const [tags, setTags] = useState<string[]>([]);
+    const inputTagsRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const getParams = async () => {
@@ -32,15 +34,15 @@ export default function Task(
 
             const data = await res.json();
 
-            // process hashtags later here
+            const addHashtagToTags = data.tags.map((tag: string) => "#" + tag);
 
             setTask(data.task);
-            // setTags here
+            setTags(addHashtagToTags);
         }
 
         loadTask();
     }, [route]);
-    
+
     const handleAddTask = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -74,18 +76,70 @@ export default function Task(
         }
     }
 
+    const handleTagsChange = async (): Promise<void> => {
+        let inputArr;
+
+        if (!inputTagsRef.current?.value) {
+            inputArr = [""];
+        } else {
+            inputArr = inputTagsRef.current.value.trim().split(/\s+/);
+        }
+
+        const newTags: string[] = [];
+
+        for (const input of inputArr) {
+            if (
+                (
+                    input.startsWith("#") &&
+                    input.length > 1 &&
+                    input.indexOf("#", 1) === -1 // Only a single "#" allowed
+                ) ||
+                input === ""
+            ) {
+                newTags.push(input);
+            } else {
+                toast.error("Invalid tags");
+                return;
+            }
+        }
+
+        try {
+            const res = await fetch(`/api/tasks/tags/${route}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    updates: newTags,
+                    currentTags: tags
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(`Failed to update tags: ${res.status}`)
+
+            }
+
+            setTags(newTags)
+            toast.success("Tags updated");
+
+        } catch (error) {
+            console.error("Failed to update tags:", error);
+            toast.error("Failed to update tags. Please try again.");
+        }
+    }
+
     if (!task) return null;
 
     return (
         <section className="p-2">
             <div className="flex">
                 <input
+                    ref={inputTagsRef}
                     type="text"
-                    defaultValue="TO_BE_REPLACED - tags"
+                    defaultValue={tags?.join(" ")}
                     placeholder="add tags..."
                     className="w-full text-right font-light text-muted-foreground outline-hidden peer"
                 />
-                <button className="w-0 peer-focus:w-auto peer-focus:px-2 opacity-0 peer-focus:opacity-100 overflow-hidden transition-opacity cursor-pointer hover:text-accent">
+                <button onMouseDown={handleTagsChange} className="w-0 peer-focus:w-auto peer-focus:px-2 opacity-0 peer-focus:opacity-100 overflow-hidden transition-opacity cursor-pointer hover:text-accent">
                     <Check />
                 </button>
             </div>
