@@ -33,7 +33,7 @@ export default function Note(
     if (!route) return;
 
     const loadNote = async (): Promise<void> => {
-      const res = await fetch(`/api/notes/${route}?columns=title,content`, { method: "GET" });
+      const res = await fetch(`/api/notes/${route}?columns=title,content&tags=true`, { method: "GET" });
 
       if (!res.ok) {
         throw new Error(`Failed to fetch data: ${res.status}`);

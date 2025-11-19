@@ -29,13 +29,18 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { NoteInfo } from "@/lib/types";
 import { usePathname } from "next/navigation";
+
+type recordInfos = {
+    title: string
+    created_at: string
+    updated_at: string
+}
 
 export default function MeatballMenu() {
     const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
     const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-    const [infos, setInfos] = useState<NoteInfo | undefined>(undefined); // -> change type here to be universal for notes and tasks
+    const [infos, setInfos] = useState<recordInfos | undefined>(undefined);
 
     const params = useParams<{ id: string }>();
     const id = params.id;
@@ -47,17 +52,17 @@ export default function MeatballMenu() {
 
             const fetchInfos = async (): Promise<void> => {
                 const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
-                const entryType = pathname.slice(1, secondSlashIdx)
+                const recordType = pathname.slice(1, secondSlashIdx);
 
-                const res = await fetch(`/api/${entryType}/${id}?columns=title,created_at,updated_at`, { method: "GET" });
+                const res = await fetch(`/api/${recordType}/${id}?columns=title,created_at,updated_at`, { method: "GET" });
 
                 if (!res.ok) {
                     throw new Error(`Failed to fetch infos: ${res.status}`);
                 }
 
-                const { infos } = await res.json();
+                const infos = await res.json();
 
-                setInfos(infos);
+                setInfos(infos[recordType.slice(0, -1)]); // slice "s" to match API response
             };
 
             fetchInfos();
@@ -66,8 +71,11 @@ export default function MeatballMenu() {
 
     // Add logic to get and set the URL dynamically
     const handleDelete = async (): Promise<void> => {
+        const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
+        const recordType = pathname.slice(1, secondSlashIdx);
+
         try {
-            const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/${recordType}/${id}`, { method: "DELETE" });
 
             if (!res.ok) {
                 throw new Error(`Failed to delete: ${res.status}`)
@@ -79,7 +87,7 @@ export default function MeatballMenu() {
         }
 
         toast.success("Deleted");
-        redirect("/notes");
+        redirect(`/${recordType}`);
     }
 
     return (
@@ -107,7 +115,7 @@ export default function MeatballMenu() {
                                 {infos.title}<br /><br />
 
                                 Created at:<br />
-                                {new Date(infos.created_at).toLocaleString(undefined, {
+                                {new Date(infos.created_at + "Z").toLocaleString(undefined, {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",
@@ -116,7 +124,7 @@ export default function MeatballMenu() {
                                 })}<br /><br />
 
                                 Last updated at:<br />
-                                {new Date(infos.updated_at).toLocaleString(undefined, {
+                                {new Date(infos.updated_at + "Z").toLocaleString(undefined, {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",

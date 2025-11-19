@@ -3,6 +3,13 @@ import { Task } from "./types";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
 
+export function createTask(): number | bigint {
+    const stmt = db.prepare('INSERT INTO task (title, content) VALUES (?, ?)');
+    const createdTaskId = stmt.run('New Untitled Task', '');
+
+    return createdTaskId.lastInsertRowid;
+}
+
 export function getTask(id: string, columns?: string[]): Partial<Task> {    
     let selectedColumns = " * ";
 
@@ -27,13 +34,6 @@ export function getTask(id: string, columns?: string[]): Partial<Task> {
     return task as Partial<Task>;
 }
 
-export function createTask(): number | bigint {
-    const stmt = db.prepare('INSERT INTO task (title, content) VALUES (?, ?)');
-    const createdTaskId = stmt.run('New Untitled Task', '');
-
-    return createdTaskId.lastInsertRowid;
-}
-
 type TaskUpdate = {
     title: string
     content?: string
@@ -49,4 +49,11 @@ export function updateTask(id: string, updates: TaskUpdate): any {
     const stmt = db.prepare(`UPDATE task SET ${setClause} WHERE id = ?`);
     const info = stmt.run(...values, id);
     return info.changes;
+}
+
+export function deleteTask(id: string): number {
+    const stmt = db.prepare('DELETE FROM task WHERE id = ?');
+    const result = stmt.run(id);
+
+    return result.changes;
 }

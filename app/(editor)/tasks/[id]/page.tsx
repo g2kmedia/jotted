@@ -26,7 +26,7 @@ export default function Task(
         if (!route) return;
 
         const loadTask = async () => {
-            const res = await fetch(`/api/tasks/${route}?columns=title,content,due_date,priority`, { method: "GET" });
+            const res = await fetch(`/api/tasks/${route}?columns=title,content,due_date,priority&tags=true`, { method: "GET" });
 
             if (!res.ok) {
                 throw new Error(`Failed to fetch task: ${res.status}`);

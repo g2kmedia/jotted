@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getTask, updateTask } from "@/lib/tasks";
+import { deleteTask, getTask, updateTask } from "@/lib/tasks";
 import { getTaskTags } from '@/lib/tags';
 
 export async function GET(
@@ -10,10 +10,11 @@ export async function GET(
         const route = await params;
         const { searchParams } = request.nextUrl;
         const columns = searchParams.get("columns")?.split(",");
+        const includeTags = searchParams.get("tags") === "true";
 
         const task = getTask(route.id, columns);
-        const tags = getTaskTags(route.id);
-        
+        const tags = includeTags ? getTaskTags(route.id) : undefined;
+
         return Response.json({ task, tags });
     } catch (error) {
         return Response.json({
@@ -24,7 +25,7 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    { params } : { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const route = await params;
@@ -45,6 +46,32 @@ export async function PATCH(
     } catch (error) {
         return Response.json({
             error: "Could not update task"
-        }, {status: 400});
+        }, { status: 400 });
+    }
+}
+
+export async function DELETE(
+    request: Request,
+    { params } : { params: Promise<{ id: string }> }
+) {
+    try {
+        const route = await params;
+        const deletedTask = deleteTask(route.id);
+
+        if (deletedTask === 1) {
+            return Response.json({
+                message: "Task deleted successfully"
+            }, { status: 200 });
+        }
+
+        return Response.json({
+            message: "Task not found"
+        }, { status: 404 });
+    } catch (error) {
+        console.error("Delete task error:", error)
+
+        return Response.json({
+            error: "Failed to delete task"
+        }, { status: 500 });
     }
 }

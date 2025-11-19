@@ -10,9 +10,10 @@ export async function GET(
         const route = await params;
         const { searchParams } = request.nextUrl;
         const columns = searchParams.get("columns")?.split(",");
+        const includeTags = searchParams.get("tags") === "true";
 
         const note = getNote(route.id, columns);
-        const tags = getNoteTags(route.id);
+        const tags = includeTags ? getNoteTags(route.id) : undefined;
         
         return Response.json({ note, tags });
     } catch (error) {
