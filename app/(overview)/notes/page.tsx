@@ -1,6 +1,6 @@
 "use client"
 
-import { NoteWithTag, Tag } from "@/lib/schemas";
+import { NoteWithTag, Tag } from "@/lib/types";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight } from 'lucide-react';

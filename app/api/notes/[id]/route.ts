@@ -13,7 +13,7 @@ export async function GET(
 
         const note = getNote(route.id, columns);
         const tags = getNoteTags(route.id);
-
+        
         return Response.json({ note, tags });
     } catch (error) {
         return Response.json({

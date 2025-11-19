@@ -29,48 +29,56 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { NoteInfo } from "@/lib/schemas";
+import { NoteInfo } from "@/lib/types";
+import { usePathname } from "next/navigation";
 
 export default function MeatballMenu() {
     const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
     const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-    const [noteInfos, setNoteInfos] = useState<NoteInfo | undefined>(undefined);
+    const [infos, setInfos] = useState<NoteInfo | undefined>(undefined); // -> change type here to be universal for notes and tasks
 
     const params = useParams<{ id: string }>();
-    const noteId = params.id;
+    const id = params.id;
+
+    const pathname = usePathname();
 
     useEffect(() => {
         if (isInfoDialogOpen) {
-            const fetchNoteInfos = async (): Promise<void> => {
-                const res = await fetch(`/api/notes/${noteId}?columns=title,created_at,updated_at`, { method: "GET" });
+
+            const fetchInfos = async (): Promise<void> => {
+                const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
+                const entryType = pathname.slice(1, secondSlashIdx)
+
+                const res = await fetch(`/api/${entryType}/${id}?columns=title,created_at,updated_at`, { method: "GET" });
 
                 if (!res.ok) {
-                    throw new Error(`Failed to fetch note infos: ${res.status}`);
+                    throw new Error(`Failed to fetch infos: ${res.status}`);
                 }
 
-                const { note } = await res.json();
+                const { infos } = await res.json();
 
-                setNoteInfos(note);
+                setInfos(infos);
             };
 
-            fetchNoteInfos();
+            fetchInfos();
         }
     }, [isInfoDialogOpen]);
 
+    // Add logic to get and set the URL dynamically
     const handleDelete = async (): Promise<void> => {
         try {
-            const res = await fetch(`/api/notes/${noteId}`, { method: "DELETE" });
+            const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
 
             if (!res.ok) {
-                throw new Error(`Failed to delete note: ${res.status}`)
+                throw new Error(`Failed to delete: ${res.status}`)
                 // Add popup notifications with a warning
             }
         } catch (error) {
-            console.error("Failed to delete note:", error);
+            console.error("Failed to delete:", error);
             // Add notifications for the user
         }
 
-        toast.success("Note deleted");
+        toast.success("Deleted");
         redirect("/notes");
     }
 
@@ -93,13 +101,13 @@ export default function MeatballMenu() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Info</DialogTitle>
-                        {noteInfos && (
+                        {infos && (
                             <DialogDescription>
                                 Title:<br />
-                                {noteInfos.title}<br /><br />
+                                {infos.title}<br /><br />
 
                                 Created at:<br />
-                                {new Date(noteInfos.created_at).toLocaleString(undefined, {
+                                {new Date(infos.created_at).toLocaleString(undefined, {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",
@@ -108,7 +116,7 @@ export default function MeatballMenu() {
                                 })}<br /><br />
 
                                 Last updated at:<br />
-                                {new Date(noteInfos.updated_at).toLocaleString(undefined, {
+                                {new Date(infos.updated_at).toLocaleString(undefined, {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",

@@ -1,8 +1,7 @@
 import { db } from "@/lib/database";
-import { Note, NoteWithTag, NoteSchema, NoteUpdate } from "./schemas";
+import type { Note } from "./types";
 
-const ALLOWED_COLUMNS = Object.keys(NoteSchema.shape);
-const PartialNoteSchema = NoteSchema.partial();
+const ALLOWED_COLUMNS: (keyof Note)[] = ["id", "title", "content", "created_at", "updated_at", "is_pinned", "is_trashed"];
 
 export function createNote(): number | bigint {
     const stmt = db.prepare('INSERT INTO note (title, content) VALUES (?, ?)')
@@ -13,7 +12,7 @@ export function createNote(): number | bigint {
 
 export function getNote(id: string, columns?: string[]): Partial<Note> {
     if (columns &&
-        !columns.every(col => ALLOWED_COLUMNS.includes(col))
+        !columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))
     ) {
         throw new Error("Invalid column name");
     }
@@ -27,7 +26,7 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
         throw new Error("Note not found");
     }
 
-    return PartialNoteSchema.parse(note);
+    return note;
 }
 
 type notesApiParams = {
@@ -41,7 +40,11 @@ type NoteWithTagRow = Partial<Note> & {
     tags: string
 }
 
-export function getAllNotes(params: notesApiParams): Partial<NoteWithTag>[] | null {
+type NoteWithTags = Partial<Note> & {
+    tags: string[]
+}
+
+export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
     const {
         columns = [],
         idBefore,
@@ -49,7 +52,7 @@ export function getAllNotes(params: notesApiParams): Partial<NoteWithTag>[] | nu
         limit = 20
     } = params;
 
-    if (columns.length > 0 && !columns.every(col => ALLOWED_COLUMNS.includes(col))) {
+    if (columns.length > 0 && !columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))) {
         throw new Error("Invalid column name");
     }
 
@@ -105,7 +108,7 @@ export function getAllNotes(params: notesApiParams): Partial<NoteWithTag>[] | nu
     }));
 }
 
-export function updateNote(id: string, updates: NoteUpdate): number {
+export function updateNote(id: string, updates: Partial<Note>): number {
     const columns = Object.keys(updates);
     const setClause = columns.map(column => `${column} = ?`).join(", ");
     const values = Object.values(updates).map(v =>

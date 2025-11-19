@@ -5,7 +5,7 @@ const db = new Database("./database.sqlite");
 db.pragma("foreign_keys = ON");
 
 const initDd = (): void => {
-    // Note table
+    // Note
     const createNoteTable = `
         CREATE TABLE IF NOT EXISTS note (
             id INTEGER PRIMARY KEY,
@@ -31,7 +31,7 @@ const initDd = (): void => {
         END
     `;
 
-    // Task table
+    // Task
     const createTaskTable = `
         CREATE TABLE IF NOT EXISTS task (
             id INTEGER PRIMARY KEY,
@@ -61,7 +61,7 @@ const initDd = (): void => {
         END
     `;
 
-    // Tag table
+    // Tag
     const createTagTable = `
         CREATE TABLE IF NOT EXISTS tag (
             id INTEGER PRIMARY KEY,

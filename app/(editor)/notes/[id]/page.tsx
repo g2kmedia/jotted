@@ -2,17 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import debounce from "lodash.debounce";
-import { type NoteUpdate, type EditorNote } from "@/lib/schemas";
 import { Editor } from "@/app/components/DynamicEditor";
+import type { Note } from "@/lib/types"
 import type { Block } from "@blocknote/core";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+
+type EditorNote = Omit<Note, "content"> & {
+  content: Block[]
+}
 
 export default function Note(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const [route, setRoute] = useState<string | null>(null);
-  const [note, setNote] = useState<EditorNote | undefined>(undefined);
+  const [note, setNote] = useState<Partial<EditorNote> | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
   const inputTagsRef = useRef<HTMLInputElement>(null);
 
@@ -36,6 +40,7 @@ export default function Note(
       }
 
       const data = await res.json();
+      data.note.content = data.note.content ? JSON.parse(data.note.content) : "";
 
       const addHashtagToTags = data.tags.map((tag: string) => "#" + tag);
 
@@ -47,7 +52,7 @@ export default function Note(
   }, [route]);
 
   const debouncedSave = useCallback(
-    debounce(async (newDocument: NoteUpdate, currentRoute: string | null) => {
+    debounce(async (newDocument: Partial<EditorNote>, currentRoute: string | null) => {
       if (!currentRoute) return;
 
       try {

@@ -1,6 +1,6 @@
 "use client"
 
-import { TaskSchema } from "@/lib/schemas";
+import type { Task } from "@/lib/types";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ export default function Task(
     { params }: { params: Promise<{ id: string }> }
 ) {
     const [route, setRoute] = useState<string | null>(null);
-    const [task, setTask] = useState<TaskSchema | undefined>(undefined);
+    const [task, setTask] = useState<Task | undefined>(undefined);
     const [tags, setTags] = useState<string[]>([]);
     const inputTagsRef = useRef<HTMLInputElement>(null);
 

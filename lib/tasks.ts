@@ -1,9 +1,9 @@
 import { db } from "@/lib/database";
-import { TaskSchema } from "./schemas";
+import { Task } from "./types";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
 
-export function getTask(id: string, columns?: string[]): Partial<TaskSchema> {    
+export function getTask(id: string, columns?: string[]): Partial<Task> {    
     let selectedColumns = " * ";
 
     if (columns) {
@@ -24,7 +24,7 @@ export function getTask(id: string, columns?: string[]): Partial<TaskSchema> {
         throw new Error("Task not found");
     }
 
-    return task as Partial<TaskSchema>;
+    return task as Partial<Task>;
 }
 
 export function createTask(): number | bigint {

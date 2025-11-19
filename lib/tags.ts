@@ -1,5 +1,5 @@
 import { db } from "@/lib/database";
-import { Tag } from "./schemas";
+import { Tag } from "./types";
 
 const cleanupOrphanTags = () => {
     const stmt = db.prepare(`
@@ -74,6 +74,9 @@ export function getAllNotesTags(): Partial<Tag>[] {
     const stmt = db.prepare(`
         SELECT id, name
         FROM tag
+        WHERE EXISTS (
+            SELECT 1 FROM note_tag WHERE note_tag.tag_id = tag.id
+        )
         ORDER BY name ASC    
     `);
 
