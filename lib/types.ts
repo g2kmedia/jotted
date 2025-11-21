@@ -25,3 +25,7 @@ export type Tag = {
     name: string
     created_at: string
 }
+
+export type NoteWithTags = Partial<Note> & {
+    tags: string[]
+}

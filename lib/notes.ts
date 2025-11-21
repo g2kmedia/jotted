@@ -1,5 +1,5 @@
 import { db } from "@/lib/database";
-import type { Note } from "./types";
+import type { Note, NoteWithTags } from "./types";
 
 const ALLOWED_COLUMNS: (keyof Note)[] = ["id", "title", "content", "created_at", "updated_at", "is_pinned", "is_trashed"];
 
@@ -38,10 +38,6 @@ type notesApiParams = {
 
 type NoteWithTagRow = Partial<Note> & {
     tags: string
-}
-
-type NoteWithTags = Partial<Note> & {
-    tags: string[]
 }
 
 export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {

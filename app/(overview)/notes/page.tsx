@@ -1,15 +1,14 @@
 "use client"
 
-import { NoteWithTag, Tag } from "@/lib/types";
+import { NoteWithTags, Tag } from "@/lib/types";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight } from 'lucide-react';
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
   const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
   const [activeTags, setActiveTags] = useState<number[]>([]);
-  const [notes, setNotes] = useState<Partial<NoteWithTag>[] | undefined>(undefined);
+  const [notes, setNotes] = useState<Partial<NoteWithTags>[] | undefined>(undefined);
   const [lastNoteId, setLastNoteId] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -54,7 +53,7 @@ export default function NotesOverview() {
         if (resetStates || !prev) return newNotes;
 
         const existingIds = new Set(prev.map(note => note.id));
-        const uniqueNewNotes = newNotes.filter((note: Partial<NoteWithTag>) => !existingIds.has(note.id));
+        const uniqueNewNotes = newNotes.filter((note: Partial<NoteWithTags>) => !existingIds.has(note.id));
 
         return [...prev, ...uniqueNewNotes];
       });
