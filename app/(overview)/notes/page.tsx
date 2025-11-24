@@ -22,11 +22,10 @@ export default function NotesOverview() {
     if (!hasMore && !resetStates) return;
 
     const url = new URL("/api/notes", window.location.origin);
-
     url.searchParams.set("columns", "id,title,updated_at");
 
     if (lastNoteId && !resetStates) {
-      url.searchParams.set("id_before", lastNoteId.toString())
+      url.searchParams.set("id_before", lastNoteId.toString());
     }
 
     if (activeTags.length > 0) {
@@ -76,7 +75,6 @@ export default function NotesOverview() {
       }
 
       const { tags } = await res.json();
-
       setTags(tags);
 
     } catch (error) {
@@ -100,7 +98,7 @@ export default function NotesOverview() {
 
   useEffect(() => {
     loadNotes(true); // Reset states/query params
-  }, [activeTags])
+  }, [activeTags]);
 
   const sortedTags = useMemo(() => {
     return [...tags].sort((a, b) => {
@@ -146,7 +144,7 @@ export default function NotesOverview() {
           next={loadNotes}
           hasMore={hasMore}
           loader={""}
-          scrollableTarget="main-scrollable-target" // id of main tag for scroll detection
+          scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
         >
           {notes.map((note) => {
             return (

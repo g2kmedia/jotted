@@ -27,5 +27,9 @@ export type Tag = {
 }
 
 export type NoteWithTags = Partial<Note> & {
-    tags: string[]
+    tags?: string[]
+}
+
+export type TaskWithTags = Partial<Task> & {
+    tags?: string[]
 }

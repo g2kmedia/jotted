@@ -14,7 +14,7 @@ export async function POST() {
     }
 }
 
-export function GET(
+export async function GET(
     request: NextRequest
 ) {
     try {

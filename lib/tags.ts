@@ -98,6 +98,21 @@ export function getTaskTags(noteId: string): string[] {
 
 }
 
+export function getAllTasksTags(): Partial<Tag>[] {
+    const stmt = db.prepare(`
+        SELECT id, name
+        FROM tag
+        WHERE EXISTS (
+            SELECT 1 FROM task_tag WHERE task_tag.tag_id = tag.id
+        )
+        ORDER BY name ASC    
+    `);
+
+    const result = stmt.all() as Partial<Tag>[];
+
+    return result;
+}
+
 export function updateTaskTags(id: string, updates: string[], currentTags: string[]): { success: boolean } {
     // slice to remove "#" from the tags
     const toAdd = updates.flatMap(tag =>
