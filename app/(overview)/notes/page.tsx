@@ -22,6 +22,7 @@ export default function NotesOverview() {
     if (!hasMore && !resetStates) return;
 
     const url = new URL("/api/notes", window.location.origin);
+    
     url.searchParams.set("columns", "id,title,updated_at");
 
     if (lastNoteId && !resetStates) {

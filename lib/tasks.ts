@@ -1,5 +1,6 @@
 import { db } from "@/lib/database";
 import { Task, TaskWithTags } from "./types";
+import { DateTime } from "luxon";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
 
@@ -36,6 +37,9 @@ export function getTask(id: string, columns?: string[]): Partial<Task> {
 
 type tasksApiParams = {
     columns?: string[]
+    dueDateStart?: string
+    dueDateEnd?: string
+    hasDueDate?: string
     idBefore?: number
     tags?: string[]
     limit?: number
@@ -48,6 +52,9 @@ type TaskWithTagRow = Partial<Task> & {
 export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
     const {
         columns = [],
+        dueDateStart,
+        dueDateEnd,
+        hasDueDate,
         idBefore,
         tags = [],
         limit = 20
@@ -69,6 +76,19 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         queryParams.push(idBefore);
     }
 
+    if (dueDateStart && dueDateEnd) {
+        // Convert to UTC for SQLite comparison
+        const startUTC = DateTime.fromISO(dueDateStart).toUTC().toISO();
+        const endUTC = DateTime.fromISO(dueDateEnd).toUTC().toISO();
+
+        if (!startUTC || !endUTC) {
+            throw new Error("Invalid date format");
+        }
+
+        whereClauses.push('task.due_date >= ? AND task.due_date <= ?');
+        queryParams.push(startUTC, endUTC);
+    }
+
     if (tags.length > 0) {
         const placeholders = tags.map(() => '?').join(",");
         whereClauses.push(`task.id IN (
@@ -79,9 +99,19 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         queryParams.push(...tags);
     }
 
+    if (hasDueDate === "true") {
+        whereClauses.push('task.due_date IS NOT NULL');
+    } else if (hasDueDate === "false") {
+        whereClauses.push('task.due_date IS NULL');
+    }
+
     const finalWhereClause = whereClauses.length > 0
         ? `WHERE ${whereClauses.join(' AND ')}`
         : '';
+
+    const orderBy = dueDateStart && dueDateEnd
+        ? "ORDER BY task.due_date ASC, task.priority DESC, task.updated_at DESC, task.id DESC"
+        : "ORDER BY task.updated_at DESC, task.id DESC";
 
     const query = `
         SELECT ${selectedColumns},
@@ -94,7 +124,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         LEFT JOIN tag ON task_tag.tag_id = tag.id
         ${finalWhereClause}
         GROUP BY task.id
-        ORDER BY task.updated_at DESC, task.id DESC
+        ${orderBy}
         LIMIT ?
     `;
 
@@ -131,4 +161,41 @@ export function deleteTask(id: string): number {
     const result = stmt.run(id);
 
     return result.changes;
+}
+
+export function getTaskCounts(timezone: string): {
+    today: number;
+    week: number;
+    scheduled: number;
+    later: number;
+} {
+    const today = DateTime.now().setZone(timezone);
+
+    // Convert to UTC for SQLite comparison
+    const todayStartUTC = today.startOf("day").toUTC().toISO();
+    const todayEndUTC = today.endOf("day").toUTC().toISO();
+    const weekStartUTC = today.startOf("week").toUTC().toISO();
+    const weekEndUTC = today.endOf("week").toUTC().toISO();
+
+    return {
+        today: (db.prepare(`
+            SELECT COUNT(*) as count FROM task 
+            WHERE due_date >= ? AND due_date <= ?
+        `).get(todayStartUTC, todayEndUTC) as { count: number }).count,
+
+        week: (db.prepare(`
+            SELECT COUNT(*) as count FROM task 
+            WHERE due_date >= ? AND due_date <= ?
+        `).get(weekStartUTC, weekEndUTC) as { count: number }).count,
+
+        scheduled: (db.prepare(`
+            SELECT COUNT(*) as count FROM task 
+            WHERE due_date IS NOT NULL
+        `).get() as { count: number }).count,
+
+        later: (db.prepare(`
+            SELECT COUNT(*) as count FROM task 
+            WHERE due_date IS NULL
+        `).get() as { count: number }).count
+    };
 }

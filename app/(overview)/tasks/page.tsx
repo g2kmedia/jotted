@@ -5,8 +5,16 @@ import { Circle } from 'lucide-react';
 import { useEffect, useMemo, useState } from "react";
 import { Tag, TaskWithTags } from "@/lib/types";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { DateTime } from "luxon";
 
 export default function TasksOverview() {
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+  const [taskCounts, setTaskCounts] = useState({
+    today: 0,
+    week: 0,
+    scheduled: 0,
+    later: 0
+  });
   const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
   const [activeTags, setActiveTags] = useState<number[]>([]);
   const [tasks, setTasks] = useState<Partial<TaskWithTags>[] | undefined>(undefined);
@@ -18,12 +26,39 @@ export default function TasksOverview() {
       setTasks(undefined);
       setLastTaskId(null);
       setHasMore(true);
+    } else if (!hasMore) {
+      return;
     }
 
-    if (!hasMore && !resetStates) return;
-
     const url = new URL("/api/tasks", window.location.origin);
-    url.searchParams.set("columns", "id,title,updated_at");
+
+    url.searchParams.set("columns", "id,title");
+
+    const now = DateTime.now();
+    switch (quickFilter) {
+      case "today":
+        const startOfDay = now.startOf("day").toISO();
+        const endOfDay = now.endOf("day").toISO();
+
+        url.searchParams.set("due_date_start", startOfDay);
+        url.searchParams.set("due_date_end", endOfDay);
+        break;
+      case "week":
+        const startOfWeek = now.startOf("week").toISO();
+        const endOfWeek = now.endOf("week").toISO();
+
+        url.searchParams.set("due_date_start", startOfWeek);
+        url.searchParams.set("due_date_end", endOfWeek);
+        break;
+      case "scheduled":
+        url.searchParams.set("has_due_date", "true");
+        break;
+      case "later":
+        url.searchParams.set("has_due_date", "false");
+        break;
+      default:
+        break;
+    }
 
     if (lastTaskId && !resetStates) {
       url.searchParams.set("id_before", lastTaskId.toString());
@@ -46,6 +81,11 @@ export default function TasksOverview() {
 
       if (newTasks.length === 0) {
         setHasMore(false);
+
+        if (resetStates || !tasks) {
+          setTasks([]);
+        }
+
         return;
       }
 
@@ -62,6 +102,24 @@ export default function TasksOverview() {
 
     } catch (error) {
       console.error("Failed to load tasks:", error);
+    }
+  }
+
+  const loadTaskCounts = async (): Promise<void> => {
+    try {
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const url = `/api/tasks/counts?timezone=${encodeURIComponent(userTimezone)}`;
+      const res = await fetch(url, { method: "GET" });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch task counts: ${res.status}`);
+      }
+
+      const counts = await res.json();
+      setTaskCounts(counts);
+    } catch (error) {
+      console.error("Failed to load task counts:", error);
     }
   }
 
@@ -95,11 +153,12 @@ export default function TasksOverview() {
 
   useEffect(() => {
     loadTags();
+    loadTaskCounts();
   }, []);
 
   useEffect(() => {
     loadTasks(true); // Reset states/query params
-  }, [activeTags]);
+  }, [quickFilter, activeTags]);
 
   const sortedTags = useMemo(() => {
     return [...tags].sort((a, b) => {
@@ -115,12 +174,6 @@ export default function TasksOverview() {
 
   if (!tasks) return null;
 
-  if (tasks.length === 0) {
-    return (
-      <p className="h-full flex justify-center items-center text-center">You seem to not have any tasks.<br />Start by creating one.</p>
-    );
-  }
-
   const completeTask = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
     e.stopPropagation();
@@ -131,21 +184,33 @@ export default function TasksOverview() {
   return (
     <>
       <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
-        <button className="min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer">
+        <button
+          className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "today" ? null : "today")}
+        >
           <span>Today</span>
-          <span>2</span>
+          <span>{taskCounts.today}</span>
         </button>
-        <button className="min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer">
+        <button
+          className={`${quickFilter === "week" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "week" ? null : "week")}
+        >
           <span>This week</span>
-          <span>4</span>
+          <span>{taskCounts.week}</span>
         </button>
-        <button className="min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer">
+        <button
+          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "scheduled" ? null : "scheduled")}
+        >
           <span>Scheduled</span>
-          <span>5</span>
+          <span>{taskCounts.scheduled}</span>
         </button>
-        <button className="min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer">
+        <button
+          className={`${quickFilter === "later" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "later" ? null : "later")}
+        >
           <span>Later</span>
-          <span>23</span>
+          <span>{taskCounts.later}</span>
         </button>
       </section>
       <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -160,33 +225,41 @@ export default function TasksOverview() {
         ))}
       </section>
       <section>
-        <InfiniteScroll
-          dataLength={tasks.length}
-          next={loadTasks}
-          hasMore={hasMore}
-          loader={""}
-          scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
-        >
-          {tasks.map((task) => {
-            return (
-              <Link href={`/tasks/${task.id}`} key={task.id}>
-                <article className="grid grid-cols-[auto_1fr] gap-4 h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
-                  <button onClick={completeTask} className="self-center"><Circle /></button>
-                  <div>
-                    <h3 className="text-lg mb-1">{task.title}</h3>
-                    <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {task.tags?.map((tag, index) => (
-                        <li key={index} className="pl-2">#{tag}</li>
-                      ))}
-                    </ul>
-                  </div>
+        {tasks.length === 0 ? (
+          <p className="h-full flex justify-center items-center text-center mt-20">
+            {quickFilter || activeTags.length > 0
+              ? "No tasks here."
+              : "You seem to not have any tasks.\nStart by creating one."}
+          </p>
+        ) : (
+          <InfiniteScroll
+            dataLength={tasks.length}
+            next={loadTasks}
+            hasMore={hasMore}
+            loader={""}
+            scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
+          >
+            {tasks.map((task) => {
+              return (
+                <Link href={`/tasks/${task.id}`} key={task.id}>
+                  <article className="grid grid-cols-[auto_1fr] gap-4 h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
+                    <button onClick={completeTask} className="self-center"><Circle /></button>
+                    <div>
+                      <h3 className="text-lg mb-1">{task.title}</h3>
+                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {task.tags?.map((tag, index) => (
+                          <li key={index} className="pl-2">#{tag}</li>
+                        ))}
+                      </ul>
+                    </div>
 
 
-                </article>
-              </Link>
-            );
-          })}
-        </InfiniteScroll>
+                  </article>
+                </Link>
+              );
+            })}
+          </InfiniteScroll>
+        )}
         <div className="h-16"></div>
       </section>
     </>
