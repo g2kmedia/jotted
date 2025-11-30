@@ -144,7 +144,7 @@ export default function NotesOverview() {
           dataLength={notes.length}
           next={loadNotes}
           hasMore={hasMore}
-          loader={""}
+          loader={null}
           scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
         >
           {notes.map((note) => {

@@ -192,9 +192,9 @@ export default function Task(
                     className="w-40 self-center text-center p-2 border rounded-2xl"
                 >
                     <option value="">-</option>
-                    <option value="2">Low</option>
-                    <option value="1">Medium</option>
-                    <option value="0">High</option>
+                    <option value="1">High</option>
+                    <option value="2">Medium</option>
+                    <option value="3">Low</option>
                 </select>
 
                 <button type="submit" className="w-full my-10 p-2 bg-accent border rounded-2xl cursor-pointer hover:text-background">

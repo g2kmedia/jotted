@@ -7,6 +7,12 @@ import { Tag, TaskWithTags } from "@/lib/types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { DateTime } from "luxon";
 
+const TASK_PRIORITY_LABELS: Record<number, string> = {
+  1: "High",
+  2: "Medium",
+  3: "Low"
+};
+
 export default function TasksOverview() {
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
   const [taskCounts, setTaskCounts] = useState({
@@ -32,7 +38,7 @@ export default function TasksOverview() {
 
     const url = new URL("/api/tasks", window.location.origin);
 
-    url.searchParams.set("columns", "id,title");
+    url.searchParams.set("columns", "id,title,due_date,priority");
 
     const now = DateTime.now();
     switch (quickFilter) {
@@ -236,24 +242,38 @@ export default function TasksOverview() {
             dataLength={tasks.length}
             next={loadTasks}
             hasMore={hasMore}
-            loader={""}
+            loader={null}
             scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
           >
             {tasks.map((task) => {
               return (
                 <Link href={`/tasks/${task.id}`} key={task.id}>
-                  <article className="grid grid-cols-[auto_1fr] gap-4 h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
+                  <article className="grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
                     <button onClick={completeTask} className="self-center"><Circle /></button>
                     <div>
                       <h3 className="text-lg mb-1">{task.title}</h3>
                       <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.tags?.map((tag, index) => (
-                          <li key={index} className="pl-2">#{tag}</li>
+                          <li key={index}>#{tag}</li>
                         ))}
                       </ul>
+                      <ul className="flex text-sm mt-2">
+                        {task.due_date && (() => {
+                          const dueDate = new Date(task.due_date);
+
+                          return (
+                            <>
+                              <li className="pr-2">{dueDate.toLocaleDateString("en-CA")}</li>
+                              <li className="pr-5">{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
+                            </>
+                          );
+                        }
+                        )()}
+                        {task.priority && (
+                          <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
+                        )}
+                      </ul>
                     </div>
-
-
                   </article>
                 </Link>
               );
@@ -261,7 +281,7 @@ export default function TasksOverview() {
           </InfiniteScroll>
         )}
         <div className="h-16"></div>
-      </section>
+      </section >
     </>
   );
 }
