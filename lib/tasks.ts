@@ -110,7 +110,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         : '';
 
     const orderBy = dueDateStart && dueDateEnd
-        ? "ORDER BY task.due_date ASC, task.priority DESC, task.updated_at DESC, task.id DESC"
+        ? "ORDER BY task.due_date ASC, task.priority ASC, task.updated_at DESC, task.id DESC"
         : "ORDER BY task.updated_at DESC, task.id DESC";
 
     const query = `
