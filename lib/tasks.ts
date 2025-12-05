@@ -37,6 +37,7 @@ export function getTask(id: string, columns?: string[]): Partial<Task> {
 
 type tasksApiParams = {
     columns?: string[]
+    isCompleted?: string
     dueDateStart?: string
     dueDateEnd?: string
     hasDueDate?: string
@@ -52,6 +53,7 @@ type TaskWithTagRow = Partial<Task> & {
 export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
     const {
         columns = [],
+        isCompleted,
         dueDateStart,
         dueDateEnd,
         hasDueDate,
@@ -70,6 +72,11 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
 
     const whereClauses: string[] = [];
     const queryParams: (string | number)[] = [];
+
+    if (isCompleted) {
+        whereClauses.push('task.is_completed = ?')
+        queryParams.push(isCompleted);
+    }
 
     if (idBefore) {
         whereClauses.push('task.id < ?');

@@ -41,6 +41,8 @@ export default function TasksOverview() {
 
     url.searchParams.set("columns", "id,title,due_date,priority,is_completed");
 
+    url.searchParams.set("is_completed", "0");
+
     const now = DateTime.now();
     switch (quickFilter) {
       case "today":
