@@ -144,9 +144,11 @@ type TaskUpdate = {
     content?: string
     due_date?: string
     priority?: number
+    is_completed?: number
 }
 
 export function updateTask(id: string, updates: TaskUpdate): any {
+    console.log("1")
     const columns = Object.keys(updates);
     const setClause = columns.map(column => `${column} = ?`).join(", ");
     const values = Object.values(updates);

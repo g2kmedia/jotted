@@ -43,7 +43,7 @@ export default function Task(
         loadTask();
     }, [route]);
 
-    const handleAddTask = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleTaskChange = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const formData = new FormData(e.currentTarget);
@@ -143,7 +143,7 @@ export default function Task(
                     <Check />
                 </button>
             </div>
-            <form onSubmit={handleAddTask} className="flex flex-col">
+            <form onSubmit={handleTaskChange} className="flex flex-col">
                 <label htmlFor="title"></label>
                 <input
                     id="title"

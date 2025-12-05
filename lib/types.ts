@@ -16,8 +16,8 @@ export type Task = {
     updated_at: Date
     due_date: Date
     priority: number
-    is_completed: boolean
-    is_trashed: boolean
+    is_completed: number
+    is_trashed: number
 }
 
 export type Tag = {

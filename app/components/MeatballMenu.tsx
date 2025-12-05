@@ -98,10 +98,10 @@ export default function MeatballMenu() {
                         <Ellipsis size={32} />
                     </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={() => setIsInfoDialogOpen(true)}>Info</DropdownMenuItem>
+                <DropdownMenuContent className="mx-2 rounded-2xl">
+                    <DropdownMenuItem onSelect={() => setIsInfoDialogOpen(true)} className="rounded-2xl">Info</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)} className="rounded-2xl">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
 
