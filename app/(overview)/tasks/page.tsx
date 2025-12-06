@@ -242,7 +242,7 @@ export default function TasksOverview() {
           <span>{taskCounts.week}</span>
         </button>
         <button
-          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between  items-centercursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "scheduled" ? null : "scheduled")}
         >
           <span>Scheduled</span>
@@ -256,13 +256,13 @@ export default function TasksOverview() {
           <span>{taskCounts.later}</span>
         </button>
         <button
-          className={`${quickFilter === "completed" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg items-center cursor-pointer`}
+          className={`${quickFilter === "completed" ? "bg-accent" : ""} h-12 p-3 text-base border-1 border-foreground rounded-lg cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "completed" ? null : "completed")}
         >
           Completed
         </button>
         <button
-          className={`${quickFilter === "deleted" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg items-center cursor-pointer`}
+          className={`${quickFilter === "deleted" ? "bg-accent" : ""} h-12 p-3 text-base border-1 border-foreground rounded-lg cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "deleted" ? null : "deleted")}
         >
           Deleted
