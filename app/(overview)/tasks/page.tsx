@@ -41,7 +41,9 @@ export default function TasksOverview() {
 
     url.searchParams.set("columns", "id,title,due_date,priority,is_completed");
 
-    url.searchParams.set("is_completed", "0");
+    quickFilter === "completed"
+      ? url.searchParams.set("is_completed", "1")
+      : url.searchParams.set("is_completed", "0");
 
     const now = DateTime.now();
     switch (quickFilter) {
@@ -118,7 +120,13 @@ export default function TasksOverview() {
     try {
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      const url = `/api/tasks/counts?timezone=${encodeURIComponent(userTimezone)}`;
+      //const url = `/api/tasks/counts?timezone=${encodeURIComponent(userTimezone)}`;
+
+      const url = new URL("/api/tasks/counts", window.location.origin);
+
+      url.searchParams.set("timezone", userTimezone);
+      url.searchParams.set("is_completed", "0");
+
       const res = await fetch(url, { method: "GET" });
 
       if (!res.ok) {
@@ -246,6 +254,18 @@ export default function TasksOverview() {
         >
           <span>Later</span>
           <span>{taskCounts.later}</span>
+        </button>
+        <button
+          className={`${quickFilter === "completed" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "completed" ? null : "completed")}
+        >
+          Completed
+        </button>
+        <button
+          className={`${quickFilter === "deleted" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "deleted" ? null : "deleted")}
+        >
+          Deleted
         </button>
       </section>
       <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

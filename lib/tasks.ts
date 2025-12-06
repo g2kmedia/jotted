@@ -1,6 +1,7 @@
 import { db } from "@/lib/database";
 import { Task, TaskWithTags } from "./types";
 import { DateTime } from "luxon";
+import { isReactCompilerRequired } from "next/dist/build/swc/generated-native";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
 
@@ -172,12 +173,27 @@ export function deleteTask(id: string): number {
     return result.changes;
 }
 
-export function getTaskCounts(timezone: string): {
+export function getTaskCounts(
+    params: { timezone: string,  isCompleted: string | undefined }
+): {
     today: number;
     week: number;
     scheduled: number;
     later: number;
 } {
+    const {
+        timezone,
+        isCompleted
+    } = params;
+
+    let whereClause = 'WHERE 1=1';
+    const queryParams: string[] = [];
+
+    if (isCompleted) {
+        whereClause += ' AND is_completed = ?';
+        queryParams.push(isCompleted);
+    }
+
     const today = DateTime.now().setZone(timezone);
 
     // Convert to UTC for SQLite comparison
@@ -189,22 +205,22 @@ export function getTaskCounts(timezone: string): {
     return {
         today: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            WHERE due_date >= ? AND due_date <= ?
-        `).get(todayStartUTC, todayEndUTC) as { count: number }).count,
+            ${whereClause} AND due_date >= ? AND due_date <= ?
+        `).get(...queryParams, todayStartUTC, todayEndUTC) as { count: number }).count,
 
         week: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            WHERE due_date >= ? AND due_date <= ?
-        `).get(weekStartUTC, weekEndUTC) as { count: number }).count,
+            ${whereClause} AND due_date >= ? AND due_date <= ?
+        `).get(...queryParams, weekStartUTC, weekEndUTC) as { count: number }).count,
 
         scheduled: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            WHERE due_date IS NOT NULL
-        `).get() as { count: number }).count,
+            ${whereClause} AND due_date IS NOT NULL
+        `).get(...queryParams) as { count: number }).count,
 
         later: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            WHERE due_date IS NULL
-        `).get() as { count: number }).count
+            ${whereClause} AND due_date IS NULL
+        `).get(...queryParams) as { count: number }).count
     };
 }
