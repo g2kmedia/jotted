@@ -268,7 +268,7 @@ export default function TasksOverview() {
           <span>{taskCounts.week}</span>
         </button>
         <button
-          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-centercursor-pointer`}
+          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "scheduled" ? null : "scheduled")}
         >
           <span>Scheduled</span>
