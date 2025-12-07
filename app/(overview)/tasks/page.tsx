@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link";
-import { Circle } from 'lucide-react';
+import { Circle, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from "react";
 import { Tag, TaskWithTags } from "@/lib/types";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -242,7 +242,7 @@ export default function TasksOverview() {
           <span>{taskCounts.week}</span>
         </button>
         <button
-          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between  items-centercursor-pointer`}
+          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-centercursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "scheduled" ? null : "scheduled")}
         >
           <span>Scheduled</span>
@@ -256,16 +256,18 @@ export default function TasksOverview() {
           <span>{taskCounts.later}</span>
         </button>
         <button
-          className={`${quickFilter === "completed" ? "bg-accent" : ""} h-12 p-3 text-base border-1 border-foreground rounded-lg cursor-pointer`}
+          className={`${quickFilter === "completed" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "completed" ? null : "completed")}
         >
-          Completed
+          <span>Completed</span>
+          <span><Circle /></span>
         </button>
         <button
-          className={`${quickFilter === "deleted" ? "bg-accent" : ""} h-12 p-3 text-base border-1 border-foreground rounded-lg cursor-pointer`}
+          className={`${quickFilter === "deleted" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "deleted" ? null : "deleted")}
         >
-          Deleted
+          <span>Deleted</span>
+          <span><Trash2 /></span>
         </button>
       </section>
       <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

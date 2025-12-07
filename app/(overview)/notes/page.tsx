@@ -1,11 +1,13 @@
 "use client"
 
 import { NoteWithTags, Tag } from "@/lib/types";
+import { Pin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
   const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
   const [activeTags, setActiveTags] = useState<number[]>([]);
   const [notes, setNotes] = useState<Partial<NoteWithTags>[] | undefined>(undefined);
@@ -123,11 +125,22 @@ export default function NotesOverview() {
 
   return (
     <>
-      <h1 className="mb-6 pl-4 text-3xl font-extrabold flex flex-col">
-        <span>your</span>
-        <span className="pl-4">notes
-        </span>
-      </h1>
+      <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
+        <button
+          className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "pinned" ? null : "pinned")}
+        >
+          <span>Pinned</span>
+          <span><Pin /></span>
+        </button>
+        <button
+          className={`${quickFilter === "deleted" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "deleted" ? null : "deleted")}
+        >
+          <span>Deleted</span>
+          <span><Trash2 /></span>
+        </button>
+      </section>
       <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {sortedTags.map((tag) => (
           <button
