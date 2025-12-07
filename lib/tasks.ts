@@ -1,7 +1,6 @@
 import { db } from "@/lib/database";
 import { Task, TaskWithTags } from "./types";
 import { DateTime } from "luxon";
-import { isReactCompilerRequired } from "next/dist/build/swc/generated-native";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
 

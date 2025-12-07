@@ -1,5 +1,6 @@
 import { db } from "@/lib/database";
 import { Tag } from "./types";
+import { DateTime } from "luxon";
 
 const cleanupOrphanTags = () => {
     const stmt = db.prepare(`
@@ -72,10 +73,14 @@ export function getNoteTags(noteId: string): string[] {
 
 export function getAllNotesTags(): Partial<Tag>[] {
     const stmt = db.prepare(`
-        SELECT id, name
+        SELECT tag.id, tag.name
         FROM tag
         WHERE EXISTS (
-            SELECT 1 FROM note_tag WHERE note_tag.tag_id = tag.id
+            SELECT 1
+            FROM note_tag
+            JOIN note ON note.id = note_tag.note_id
+            WHERE note_tag.tag_id = tag.id
+            AND note.is_trashed = 0
         )
         ORDER BY name ASC    
     `);
@@ -98,17 +103,74 @@ export function getTaskTags(noteId: string): string[] {
 
 }
 
-export function getAllTasksTags(): Partial<Tag>[] {
-    const stmt = db.prepare(`
-        SELECT id, name
+type tasksTagsApiParams = {
+    isCompleted?: string
+    isTrashed?: string
+    dueDateStart?: string
+    dueDateEnd?: string
+    hasDueDate?: string
+}
+
+export function getAllTasksTags(params: tasksTagsApiParams): Partial<Tag>[] {
+    const {
+        isCompleted,
+        isTrashed,
+        dueDateStart,
+        dueDateEnd,
+        hasDueDate,
+    } = params;
+
+    const whereClauses: string[] = [];
+    const queryParams: (string | number)[] = [];
+
+    if (isCompleted) {
+        whereClauses.push('task.is_completed = ?');
+        queryParams.push(isCompleted);
+    }
+
+    if (isTrashed) {
+        whereClauses.push('task.is_trashed = ?');
+        queryParams.push(isTrashed);
+    }
+
+    if (dueDateStart && dueDateEnd) {
+        // Convert to UTC for SQLite comparison
+        const startUTC = DateTime.fromISO(dueDateStart).toUTC().toISO();
+        const endUTC = DateTime.fromISO(dueDateEnd).toUTC().toISO();
+
+        if (!startUTC || !endUTC) {
+            throw new Error("Invalid date format");
+        }
+
+        whereClauses.push('task.due_date >= ? AND task.due_date <= ?');
+        queryParams.push(startUTC, endUTC);
+    }
+
+    if (hasDueDate === "true") {
+        whereClauses.push('task.due_date IS NOT NULL');
+    } else if (hasDueDate === "false") {
+        whereClauses.push('task.due_date IS NULL');
+    }
+
+    const finalWhereClause = whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(" AND ")}`
+        : "";
+
+    const query = `
+        SELECT DISTINCT tag.id, tag.name
         FROM tag
         WHERE EXISTS (
-            SELECT 1 FROM task_tag WHERE task_tag.tag_id = tag.id
+            SELECT 1
+            FROM task_tag
+            JOIN task ON task.id = task_tag.task_id
+            ${finalWhereClause}
+            AND task_tag.tag_id = tag.id
         )
-        ORDER BY name ASC    
-    `);
+        ORDER BY tag.name ASC
+    `;
 
-    const result = stmt.all() as Partial<Tag>[];
+    const stmt = db.prepare(query);
+    const result = stmt.all(...queryParams) as Partial<Tag>[];
 
     return result;
 }

@@ -120,12 +120,11 @@ export default function TasksOverview() {
     try {
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      //const url = `/api/tasks/counts?timezone=${encodeURIComponent(userTimezone)}`;
-
       const url = new URL("/api/tasks/counts", window.location.origin);
 
       url.searchParams.set("timezone", userTimezone);
       url.searchParams.set("is_completed", "0");
+      url.searchParams.set("is_trashed", "0");
 
       const res = await fetch(url, { method: "GET" });
 
@@ -142,7 +141,34 @@ export default function TasksOverview() {
 
   const loadTags = async (): Promise<void> => {
     try {
-      const url = "/api/tasks/tags";
+      const url = new URL("/api/tasks/tags", window.location.origin);
+
+      if (quickFilter === "completed") {
+        url.searchParams.set("is_completed", "1");
+      } else if (quickFilter === "trashed") {
+        url.searchParams.set("is_trashed", "1");
+      } else {
+        url.searchParams.set("is_completed", "0");
+        url.searchParams.set("is_trashed", "0");
+      }
+
+      const now = DateTime.now();
+      switch (quickFilter) {
+        case "today":
+          url.searchParams.set("due_date_start", now.startOf("day").toISO());
+          url.searchParams.set("due_date_end", now.endOf("day").toISO());
+          break;
+        case "week":
+          url.searchParams.set("due_date_start", now.startOf("week").toISO());
+          url.searchParams.set("due_date_end", now.endOf("week").toISO());
+          break;
+        case "scheduled":
+          url.searchParams.set("has_due_date", "true");
+          break;
+        case "later":
+          url.searchParams.set("has_due_date", "false");
+          break;
+      }
 
       const res = await fetch(url, { method: "GET" });
 
@@ -169,12 +195,12 @@ export default function TasksOverview() {
   }
 
   useEffect(() => {
-    loadTags();
     loadTaskCounts();
   }, []);
 
   useEffect(() => {
     loadTasks(true); // Reset states/query params
+    loadTags();
   }, [quickFilter, activeTags]);
 
   const sortedTags = useMemo(() => {
@@ -263,10 +289,10 @@ export default function TasksOverview() {
           <span><Circle /></span>
         </button>
         <button
-          className={`${quickFilter === "deleted" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "deleted" ? null : "deleted")}
+          className={`${quickFilter === "trashed" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "trashed" ? null : "trashed")}
         >
-          <span>Deleted</span>
+          <span>Trashed</span>
           <span><Trash2 /></span>
         </button>
       </section>

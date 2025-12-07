@@ -70,23 +70,26 @@ export default function MeatballMenu() {
     }, [isInfoDialogOpen]);
 
     // Add logic to get and set the URL dynamically
-    const handleDelete = async (): Promise<void> => {
+    const handleTrash = async (update: string): Promise<void> => {
         const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
         const recordType = pathname.slice(1, secondSlashIdx);
 
         try {
-            const res = await fetch(`/api/${recordType}/${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/${recordType}/${id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ is_trashed: update })
+            });
 
             if (!res.ok) {
-                throw new Error(`Failed to delete: ${res.status}`)
+                throw new Error(`Failed to move to trash: ${res.status}`)
                 // Add popup notifications with a warning
             }
         } catch (error) {
-            console.error("Failed to delete:", error);
+            console.error("Failed to move to trash:", error);
             // Add notifications for the user
         }
 
-        toast.success("Deleted");
+        toast.success("Trashed");
         redirect(`/${recordType}`);
     }
 
@@ -101,7 +104,7 @@ export default function MeatballMenu() {
                 <DropdownMenuContent className="mx-2 rounded-2xl">
                     <DropdownMenuItem onSelect={() => setIsInfoDialogOpen(true)} className="rounded-2xl">Info</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)} className="rounded-2xl">Delete</DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)} className="rounded-2xl">Move to Trash</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -141,13 +144,10 @@ export default function MeatballMenu() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your note.
-                        </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel className="dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={() => handleTrash("1")} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Trash</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

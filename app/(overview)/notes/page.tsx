@@ -27,6 +27,10 @@ export default function NotesOverview() {
     
     url.searchParams.set("columns", "id,title,updated_at");
 
+    quickFilter === "trashed"
+      ? url.searchParams.set("is_trashed", "1")
+      : url.searchParams.set("is_trashed", "0");
+
     if (lastNoteId && !resetStates) {
       url.searchParams.set("id_before", lastNoteId.toString());
     }
@@ -134,10 +138,10 @@ export default function NotesOverview() {
           <span><Pin /></span>
         </button>
         <button
-          className={`${quickFilter === "deleted" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "deleted" ? null : "deleted")}
+          className={`${quickFilter === "trashed" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
+          onClick={() => setQuickFilter(prev => prev === "trashed" ? null : "trashed")}
         >
-          <span>Deleted</span>
+          <span>Trashed</span>
           <span><Trash2 /></span>
         </button>
       </section>
