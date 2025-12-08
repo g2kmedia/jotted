@@ -115,6 +115,7 @@ initDd();
 const cleanupTrashedRecords = (daysOld = 30): {
     notesDeleted: number
     tasksDeleted: number
+    tagsDeleted: number
 } => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
@@ -132,13 +133,24 @@ const cleanupTrashedRecords = (daysOld = 30): {
         AND updated_at < ?
     `);
 
+    const deleteOrphanTags = db.prepare(`
+        DELETE FROM tag
+        WHERE id NOT IN (
+            SELECT DISTINCT tag_id FROM task_tag
+            UNION
+            SELECT DISTINCT tag_id FROM note_tag
+        )
+    `);
+
     const transaction = db.transaction(() => {
         const noteResult = deleteNotes.run(cutoffISODate);
         const taskResult = deleteTasks.run(cutoffISODate);
+        const tagResult = deleteOrphanTags.run();
 
         return {
             notesDeleted: noteResult.changes,
-            tasksDeleted: taskResult.changes
+            tasksDeleted: taskResult.changes,
+            tagsDeleted: tagResult.changes
         };
     })
 

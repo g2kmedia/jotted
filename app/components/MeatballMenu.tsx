@@ -7,6 +7,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Ellipsis } from "lucide-react";
 import { useRouter, useParams, usePathname } from "next/navigation";
@@ -34,6 +44,7 @@ type RecordStatus = {
 
 export default function MeatballMenu() {
     const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+    const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
     const [infos, setInfos] = useState<recordInfos | undefined>(undefined);
     const [recordStatus, setRecordStatus] = useState<RecordStatus | null>(null);
 
@@ -173,6 +184,23 @@ export default function MeatballMenu() {
         router.push(`/${recordType}`);
     }
 
+    const handlePermanentDelete = async (): Promise<void> => {
+        try {
+            const res = await fetch(baseUrl, { method: "DELETE" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to delete: ${res.status}`)
+                // Add popup notifications with a warning
+            }
+        } catch (error) {
+            console.error("Failed to delete:", error);
+            // Add notifications for the user
+        }
+
+        toast.success("Deleted");
+        router.push(`/${recordType}`);
+    }
+
     const getMenuItems = (recordType: string, recordStatus: RecordStatus) => {
         if (recordType === "notes") {
             return recordStatus?.is_pinned === 1
@@ -204,7 +232,7 @@ export default function MeatballMenu() {
                         <>
                             <DropdownMenuItem onSelect={() => handleTrash()} className="rounded-2xl">Restore from Trash</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" className="rounded-2xl">Permanently Delete</DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)} className="rounded-2xl">Permanently Delete</DropdownMenuItem>
                         </>
                     ) : (
                         <DropdownMenuItem variant="destructive" onSelect={() => handleTrash()} className="rounded-2xl">Move to Trash</DropdownMenuItem>
@@ -243,6 +271,21 @@ export default function MeatballMenu() {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {`This action cannot be undone. This will permanently delete this ${recordType.slice(0, -1)}.`}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handlePermanentDelete} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }
