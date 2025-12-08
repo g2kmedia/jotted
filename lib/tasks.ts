@@ -159,16 +159,17 @@ type TaskUpdate = {
     due_date?: string
     priority?: number
     is_completed?: number
+    is_deleted?: number
 }
 
 export function updateTask(id: string, updates: TaskUpdate): any {
-    console.log("1")
     const columns = Object.keys(updates);
     const setClause = columns.map(column => `${column} = ?`).join(", ");
     const values = Object.values(updates);
 
     const stmt = db.prepare(`UPDATE task SET ${setClause} WHERE id = ?`);
     const info = stmt.run(...values, id);
+    
     return info.changes;
 }
 

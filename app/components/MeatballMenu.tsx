@@ -7,19 +7,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Ellipsis } from "lucide-react";
-import { redirect, useParams } from "next/navigation";
+import { useRouter, useParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import {
@@ -29,7 +19,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { usePathname } from "next/navigation";
 
 type recordInfos = {
     title: string
@@ -37,24 +26,59 @@ type recordInfos = {
     updated_at: string
 }
 
+type RecordStatus = {
+    is_pinned?: number;
+    is_completed?: number;
+    is_trashed?: number;
+} | null;
+
 export default function MeatballMenu() {
     const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
-    const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
     const [infos, setInfos] = useState<recordInfos | undefined>(undefined);
+    const [recordStatus, setRecordStatus] = useState<RecordStatus | null>(null);
+
+    const router = useRouter();
 
     const params = useParams<{ id: string }>();
     const id = params.id;
 
     const pathname = usePathname();
+    const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
+    const recordType = pathname.slice(1, secondSlashIdx);
+
+    const baseUrl = `/api/${recordType}/${id}`;
+
+    useEffect(() => {
+        const getRecordStatus = async (): Promise<void> => {
+            const url = new URL(baseUrl, window.location.origin);
+
+            recordType === "notes"
+                ? url.searchParams.set("columns", "is_pinned,is_trashed")
+                : url.searchParams.set("columns", "is_completed,is_trashed");
+
+            try {
+                const res = await fetch(url, { method: "GET" });
+
+                if (!res.ok) {
+                    throw new Error(`Failed to get record status: ${res.status}`);
+                }
+
+                const recordStatus = await res.json();
+                setRecordStatus(recordStatus[recordType.slice(0, -1)]); // slice "s" to match API response
+            } catch (error) {
+                console.error("Failed to get record status", error);
+            }
+        }
+
+        getRecordStatus();
+    }, [])
 
     useEffect(() => {
         if (isInfoDialogOpen) {
 
-            const fetchInfos = async (): Promise<void> => {
-                const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
-                const recordType = pathname.slice(1, secondSlashIdx);
+            const fetchGeneralInfos = async (): Promise<void> => {
 
-                const res = await fetch(`/api/${recordType}/${id}?columns=title,created_at,updated_at`, { method: "GET" });
+                const res = await fetch(`${baseUrl}?columns=title,created_at,updated_at`, { method: "GET" });
 
                 if (!res.ok) {
                     throw new Error(`Failed to fetch infos: ${res.status}`);
@@ -65,32 +89,102 @@ export default function MeatballMenu() {
                 setInfos(infos[recordType.slice(0, -1)]); // slice "s" to match API response
             };
 
-            fetchInfos();
+            fetchGeneralInfos();
         }
     }, [isInfoDialogOpen]);
 
-    // Add logic to get and set the URL dynamically
-    const handleTrash = async (update: string): Promise<void> => {
-        const secondSlashIdx = pathname.indexOf("/", 1) || pathname.length;
-        const recordType = pathname.slice(1, secondSlashIdx);
+    const pinNote = async (): Promise<void> => {
+        const currentPinStatus = recordStatus?.is_pinned;
+        const newPinStatus = recordStatus?.is_pinned === 0 ? 1 : 0;
+
+        // Optimistically update
+        setRecordStatus(prev => prev ? { ...prev, is_pinned: newPinStatus } : null);
+
+        try {
+            const res = await fetch(baseUrl, {
+                method: "PATCH",
+                body: JSON.stringify({ is_pinned: newPinStatus })
+            });
+
+            if (!res.ok) {
+                // Rollback on error
+                setRecordStatus(prev => prev ? { ...prev, is_pinned: currentPinStatus } : null);
+            }
+        } catch (error) {
+            // Rollback on error
+            setRecordStatus(prev => prev ? { ...prev, is_pinned: currentPinStatus } : null);
+            toast.error("Failed to pin");
+        }
+
+        toast.success(newPinStatus === 1 ? "Pinned" : "Unpinned");
+    }
+
+    const completeTask = async (): Promise<void> => {
+        const currentCompletionStatus = recordStatus?.is_completed;
+        const newCompletionStatus = recordStatus?.is_completed === 0 ? 1 : 0;
+
+        // Optimistically update
+        setRecordStatus(prev => prev ? { ...prev, is_completed: newCompletionStatus } : null);
 
         try {
             const res = await fetch(`/api/${recordType}/${id}`, {
                 method: "PATCH",
-                body: JSON.stringify({ is_trashed: update })
+                body: JSON.stringify({ is_completed: newCompletionStatus })
             });
 
             if (!res.ok) {
-                throw new Error(`Failed to move to trash: ${res.status}`)
-                // Add popup notifications with a warning
+                // Rollback on error
+                setRecordStatus(prev => prev ? { ...prev, is_completed: currentCompletionStatus } : null);
             }
         } catch (error) {
-            console.error("Failed to move to trash:", error);
-            // Add notifications for the user
+            // Rollback on error
+            setRecordStatus(prev => prev ? { ...prev, is_completed: currentCompletionStatus } : null);
+            toast.error("Failed to mark as completed");
         }
 
-        toast.success("Trashed");
-        redirect(`/${recordType}`);
+        toast.success(newCompletionStatus === 1 ? "Marked as Completed" : "Marked as Uncompleted");
+        router.push(`/${recordType}`);
+    }
+
+    const handleTrash = async (): Promise<void> => {
+        const currentTrashStatus = recordStatus?.is_trashed;
+        const newTrashStatus = recordStatus?.is_trashed === 0 ? 1 : 0;
+
+        // Optimistically update
+        setRecordStatus(prev => prev ? { ...prev, is_trashed: newTrashStatus } : null);
+
+        try {
+            const res = await fetch(`/api/${recordType}/${id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ is_trashed: newTrashStatus })
+            });
+
+            if (!res.ok) {
+                // Rollback on error
+                setRecordStatus(prev => prev ? { ...prev, is_trashed: currentTrashStatus } : null);
+            }
+        } catch (error) {
+            // Rollback on error
+            setRecordStatus(prev => prev ? { ...prev, is_trashed: currentTrashStatus } : null);
+            toast.error("Failed to move to trash");
+        }
+
+        toast.success(newTrashStatus === 1 ? "Trashed" : "Restored");
+        router.push(`/${recordType}`);
+    }
+
+    const getMenuItems = (recordType: string, recordStatus: RecordStatus) => {
+        if (recordType === "notes") {
+            return recordStatus?.is_pinned === 1
+                ? <DropdownMenuItem onSelect={() => pinNote()} className="rounded-2xl">Unpin Note</DropdownMenuItem>
+                : <DropdownMenuItem onSelect={() => pinNote()} className="rounded-2xl">Pin Note</DropdownMenuItem>;
+        }
+
+        if (recordType === "tasks") {
+            return recordStatus?.is_completed === 1
+                ? <DropdownMenuItem onSelect={() => completeTask()} className="rounded-2xl">Mark as Uncompleted</DropdownMenuItem>
+                : <DropdownMenuItem onSelect={() => completeTask()} className="rounded-2xl">Mark as Completed</DropdownMenuItem>;
+        }
     }
 
     return (
@@ -104,7 +198,13 @@ export default function MeatballMenu() {
                 <DropdownMenuContent className="mx-2 rounded-2xl">
                     <DropdownMenuItem onSelect={() => setIsInfoDialogOpen(true)} className="rounded-2xl">Info</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onSelect={() => setIsAlertDialogOpen(true)} className="rounded-2xl">Move to Trash</DropdownMenuItem>
+                    {getMenuItems(recordType, recordStatus)}
+                    <DropdownMenuSeparator />
+                    {recordStatus?.is_trashed === 1 ? (
+                        <DropdownMenuItem variant="destructive" onSelect={() => handleTrash()} className="rounded-2xl">Restore from Trash</DropdownMenuItem>
+                    ) : (
+                        <DropdownMenuItem variant="destructive" onSelect={() => handleTrash()} className="rounded-2xl">Move to Trash</DropdownMenuItem>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -139,18 +239,6 @@ export default function MeatballMenu() {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-
-            <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleTrash("1")} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Trash</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </>
     );
 }

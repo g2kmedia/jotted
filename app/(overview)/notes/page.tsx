@@ -32,7 +32,6 @@ export default function NotesOverview() {
     } else if (quickFilter === "trashed") {
       url.searchParams.set("is_trashed", "1");
     } else {
-      url.searchParams.set("is_pinned", "0");
       url.searchParams.set("is_trashed", "0");
     }
 
