@@ -24,12 +24,17 @@ export default function NotesOverview() {
     if (!hasMore && !resetStates) return;
 
     const url = new URL("/api/notes", window.location.origin);
-    
+
     url.searchParams.set("columns", "id,title,updated_at");
 
-    quickFilter === "trashed"
-      ? url.searchParams.set("is_trashed", "1")
-      : url.searchParams.set("is_trashed", "0");
+    if (quickFilter === "pinned") {
+      url.searchParams.set("is_pinned", "1");
+    } else if (quickFilter === "trashed") {
+      url.searchParams.set("is_trashed", "1");
+    } else {
+      url.searchParams.set("is_pinned", "0");
+      url.searchParams.set("is_trashed", "0");
+    }
 
     if (lastNoteId && !resetStates) {
       url.searchParams.set("id_before", lastNoteId.toString());
@@ -52,6 +57,11 @@ export default function NotesOverview() {
 
       if (newNotes.length === 0) {
         setHasMore(false);
+
+        if (resetStates || !notes) {
+          setNotes([]);
+        }
+
         return;
       }
 
@@ -73,7 +83,16 @@ export default function NotesOverview() {
 
   const loadTags = async (): Promise<void> => {
     try {
-      const url = "/api/notes/tags";
+      const url = new URL("/api/notes/tags", window.location.origin);
+
+      if (quickFilter === "pinned") {
+        url.searchParams.set("is_pinned", "1");
+      } else if (quickFilter === "trashed") {
+        url.searchParams.set("is_trashed", "1");
+      } else {
+        url.searchParams.set("is_pinned", "0");
+        url.searchParams.set("is_trashed", "0");
+      }
 
       const res = await fetch(url, { method: "GET" });
 
@@ -100,12 +119,9 @@ export default function NotesOverview() {
   }
 
   useEffect(() => {
-    loadTags();
-  }, []);
-
-  useEffect(() => {
     loadNotes(true); // Reset states/query params
-  }, [activeTags]);
+    loadTags();
+  }, [quickFilter, activeTags]);
 
   const sortedTags = useMemo(() => {
     return [...tags].sort((a, b) => {
@@ -120,12 +136,6 @@ export default function NotesOverview() {
   }, [tags, activeTags]);
 
   if (!notes) return null;
-
-  if (notes.length === 0) {
-    return (
-      <p className="h-full flex justify-center items-center text-center">You seem to not have any notes.<br />Start by creating one.</p>
-    );
-  }
 
   return (
     <>
@@ -157,28 +167,36 @@ export default function NotesOverview() {
         ))}
       </section>
       <section>
-        <InfiniteScroll
-          dataLength={notes.length}
-          next={loadNotes}
-          hasMore={hasMore}
-          loader={null}
-          scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
-        >
-          {notes.map((note) => {
-            return (
-              <Link href={`/notes/${note.id}`} key={note.id}>
-                <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
-                  <h3 className="text-lg mb-1">{note.title}</h3>
-                  <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {note.tags?.map((tag, index) => (
-                      <li key={index} className="pl-2">#{tag}</li>
-                    ))}
-                  </ul>
-                </article>
-              </Link>
-            );
-          })}
-        </InfiniteScroll>
+        {notes.length === 0 ? (
+          <p className="h-full flex justify-center items-center text-center mt-20">
+            {quickFilter || activeTags.length > 0
+              ? "No notes here."
+              : "You seem to not have any notes.\nStart by creating one."}
+          </p>
+        ) : (
+          <InfiniteScroll
+            dataLength={notes.length}
+            next={loadNotes}
+            hasMore={hasMore}
+            loader={null}
+            scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
+          >
+            {notes.map((note) => {
+              return (
+                <Link href={`/notes/${note.id}`} key={note.id}>
+                  <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
+                    <h3 className="text-lg mb-1">{note.title}</h3>
+                    <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {note.tags?.map((tag, index) => (
+                        <li key={index} className="pl-2">#{tag}</li>
+                      ))}
+                    </ul>
+                  </article>
+                </Link>
+              );
+            })}
+          </InfiniteScroll>
+        )}
         <div className="h-16"></div>
       </section>
     </>

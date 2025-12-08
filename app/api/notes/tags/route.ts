@@ -1,8 +1,16 @@
+import { NextRequest } from "next/server";
 import { getAllNotesTags } from "@/lib/tags";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        const tags = getAllNotesTags();
+        const { searchParams } = request.nextUrl;
+
+        const isPinned = searchParams.get("is_pinned") || undefined;
+        const isTrashed = searchParams.get("is_trashed") || undefined;
+
+        const queryParams = { isPinned, isTrashed };
+
+        const tags = getAllNotesTags(queryParams);
 
         return Response.json({
             tags

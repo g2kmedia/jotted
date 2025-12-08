@@ -30,7 +30,8 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
 }
 
 type notesApiParams = {
-    columns?: string[],
+    columns?: string[]
+    isPinned?: string
     isTrashed?: string
     idBefore?: number
     tags?: string[]
@@ -44,6 +45,7 @@ type NoteWithTagRow = Partial<Note> & {
 export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
     const {
         columns = [],
+        isPinned,
         isTrashed,
         idBefore,
         tags = [],
@@ -60,6 +62,11 @@ export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
 
     const whereClauses: string[] = [];
     const queryParams: (string | number)[] = [];
+
+    if (isPinned) {
+        whereClauses.push('n.is_pinned = ?');
+        queryParams.push(isPinned);
+    }
 
     if (isTrashed) {
         whereClauses.push('n.is_trashed = ?');

@@ -220,8 +220,6 @@ export default function TasksOverview() {
     });
   }, [tags, activeTags]);
 
-  if (!tasks) return null;
-
   const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: number | undefined, isCompleted: number | undefined): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
@@ -254,6 +252,8 @@ export default function TasksOverview() {
       toast.error("Failed to update task");
     }
   }
+
+  if (!tasks) return null;
 
   return (
     <>

@@ -21,12 +21,13 @@ export async function GET(
         const { searchParams } = request.nextUrl;
         
         const columns = searchParams.get("columns")?.split(",") || undefined;
+        const isPinned = searchParams.get("is_pinned") || undefined;
         const isTrashed = searchParams.get("is_trashed") || undefined;
         const idBefore = Number(searchParams.get("id_before")) || undefined;
         const tags = searchParams.get("tags")?.split(",") || undefined;
         const limit = Number(searchParams.get("limit")) || undefined;
 
-        const queryParams = { columns, isTrashed, idBefore, tags, limit };
+        const queryParams = { columns, isPinned, isTrashed, idBefore, tags, limit };
         
         const notes = getAllNotes(queryParams);
 

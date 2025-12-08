@@ -71,21 +71,49 @@ export function getNoteTags(noteId: string): string[] {
     return result.map(row => row.name);
 }
 
-export function getAllNotesTags(): Partial<Tag>[] {
-    const stmt = db.prepare(`
-        SELECT tag.id, tag.name
+type notesTagsApiParams = {
+    isPinned?: string
+    isTrashed?: string
+}
+
+export function getAllNotesTags(params: notesTagsApiParams): Partial<Tag>[] {
+    const {
+        isPinned,
+        isTrashed
+    } = params;
+
+    const whereClauses: string[] = [];
+    const queryParams: string[] = [];
+
+    if (isPinned) {
+        whereClauses.push('is_pinned = ?');
+        queryParams.push(isPinned);
+    }
+
+    if (isTrashed) {
+        whereClauses.push('is_trashed = ?');
+        queryParams.push(isTrashed);
+    }
+
+    const finalWhereClause = whereClauses.length > 0
+        ? `WHERE ${whereClauses.join(" AND ")}`
+        : "";
+
+    const query = `
+        SELECT DISTINCT tag.id, tag.name
         FROM tag
         WHERE EXISTS (
             SELECT 1
             FROM note_tag
             JOIN note ON note.id = note_tag.note_id
-            WHERE note_tag.tag_id = tag.id
-            AND note.is_trashed = 0
+            ${finalWhereClause}
+            AND note_tag.tag_id = tag.id
         )
-        ORDER BY name ASC    
-    `);
+        ORDER BY tag.name ASC
+    `;
 
-    const result = stmt.all() as Partial<Tag>[];
+    const stmt = db.prepare(query);
+    const result = stmt.all(...queryParams) as Partial<Tag>[];
 
     return result;
 }
