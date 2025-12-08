@@ -201,7 +201,11 @@ export default function MeatballMenu() {
                     {getMenuItems(recordType, recordStatus)}
                     <DropdownMenuSeparator />
                     {recordStatus?.is_trashed === 1 ? (
-                        <DropdownMenuItem variant="destructive" onSelect={() => handleTrash()} className="rounded-2xl">Restore from Trash</DropdownMenuItem>
+                        <>
+                            <DropdownMenuItem onSelect={() => handleTrash()} className="rounded-2xl">Restore from Trash</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" className="rounded-2xl">Permanently Delete</DropdownMenuItem>
+                        </>
                     ) : (
                         <DropdownMenuItem variant="destructive" onSelect={() => handleTrash()} className="rounded-2xl">Move to Trash</DropdownMenuItem>
                     )}
