@@ -41,9 +41,14 @@ export default function TasksOverview() {
 
     url.searchParams.set("columns", "id,title,due_date,priority,is_completed");
 
-    quickFilter === "completed"
-      ? url.searchParams.set("is_completed", "1")
-      : url.searchParams.set("is_completed", "0");
+    if (quickFilter === "completed") {
+      url.searchParams.set("is_completed", "1");
+    } else if (quickFilter === "trashed") {
+      url.searchParams.set("is_trashed", "1");
+    } else {
+      url.searchParams.set("is_completed", "0");
+      url.searchParams.set("is_trashed", "0");
+    }
 
     const now = DateTime.now();
     switch (quickFilter) {
