@@ -339,12 +339,7 @@ export default function TasksOverview() {
                     </button>
                     <div>
                       <h3 className="text-lg mb-1">{task.title}</h3>
-                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {task.tags?.map((tag, index) => (
-                          <li key={index}>#{tag}</li>
-                        ))}
-                      </ul>
-                      <ul className="flex text-sm mt-2">
+                      <ul className="flex text-sm mb-2">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);
 
@@ -359,6 +354,11 @@ export default function TasksOverview() {
                         {task.priority && (
                           <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
                         )}
+                      </ul>
+                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {task.tags?.map((tag, index) => (
+                          <li key={index}>#{tag}</li>
+                        ))}
                       </ul>
                     </div>
                   </article>

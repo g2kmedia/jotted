@@ -187,7 +187,7 @@ export default function NotesOverview() {
                     <h3 className="text-lg mb-1">{note.title}</h3>
                     <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {note.tags?.map((tag, index) => (
-                        <li key={index} className="pl-2">#{tag}</li>
+                        <li key={index}>#{tag}</li>
                       ))}
                     </ul>
                   </article>
