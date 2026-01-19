@@ -227,21 +227,19 @@ export function getTaskCounts(
     const today = DateTime.now().setZone(timezone);
 
     // Convert to UTC for SQLite comparison
-    const todayStartUTC = today.startOf("day").toUTC().toISO();
     const todayEndUTC = today.endOf("day").toUTC().toISO();
-    const weekStartUTC = today.startOf("week").toUTC().toISO();
     const weekEndUTC = today.endOf("week").toUTC().toISO();
 
     return {
         today: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            ${whereClause} AND due_date >= ? AND due_date <= ?
-        `).get(...queryParams, todayStartUTC, todayEndUTC) as { count: number }).count,
+            ${whereClause} AND due_date <= ?
+        `).get(...queryParams, todayEndUTC) as { count: number }).count,
 
         week: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            ${whereClause} AND due_date >= ? AND due_date <= ?
-        `).get(...queryParams, weekStartUTC, weekEndUTC) as { count: number }).count,
+            ${whereClause} AND due_date <= ?
+        `).get(...queryParams, weekEndUTC) as { count: number }).count,
 
         scheduled: (db.prepare(`
             SELECT COUNT(*) as count FROM task 

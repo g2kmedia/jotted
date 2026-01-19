@@ -24,10 +24,7 @@ export default function Home() {
     url.searchParams.set("columns", "id,title,due_date,priority,is_completed");
     url.searchParams.set("is_completed", "0");
 
-    const startOfDay = now.startOf("day").toISO();
     const endOfDay = now.endOf("day").toISO();
-
-    // url.searchParams.set("due_date_start", startOfDay); --> not needed so that overdue tasks show
     url.searchParams.set("due_date_end", endOfDay);
 
     const finalUrl = url.pathname + url.search;

@@ -14,6 +14,8 @@ const TASK_PRIORITY_LABELS: Record<number, string> = {
   3: "Low"
 };
 
+const now = DateTime.now();
+
 export default function TasksOverview() {
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
   const [taskCounts, setTaskCounts] = useState({
@@ -50,20 +52,13 @@ export default function TasksOverview() {
       url.searchParams.set("is_trashed", "0");
     }
 
-    const now = DateTime.now();
     switch (quickFilter) {
       case "today":
-        const startOfDay = now.startOf("day").toISO();
         const endOfDay = now.endOf("day").toISO();
-
-        url.searchParams.set("due_date_start", startOfDay);
         url.searchParams.set("due_date_end", endOfDay);
         break;
       case "week":
-        const startOfWeek = now.startOf("week").toISO();
         const endOfWeek = now.endOf("week").toISO();
-
-        url.searchParams.set("due_date_start", startOfWeek);
         url.searchParams.set("due_date_end", endOfWeek);
         break;
       case "scheduled":
@@ -157,14 +152,11 @@ export default function TasksOverview() {
         url.searchParams.set("is_trashed", "0");
       }
 
-      const now = DateTime.now();
       switch (quickFilter) {
         case "today":
-          url.searchParams.set("due_date_start", now.startOf("day").toISO());
           url.searchParams.set("due_date_end", now.endOf("day").toISO());
           break;
         case "week":
-          url.searchParams.set("due_date_start", now.startOf("week").toISO());
           url.searchParams.set("due_date_end", now.endOf("week").toISO());
           break;
         case "scheduled":
@@ -342,13 +334,18 @@ export default function TasksOverview() {
                       <ul className="flex text-sm mb-2">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);
+                          const dueDateLuxon = DateTime.fromJSDate(dueDate);
+
+                          if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
+                              return <li className={`pr-2 ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>;
+                            }
 
                           return (
-                            <>
-                              <li className="pr-2">{dueDate.toLocaleDateString("en-CA")}</li>
-                              <li className="pr-5">{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
-                            </>
-                          );
+                              <>
+                                <li className={`pr-2 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>
+                                <li className={`pr-5 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
+                              </>
+                            );
                         }
                         )()}
                         {task.priority && (
