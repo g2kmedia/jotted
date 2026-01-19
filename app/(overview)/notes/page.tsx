@@ -25,7 +25,7 @@ export default function NotesOverview() {
 
     const url = new URL("/api/notes", window.location.origin);
 
-    url.searchParams.set("columns", "id,title,updated_at");
+    url.searchParams.set("columns", "id,title,updated_at,is_pinned");
 
     if (quickFilter === "pinned") {
       url.searchParams.set("is_pinned", "1");
@@ -184,7 +184,10 @@ export default function NotesOverview() {
               return (
                 <Link href={`/notes/${note.id}`} key={note.id}>
                   <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
-                    <h3 className="text-lg mb-1">{note.title}</h3>
+                    <div className="flex justify-between">
+                      <h3 className="text-lg mb-1">{note.title}</h3>
+                      {note.is_pinned === 1 ? <Pin size={18} /> : ""}
+                    </div>
                     <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {note.tags?.map((tag, index) => (
                         <li key={index}>#{tag}</li>

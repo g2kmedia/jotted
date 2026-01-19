@@ -4,8 +4,8 @@ export type Note = {
     content: string
     created_at: string
     updated_at: string
-    is_pinned: boolean
-    is_trashed: boolean
+    is_pinned: number
+    is_trashed: number
 }
 
 export type Task = {

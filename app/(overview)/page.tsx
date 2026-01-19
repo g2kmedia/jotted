@@ -1,7 +1,7 @@
 "use client"
 
 import { NoteWithTags, TaskWithTags } from "@/lib/types";
-import { Circle, Key } from "lucide-react";
+import { Circle, Pin } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -55,7 +55,7 @@ export default function Home() {
 
   const loadNotes = async (): Promise<void> => {
     const url = new URL("/api/notes", window.location.origin);
-    url.searchParams.set("columns", "id,title");
+    url.searchParams.set("columns", "id,title,is_pinned");
     url.searchParams.set("is_pinned", "1");
 
     const finalUrl = url.pathname + url.search;
@@ -195,7 +195,10 @@ export default function Home() {
                 return (
                   <Link href={`/notes/${note.id}`} key={note.id}>
                     <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
-                      <h3 className="text-lg mb-1">{note.title}</h3>
+                      <div className="flex justify-between">
+                        <h3 className="text-lg mb-1">{note.title}</h3>
+                        {note.is_pinned === 1 ? <Pin size={18} /> : ""}
+                      </div>
                       <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {note.tags?.map((tag, index) => (
                           <li key={index}>#{tag}</li>
