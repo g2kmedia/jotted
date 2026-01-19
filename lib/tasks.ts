@@ -90,18 +90,41 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         queryParams.push(idBefore);
     }
 
-    if (dueDateStart && dueDateEnd) {
-        // Convert to UTC for SQLite comparison
-        const startUTC = DateTime.fromISO(dueDateStart).toUTC().toISO();
-        const endUTC = DateTime.fromISO(dueDateEnd).toUTC().toISO();
+    if (dueDateStart || dueDateEnd) {
 
-        if (!startUTC || !endUTC) {
-            throw new Error("Invalid date format");
+        if (dueDateStart && dueDateEnd) {
+            const startUTC = DateTime.fromISO(dueDateStart).toUTC().toISO();
+            const endUTC = DateTime.fromISO(dueDateEnd).toUTC().toISO();
+
+            if (!startUTC || !endUTC) {
+                throw new Error("Invalid date format");
+            }
+
+            whereClauses.push('task.due_date >= ? AND task.due_date <= ?');
+            queryParams.push(startUTC, endUTC);
+
+        } else if (dueDateStart) {
+            const startUTC = DateTime.fromISO(dueDateStart).toUTC().toISO();
+
+            if (!startUTC) {
+                throw new Error("Invalid date format");
+            }
+
+            whereClauses.push('task.due_date >= ?');
+            queryParams.push(startUTC);
+
+        } else if (dueDateEnd) {
+            const endUTC = DateTime.fromISO(dueDateEnd).toUTC().toISO();
+
+            if (!endUTC) {
+                throw new Error("Invalid date format");
+            }
+
+            whereClauses.push('task.due_date <= ?');
+            queryParams.push(endUTC);
         }
-
-        whereClauses.push('task.due_date >= ? AND task.due_date <= ?');
-        queryParams.push(startUTC, endUTC);
     }
+
 
     if (tags.length > 0) {
         const placeholders = tags.map(() => '?').join(",");
@@ -123,7 +146,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         ? `WHERE ${whereClauses.join(' AND ')}`
         : '';
 
-    const orderBy = dueDateStart && dueDateEnd
+    const orderBy = dueDateStart || dueDateEnd
         ? "ORDER BY task.due_date ASC, task.priority ASC, task.updated_at DESC, task.id DESC"
         : "ORDER BY task.updated_at DESC, task.id DESC";
 
@@ -169,7 +192,7 @@ export function updateTask(id: string, updates: TaskUpdate): any {
 
     const stmt = db.prepare(`UPDATE task SET ${setClause} WHERE id = ?`);
     const info = stmt.run(...values, id);
-    
+
     return info.changes;
 }
 
@@ -181,7 +204,7 @@ export function deleteTask(id: string): number {
 }
 
 export function getTaskCounts(
-    params: { timezone: string,  isCompleted: string | undefined }
+    params: { timezone: string, isCompleted: string | undefined }
 ): {
     today: number;
     week: number;
