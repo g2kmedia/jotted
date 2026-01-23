@@ -6,8 +6,7 @@ export default function EditorLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <main className="grid grid-rows-[auto_1fr]">
-            <EditorPageNavbar />
+        <main>
             {children}
         </main>
     );

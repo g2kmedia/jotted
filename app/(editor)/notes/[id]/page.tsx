@@ -5,8 +5,11 @@ import debounce from "lodash.debounce";
 import { Editor } from "@/app/components/DynamicEditor";
 import type { Note } from "@/lib/types"
 import type { Block } from "@blocknote/core";
-import { Check } from "lucide-react";
+import { ArrowLeft, Check, Trash2, RotateCcw, Pin } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
+import { useScrollVisibility, useDeleteRecord } from "@/lib/hooks";
+import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 
 type EditorNote = Omit<Note, "content"> & {
   content: Block[]
@@ -18,7 +21,12 @@ export default function Note(
   const [route, setRoute] = useState<string | null>(null);
   const [note, setNote] = useState<Partial<EditorNote> | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
+  const [saveStatus, setSaveStatus] = useState<"saved" | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const inputTagsRef = useRef<HTMLInputElement>(null);
+
+  const isVisible = useScrollVisibility();
+  const { handleTrash, handleDelete } = useDeleteRecord();
 
   useEffect(() => {
     const getParams = async (): Promise<void> => {
@@ -33,7 +41,7 @@ export default function Note(
     if (!route) return;
 
     const loadNote = async (): Promise<void> => {
-      const res = await fetch(`/api/notes/${route}?columns=title,content&tags=true`, { method: "GET" });
+      const res = await fetch(`/api/notes/${route}?columns=title,content,is_pinned,is_trashed&tags=true`, { method: "GET" });
 
       if (!res.ok) {
         throw new Error(`Failed to fetch data: ${res.status}`);
@@ -51,6 +59,35 @@ export default function Note(
     loadNote();
   }, [route]);
 
+  const pinNote = async (): Promise<void> => {
+    const currentPinStatus = note?.is_pinned;
+    const newPinStatus = note?.is_pinned === 0 ? 1 : 0;
+
+    // Optimistically update
+    setNote(prev => prev ? { ...prev, is_pinned: newPinStatus } : prev);
+
+    try {
+      const res = await fetch(`/api/notes/${route}`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_pinned: newPinStatus })
+      });
+
+      if (!res.ok) {
+        // Rollback on error
+        setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
+        toast.error("Failed to pin");
+        return;
+      }
+    } catch (error) {
+      // Rollback on error
+      setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
+      toast.error("Failed to pin");
+      return;
+    }
+
+    toast.success(newPinStatus === 1 ? "Note pinned" : "Note unpinned");
+  }
+
   const debouncedSave = useCallback(
     debounce(async (newDocument: Partial<EditorNote>, currentRoute: string | null) => {
       if (!currentRoute) return;
@@ -63,25 +100,31 @@ export default function Note(
         });
 
         if (!res.ok) {
-          throw new Error(`Failed to update note: ${res.status}`)
+          toast.error("Failed to save note");
+          return;
         }
 
+        setSaveStatus("saved");
 
       } catch (error) {
         console.error("Failed to update note:", error);
-        toast.error("Failed to save note. Please try again.");
+        toast.error("Failed to save note");
       }
+
+
     }, 500), []
   );
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newTitle = e.target.value;
 
+    setSaveStatus(null);
     setNote(prev => prev ? { ...prev, title: newTitle } : undefined);
     debouncedSave({ title: newTitle }, route);
   }
 
   const handleContentChange = (newDocument: Block[]): void => {
+    setSaveStatus(null);
     debouncedSave({ content: newDocument }, route)
   }
 
@@ -139,27 +182,75 @@ export default function Note(
   if (!note) return null;
 
   return (
-    <article>
-      <div className="flex p-2">
-        <input
-          ref={inputTagsRef}
+    <>
+      <nav
+        className={`m-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground sticky top-0 z-50 bg-background transition-opacity duration-300
+          ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}
+        `}>
+        <span role="status" className="mb-2 text-sm text-muted-foreground italic">{saveStatus || "\u00A0"}</span>
+        <ul className="flex justify-between w-full">
+          <li>
+            <Link href={"/notes"}>
+              <ArrowLeft className="hover:cursor-pointer" />
+            </Link>
+          </li>
+          <li>
+            {note.is_trashed === 0 ? (
+              <Pin
+                onClick={() => pinNote()}
+                fill={note.is_pinned === 1 ? "currentColor" : ""}
+                className="hover:cursor-pointer"
+              />
+            ) : (
+              <RotateCcw
+                onClick={() => handleTrash("notes", route, note, setNote)}
+                className="text-accent hover:cursor-pointer"
+              />
+            )}
+          </li>
+          <li>
+            <Trash2
+              onClick={() => note.is_trashed === 0
+                ? handleTrash("notes", route, note, setNote)
+                : setShowDeleteDialog(true)
+              }
+              className="text-destructive hover:cursor-pointer"
+            />
+          </li>
+        </ul>
+      </nav >
+      <article>
+        <div className="flex p-2">
+          <input
+            ref={inputTagsRef}
+            type="text"
+            defaultValue={tags?.join(" ")}
+            placeholder="add tags..."
+            className="w-full text-right font-light text-muted-foreground outline-hidden peer"
+          />
+          <button onMouseDown={handleTagsChange} className="w-0 peer-focus:w-auto peer-focus:px-2 opacity-0 peer-focus:opacity-100 overflow-hidden transition-opacity cursor-pointer hover:text-accent">
+            <Check />
+          </button>
+        </div>
+        <h1 className="my-3"><input
           type="text"
-          defaultValue={tags?.join(" ")}
-          placeholder="add tags..."
-          className="w-full text-right font-light text-muted-foreground outline-hidden peer"
-        />
-        <button onMouseDown={handleTagsChange} className="w-0 peer-focus:w-auto peer-focus:px-2 opacity-0 peer-focus:opacity-100 overflow-hidden transition-opacity cursor-pointer hover:text-accent">
-          <Check />
-        </button>
-      </div>
-      <h1 className="my-3"><input
-        type="text"
-        value={note.title}
-        onChange={handleTitleChange}
-        className="w-full text-center text-3xl font-bold focus-visible:outline-none"
-      /></h1>
-      <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
-    </article >
+          value={note.title}
+          onChange={handleTitleChange}
+          className="w-full text-center text-3xl font-bold focus-visible:outline-none"
+        /></h1>
+        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
+      </article >
+
+      <ConfirmDeleteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={() => {
+          handleDelete("notes", route);
+          setShowDeleteDialog(false)
+        }}
+        recordType="note"
+      />
+    </>
   )
 }
 
