@@ -125,7 +125,7 @@ export default function Home() {
           <h1 className="text-xl">No tasks for today</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background mb-1 text-xl">
+            <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl">
               Today's tasks <span className="text-muted-foreground italic">({tasks.length})</span>
             </h1>
             <section>
@@ -177,14 +177,14 @@ export default function Home() {
         )}
       </section>
 
-      <div className="my-3 border-b-1 border-foreground"></div>
+      <div className="py-2 border-b-1 border-foreground"></div>
 
       <section className="overflow-y-auto min-h-0">
         {notes.length === 0 ? (
           <h1 className="pb-3 boborder-foreground text-xl">No pinned notes</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background mb-1 text-xl">
+            <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl">
               Pinned notes <span className="text-muted-foreground italic">({notes.length})</span>
             </h1>
             <section>
@@ -209,9 +209,9 @@ export default function Home() {
           </>
         )
         }
-      </section>
 
-      <div className="h-16"></div>
+        <div className="h-16"></div>
+      </section>
     </div>
   );
 }

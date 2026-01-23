@@ -184,11 +184,10 @@ export default function Note(
   return (
     <>
       <nav
-        className={`m-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground sticky top-0 z-50 bg-background transition-opacity duration-300
+        className={`mx-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground sticky top-0 z-50 bg-background transition-opacity duration-300
           ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}
         `}>
-        <span role="status" className="mb-2 text-sm text-muted-foreground italic">{saveStatus || "\u00A0"}</span>
-        <ul className="flex justify-between w-full">
+        <ul className="h-full flex justify-between items-center w-full">
           <li>
             <Link href={"/notes"}>
               <ArrowLeft className="hover:cursor-pointer" />
@@ -218,7 +217,14 @@ export default function Note(
             />
           </li>
         </ul>
-      </nav >
+      </nav>
+
+      <div className="my-1 py-1 flex items-center justify-center bg-background">
+        <span className="text-xs text-muted-foreground/70 italic">
+          {saveStatus || '\u00A0'}
+        </span>
+      </div>
+
       <article>
         <div className="flex p-2">
           <input
