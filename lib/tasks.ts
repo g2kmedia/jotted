@@ -187,19 +187,30 @@ type TaskUpdate = {
 
 export function updateTask(id: string, updates: TaskUpdate): any {
     const columns = Object.keys(updates);
+
+    if (!columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))) {
+        throw new Error("Invalid column name");
+    }
+
     const setClause = columns.map(column => `${column} = ?`).join(", ");
     const values = Object.values(updates);
 
-    const stmt = db.prepare(`UPDATE task SET ${setClause} WHERE id = ?`);
-    const info = stmt.run(...values, id);
+    const update = db.transaction(() => {
+        const stmt = db.prepare(`UPDATE task SET ${setClause} WHERE id = ?`);
+        return stmt.run(...values, id);
+    });
 
+    const info = update();
     return info.changes;
 }
 
 export function deleteTask(id: string): number {
-    const stmt = db.prepare('DELETE FROM task WHERE id = ?');
-    const result = stmt.run(id);
+    const remove = db.transaction(() => {
+        const stmt = db.prepare('DELETE FROM task WHERE id = ?');
+        return stmt.run(id);
+    });
 
+    const result = remove();
     return result.changes;
 }
 

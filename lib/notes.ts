@@ -1,10 +1,10 @@
 import { db } from "@/lib/database";
 import type { Note, NoteWithTags } from "./types";
 
-const ALLOWED_COLUMNS: (keyof Note)[] = ["id", "title", "content", "created_at", "updated_at", "is_pinned", "is_trashed"];
+const ALLOWED_COLUMNS: (keyof Note)[] = ["id", "title", "content", "content_plaintext", "created_at", "updated_at", "is_pinned", "is_trashed"];
 
 export function createNote(): number | bigint {
-    const stmt = db.prepare('INSERT INTO note (title, content) VALUES (?, ?)')
+    const stmt = db.prepare('INSERT INTO note (title, content) VALUES (?, ?)');
     const createdNoteId = stmt.run('New Untitled Note', '');
 
     return createdNoteId.lastInsertRowid;
@@ -120,6 +120,11 @@ export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
 
 export function updateNote(id: string, updates: Partial<Note>): number {
     const columns = Object.keys(updates);
+
+    if (!columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))) {
+        throw new Error("Invalid column name");
+    }
+
     const setClause = columns.map(column => `${column} = ?`).join(", ");
     const values = Object.values(updates).map((v, i) =>
         columns[i] === "content" ? JSON.stringify(v) : v
@@ -127,12 +132,13 @@ export function updateNote(id: string, updates: Partial<Note>): number {
 
     const stmt = db.prepare(`UPDATE note SET ${setClause} WHERE id = ?`);
     const info = stmt.run(...values, id);
+
     return info.changes;
 }
 
 export function deleteNote(id: string): number {
     const stmt = db.prepare('DELETE FROM note WHERE id = ?');
-    const result = stmt.run(id);
+    const info = stmt.run(id);
 
-    return result.changes;
+    return info.changes;
 }
