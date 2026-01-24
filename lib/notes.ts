@@ -121,8 +121,8 @@ export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
 export function updateNote(id: string, updates: Partial<Note>): number {
     const columns = Object.keys(updates);
     const setClause = columns.map(column => `${column} = ?`).join(", ");
-    const values = Object.values(updates).map(v =>
-        "content" in updates ? JSON.stringify(v) : v
+    const values = Object.values(updates).map((v, i) =>
+        columns[i] === "content" ? JSON.stringify(v) : v
     );
 
     const stmt = db.prepare(`UPDATE note SET ${setClause} WHERE id = ?`);

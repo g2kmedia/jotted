@@ -15,6 +15,35 @@ type EditorNote = Omit<Note, "content"> & {
   content: Block[]
 }
 
+const extractPlaintextFromBlocks =(blocks: Block[]): string => {
+  if (!blocks || blocks.length === 0) return "";
+
+  const extractFromBlock =(block: Block): string => {
+    let text = "";
+
+    // Extract inline content
+    if (Array.isArray(block.content)) {
+      text += block.content
+        .map((item: any) => item.text || "")
+        .join("");
+    }
+
+    // Extract content from children recursively
+    if (block.children.length > 0) {
+      text += " " + block.children
+        .map(child => extractFromBlock(child))
+        .join(" ");
+    }
+
+    return text;
+  }
+
+  return blocks
+    .map(block => extractFromBlock(block))
+    .filter(text => text.trim().length > 0)
+    .join(" ");
+}
+
 export default function Note(
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -125,7 +154,8 @@ export default function Note(
 
   const handleContentChange = (newDocument: Block[]): void => {
     setSaveStatus(null);
-    debouncedSave({ content: newDocument }, route)
+    const plainText = extractPlaintextFromBlocks(newDocument);
+    debouncedSave({ content: newDocument, content_plaintext: plainText }, route);
   }
 
   const handleTagsChange = async (): Promise<void> => {

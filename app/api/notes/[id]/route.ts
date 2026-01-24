@@ -44,6 +44,7 @@ export async function PATCH(
         }, { status: 200 });
 
     } catch (error) {
+        console.error('Error updating note:', error);
         return Response.json({
             error: "Could not update note"
         }, { status: 400 });

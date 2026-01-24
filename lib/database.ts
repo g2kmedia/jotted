@@ -11,7 +11,8 @@ const initDd = (): void => {
         CREATE TABLE IF NOT EXISTS note (
             id INTEGER PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
-            content TEXT,
+            content TEXT DEFAULT '',
+            content_plaintext TEXT DEFAULT '',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             is_pinned BOOLEAN DEFAULT 0,
@@ -157,14 +158,23 @@ const cleanupTrashedRecords = (daysOld = 30): {
     return transaction();
 }
 
-// Run cleanup on startup
-const startupCleanupResult = cleanupTrashedRecords(30);
-console.log("Startup cleanup:", startupCleanupResult);
+// Initialize cleanup once at start
+let cleanupInitialized = false;
 
-// Schedule daily cleanup at 3 AM
-cron.schedule("0 3 * * *", () => {
-    const result = cleanupTrashedRecords(30);
-    console.log(`[${new Date().toISOString()}] Cleanup:`, result);
-});
+export const initializeCleanup = (): void => {
+    if (cleanupInitialized) return;
+
+    // Run cleanup on startup
+    const startupCleanupResult = cleanupTrashedRecords(30);
+    console.log("Startup cleanup:", startupCleanupResult);
+
+    // Schedule daily cleanup at 3 AM
+    cron.schedule("0 3 * * *", () => {
+        const result = cleanupTrashedRecords(30);
+        console.log(`[${new Date().toISOString()}] Cleanup:`, result);
+    });
+
+    cleanupInitialized = true;
+}
 
 export { db };

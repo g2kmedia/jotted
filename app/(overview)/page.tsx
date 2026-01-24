@@ -119,13 +119,16 @@ export default function Home() {
   if (!tasks || !notes) return null;
 
   return (
-    <div className={`grid grid-rows-[${tasks.length === 0 ? "auto" : "1fr"}_auto_${notes.length === 0 ? "auto" : "1fr"}_auto] h-full`}>
+    <div
+      className={`grid h-full`}
+      style={{ gridTemplateRows: `${tasks.length === 0 ? "auto" : "1fr"} auto ${notes.length === 0 ? "auto" : "1fr"}` }}
+    >
       <section className="overflow-y-auto min-h-0">
         {tasks.length === 0 ? (
           <h1 className="text-xl">No tasks for today</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl">
+            <h1 className="sticky top-0 z-10 bg-background px-1.5 pb-1.5 text-xl">
               Today's tasks <span className="text-muted-foreground italic">({tasks.length})</span>
             </h1>
             <section>
@@ -181,7 +184,7 @@ export default function Home() {
 
       <section className="overflow-y-auto min-h-0">
         {notes.length === 0 ? (
-          <h1 className="pb-3 boborder-foreground text-xl">No pinned notes</h1>
+          <h1 className="pt-2 mb-4 boborder-foreground text-xl">No pinned notes</h1>
         ) : (
           <>
             <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl">

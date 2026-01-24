@@ -8,7 +8,7 @@ export default function OverviewLayout({
 }>) {
     return (
         <>
-            <header className="mx-2">
+            <header className="mx-2 mb-2">
                 <TopNavbar />
             </header>
             <main id="main-scrollable-target" className="flex-1 overflow-y-auto mx-2">

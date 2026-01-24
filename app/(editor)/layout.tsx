@@ -1,4 +1,8 @@
-import EditorPageNavbar from "../components/EditorPageNavbar";
+import { initializeCleanup } from "@/lib/database";
+
+if (typeof window === "undefined") {
+    initializeCleanup();
+}
 
 export default function EditorLayout({
     children,
