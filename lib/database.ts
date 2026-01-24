@@ -1,3 +1,4 @@
+import { createTask } from '@/lib/tasks';
 import Database from "better-sqlite3";
 import cron from "node-cron";
 
@@ -89,6 +90,71 @@ const initDd = (): void => {
         )
     `;
 
+    // FTS5 virtual tables
+    const createNoteFts = `
+        CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5(
+            title,
+            content_plaintext,
+            content='note',
+            content_rowid='id'
+        )
+    `;
+
+    const createNoteFtsInsertTrigger = `
+        CREATE TRIGGER IF NOT EXISTS note_fts_insert
+        AFTER INSERT ON note BEGIN
+            INSERT INTO note_fts(rowid, title, content_plaintext)
+            VALUES (new.id, new.title, new.content_plaintext);
+        END
+    `;
+
+    const createNoteFtsUpdateTrigger = `
+        CREATE TRIGGER IF NOT EXISTS note_fts_update
+        AFTER UPDATE ON note BEGIN
+            UPDATE note_fts SET title = new.title, content_plaintext = new.content_plaintext
+            WHERE rowid = new.id;
+        END
+    `;
+
+    const createNoteFtsDeleteTrigger = `
+        CREATE TRIGGER IF NOT EXISTS note_fts_delete
+        AFTER DELETE ON note BEGIN
+            DELETE FROM note_fts WHERE rowid = old.id;
+        END
+    `;
+
+    const createTaskFts = `
+        CREATE VIRTUAL TABLE IF NOT EXISTS task_fts USING fts5(
+            title,
+            content,
+            content='task'
+            content_rowid='id'
+        )
+    `;
+
+    const createTaskFtsInsertTrigger = `
+        CREATE TRIGGER IF NOT EXISTS task_fts_insert
+        AFTER INSERT ON task BEGIN
+            INSERT INTO task_fts(rowid, title, content)
+            VALUES (new.id, new.title, new.content);
+        END
+    `;
+
+    const createTaskFtsUpdateTrigger = `
+        CREATE TRIGGER IF NOT EXISTS task_fts_update
+        AFTER UPDATE ON task BEGIN
+            UPDATE task_fts SET title = new.title, content = new.content
+            WHERE rowid = new.id;
+        END
+    `;
+
+    const createTaskFtsDeleteTrigger = `
+        CREATE TRIGGER IF NOT EXISTS task_fts_delete
+        AFTER DELETE ON task BEGIN
+            DELETE FROM task_fts WHERE rowid = old.id;
+        END
+    `;
+
     const transaction = db.transaction(() => {
         db.exec(createNoteTable);
         db.exec(createNoteTrashedIndex);
@@ -105,6 +171,14 @@ const initDd = (): void => {
         db.exec(createTagTable);
         db.exec(createNoteTagTable);
         db.exec(createTaskTagTable);
+        db.exec(createNoteFts);
+        db.exec(createNoteFtsInsertTrigger);
+        db.exec(createNoteFtsUpdateTrigger);
+        db.exec(createNoteFtsDeleteTrigger);
+        db.exec(createTaskFts);
+        db.exec(createTaskFtsInsertTrigger);
+        db.exec(createTaskFtsUpdateTrigger);
+        db.exec(createTaskFtsDeleteTrigger);
     });
 
     transaction();
