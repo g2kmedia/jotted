@@ -101,7 +101,7 @@ export default function SearchResults() {
                     ))
                 )}
             </section>
-
+            <div className="h-16"></div>
         </>
     );
 }
