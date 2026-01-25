@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link";
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import Logo from "./Logo";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function TopNavbar() {
     const pathname = usePathname();
@@ -13,6 +14,11 @@ export default function TopNavbar() {
     const [searchTerm, setSearchTerm] = useState<string>("");
 
     const handleSearch = async (searchTerm: string) => {
+        if (searchTerm === "") {
+            toast.error("Please enter a search term");
+            return;
+        }
+
         try {
             const url = new URL("/api/search", window.location.origin);
 
@@ -42,10 +48,43 @@ export default function TopNavbar() {
 
     return (
         <nav className="h-16 px-2 flex justify-between items-center text-foreground border-b-1 border-foreground">
-            <Link href={"/"} className="hover:cursor-pointer">
-                <Logo />
-            </Link>
-            <Search className="hover:cursor-pointer" />
+            {!isSearchOpen &&
+                <Link href={"/"} className="hover:cursor-pointer">
+                    <Logo />
+                </Link>
+            }
+            {isSearchOpen ? (
+                <>
+                    <input
+                        type="search"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleSearch(searchTerm);
+                            }
+                        }}
+                        placeholder="Search..."
+                        className="w-[70%] px-1 border-b-1 border-foreground outline-hidden"
+                    />
+                    <Search
+                        className="hover:cursor-pointer"
+                        onClick={() => handleSearch(searchTerm)}
+                    />
+                    <X
+                        className="hover:cursor-pointer"
+                        onClick={() => {
+                            setIsSearchOpen(false);
+                            setSearchTerm("");
+                        }}
+                    />
+                </>
+            ) : (
+                <Search
+                    className="hover:cursor-pointer"
+                    onClick={() => setIsSearchOpen(true)}
+                />
+            )}
         </nav>
     );
 }
