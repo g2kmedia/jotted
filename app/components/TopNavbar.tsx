@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { Search, X } from 'lucide-react';
 import Logo from "./Logo";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function TopNavbar() {
-    const pathname = usePathname();
+    const router = useRouter();
 
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>("");
@@ -19,31 +19,11 @@ export default function TopNavbar() {
             return;
         }
 
-        try {
-            const url = new URL("/api/search", window.location.origin);
+        const url = new URL("/search", window.location.origin);
 
-            url.searchParams.set("term", searchTerm);
+        url.searchParams.set("term", searchTerm);
 
-            if (pathname.includes("/notes")) {
-                url.searchParams.set("type", "notes");
-            }
-
-            if (pathname.includes("/tasks")) {
-                url.searchParams.set("type", "tasks");
-            }
-
-            const res = await fetch(url, { method: "GET" });
-
-            if (!res.ok) {
-                throw new Error(`Search failed: ${res.status}`);
-            }
-
-            const searchResults = await res.json();
-            console.log(searchResults);
-
-        } catch (error) {
-            console.error("Search failed:", error);
-        }
+        router.push(url.pathname + url.search);
     }
 
     return (

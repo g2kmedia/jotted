@@ -43,10 +43,8 @@ export default function NotesOverview() {
       url.searchParams.set("tags", activeTags.join());
     }
 
-    const finalUrl = url.pathname + url.search;
-
     try {
-      const res = await fetch(finalUrl, { method: "GET" });
+      const res = await fetch(url, { method: "GET" });
 
       if (!res.ok) {
         throw new Error(`Failed to fetch notes: ${res.status}`);
@@ -183,9 +181,9 @@ export default function NotesOverview() {
             {notes.map((note) => {
               return (
                 <Link href={`/notes/${note.id}`} key={note.id}>
-                  <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
+                  <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
                     <div className="flex justify-between">
-                      <h3 className="text-lg mb-1">{note.title}</h3>
+                      <h3 className="text-lg mb-1 truncate">{note.title}</h3>
                       {note.is_pinned === 1 ? <Pin size={18} /> : ""}
                     </div>
                     <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

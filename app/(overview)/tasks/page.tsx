@@ -322,7 +322,7 @@ export default function TasksOverview() {
             {tasks.map((task) => {
               return (
                 <Link href={`/tasks/${task.id}`} key={task.id}>
-                  <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-4 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                  <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-2 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
                     <button
                       onClick={(e) => completeTask(e, task.id, task.is_completed)}
                       className="self-center"
@@ -330,7 +330,7 @@ export default function TasksOverview() {
                       <Circle className={`${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                     </button>
                     <div>
-                      <h3 className="text-lg mb-1">{task.title}</h3>
+                      <h3 className="text-lg mb-1 truncate">{task.title}</h3>
                       <ul className="flex text-sm mb-2">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);

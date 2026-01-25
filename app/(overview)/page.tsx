@@ -135,7 +135,7 @@ export default function Home() {
               {tasks.map((task) => {
                 return (
                   <Link href={`/tasks/${task.id}`} key={task.id}>
-                    <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-4 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                    <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-2 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
                       <button
                         onClick={(e) => completeTask(e, task.id, task.is_completed)}
                         className="self-center"
@@ -143,7 +143,7 @@ export default function Home() {
                         <Circle className={`${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                       </button>
                       <div>
-                        <h3 className="text-lg mb-1">{task.title}</h3>
+                        <h3 className="text-lg mb-1 truncate">{task.title}</h3>
                         <ul className="flex text-sm mb-2">
                           {task.due_date && (() => {
                             const dueDate = new Date(task.due_date);
@@ -194,9 +194,9 @@ export default function Home() {
               {notes.map((note) => {
                 return (
                   <Link href={`/notes/${note.id}`} key={note.id}>
-                    <article className="h-22 mb-2 p-4 border-1 border-foreground rounded-lg">
+                    <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
                       <div className="flex justify-between">
-                        <h3 className="text-lg mb-1">{note.title}</h3>
+                        <h3 className="text-lg mb-1 truncate">{note.title}</h3>
                         {note.is_pinned === 1 ? <Pin size={18} /> : ""}
                       </div>
                       <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
