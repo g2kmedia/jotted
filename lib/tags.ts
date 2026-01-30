@@ -2,19 +2,6 @@ import { db } from "@/lib/database";
 import { Tag } from "./types";
 import { DateTime } from "luxon";
 
-// NOT NEEDE BECAUSE OF CRON ?
-// const cleanupOrphanTags = () => {
-//     const stmt = db.prepare(`
-//         DELETE FROM tag
-//         WHERE id NOT IN (
-//             SELECT DISTINCT tag_id FROM task_tag
-//             UNION
-//             SELECT DISTINCT tag_id FROM note_tag
-//         )
-//     `);
-//     stmt.run();
-// }
-
 export function updateNoteTags(id: string, updates: string[], currentTags: string[]): { success: boolean } {
     // slice to remove "#" from the tags
     const toAdd = updates.flatMap(tag =>
@@ -45,8 +32,6 @@ export function updateNoteTags(id: string, updates: string[], currentTags: strin
                 )
             `);
                 toRemove.forEach(tag => removeStmt.run(id, tag));
-
-                // cleanupOrphanTags();
             }
         });
 
