@@ -7,18 +7,18 @@ import type { Note } from "@/lib/types"
 import type { Block } from "@blocknote/core";
 import { ArrowLeft, Check, Trash2, RotateCcw, Pin } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
 import { useScrollVisibility, useDeleteRecord } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
+import { useRouter } from "next/navigation";
 
 type EditorNote = Omit<Note, "content"> & {
   content: Block[]
 }
 
-const extractPlaintextFromBlocks =(blocks: Block[]): string => {
+const extractPlaintextFromBlocks = (blocks: Block[]): string => {
   if (!blocks || blocks.length === 0) return "";
 
-  const extractFromBlock =(block: Block): string => {
+  const extractFromBlock = (block: Block): string => {
     let text = "";
 
     // Extract inline content
@@ -56,6 +56,8 @@ export default function Note(
 
   const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
+
+  const router = useRouter();
 
   useEffect(() => {
     const getParams = async (): Promise<void> => {
@@ -140,7 +142,6 @@ export default function Note(
         toast.error("Failed to save note");
       }
 
-
     }, 500), []
   );
 
@@ -219,9 +220,17 @@ export default function Note(
         `}>
         <ul className="h-full flex justify-between items-center w-full">
           <li>
-            <Link href={"/notes"}>
-              <ArrowLeft className="hover:cursor-pointer" />
-            </Link>
+            <ArrowLeft
+              onClick={(e) => {
+                if (saveStatus !== "saved") {
+                  if (!confirm("You have unsaved changes. Do you stil want to leave?")) {
+                    return;
+                  }
+                }
+                router.push("/notes");
+              }}
+              className="hover:cursor-pointer"
+            />
           </li>
           <li>
             {note.is_trashed === 0 ? (
@@ -289,6 +298,3 @@ export default function Note(
     </>
   )
 }
-
-// Replace input tag for title with textarea ?
-// Add a debounce cancel so that no changes are lost due to a quick exit

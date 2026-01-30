@@ -9,8 +9,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
-export default function CreateBtn({ className} : { className?: string }) {
+export default function CreateBtn({ className }: { className?: string }) {
     const router = useRouter();
 
     const handleCreateNote = async (): Promise<void> => {
@@ -25,7 +26,8 @@ export default function CreateBtn({ className} : { className?: string }) {
 
             router.push(`/notes/${noteId}`);
         } catch (error) {
-            // handle error & Show toast aka alert message
+            console.error("Failed to create note:", error);
+            toast.error("Failed to create note");
         }
     }
 
@@ -41,7 +43,8 @@ export default function CreateBtn({ className} : { className?: string }) {
 
             router.push(`/tasks/${taskId}`);
         } catch (error) {
-            // handle error & show alert message
+            console.error("Failed to create task:", error);
+            toast.error("Failed to create task");
         }
     }
 
@@ -49,7 +52,7 @@ export default function CreateBtn({ className} : { className?: string }) {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button className={className}>
-                    <Plus className="scale-125"/> {/* scale to compensate empty space around & match other icons on navbar */}
+                    <Plus className="scale-125" /> {/* scale to compensate empty space around & match other icons on navbar */}
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="rounded-2xl">

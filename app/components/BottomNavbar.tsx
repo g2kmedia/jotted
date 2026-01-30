@@ -11,12 +11,6 @@ import { Settings } from 'lucide-react';
 export default function BottomNavbar() {
     const pathname = usePathname();
 
-    // const highlightNavbarItem = (path: string): string => {
-    //     return path === pathname
-    //         ? "border-t-[var(--accent)]"
-    //         : "border-t-transparent"
-    // }
-
     const highlightNavbarItem = (path: string): string => {
         return path === pathname
             ? "text-foreground bg-accent rounded-2xl"

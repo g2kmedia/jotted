@@ -50,7 +50,6 @@ export async function PATCH(
     }
 }
 
-// Do I still need the DELETE API
 export async function DELETE(
     request: Request,
     { params } : { params: Promise<{ id: string }> }

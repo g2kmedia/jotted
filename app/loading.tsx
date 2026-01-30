@@ -8,6 +8,3 @@ export default function Loading() {
         </div>
     );
 }
-
-// Improve skeleton by making it a bit more interesting for loading.
-// Make more lines that are different sizes for example and try to fill most of the page or have it centered
