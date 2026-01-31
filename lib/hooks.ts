@@ -2,6 +2,20 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+export function useTagsFilter() {
+    const [activeTags, setActiveTags] = useState<number[]>([]);
+
+    const handleTagsSelection = (tagId: number): void => {
+        setActiveTags(prev =>
+            prev.includes(tagId)
+                ? prev.filter(t => t !== tagId)
+                : [...prev, tagId]
+        );
+    }
+
+    return { activeTags, handleTagsSelection };
+}
+
 export function useTagsUpdate(
     { recordType, route, tags, setTags }: { recordType: string, route: string | null, tags: string[], setTags: (tags: string[]) => void }
 ) {

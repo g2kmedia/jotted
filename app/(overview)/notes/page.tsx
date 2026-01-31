@@ -1,18 +1,21 @@
 "use client"
 
+import TagsBar from "@/app/components/TagsBar";
+import { useTagsFilter } from "@/lib/hooks";
 import { NoteWithTags, Tag } from "@/lib/types";
 import { Pin, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
   const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
-  const [activeTags, setActiveTags] = useState<number[]>([]);
   const [notes, setNotes] = useState<Partial<NoteWithTags>[] | undefined>(undefined);
   const [lastNoteId, setLastNoteId] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(true);
+
+  const { activeTags, handleTagsSelection } = useTagsFilter();
 
   const loadNotes = async (resetStates = false): Promise<void> => {
     if (resetStates) {
@@ -105,32 +108,10 @@ export default function NotesOverview() {
     }
   }
 
-  const handleTagsSelection = (tag: number): void => {
-    setActiveTags(prev => {
-      if (prev.includes(tag)) {
-        return prev.filter(t => t !== tag);
-      } else {
-        return [...prev, tag];
-      }
-    });
-  }
-
   useEffect(() => {
     loadNotes(true); // Reset states/query params
     loadTags();
   }, [quickFilter, activeTags]);
-
-  const sortedTags = useMemo(() => {
-    return [...tags].sort((a, b) => {
-      const aIsActive = activeTags.includes(a.id);
-      const bIsActive = activeTags.includes(b.id);
-
-      if (aIsActive && !bIsActive) return -1;
-      if (!aIsActive && bIsActive) return 1;
-
-      return 0;
-    });
-  }, [tags, activeTags]);
 
   if (!notes) return null;
 
@@ -152,17 +133,7 @@ export default function NotesOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {sortedTags.map((tag) => (
-          <button
-            key={tag.id}
-            className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-full whitespace-nowrap cursor-pointer`}
-            onClick={() => handleTagsSelection(tag.id)}
-          >
-            #{tag.name}
-          </button>
-        ))}
-      </section>
+      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection}/>
       <section>
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">

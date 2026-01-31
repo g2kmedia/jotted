@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { Circle, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Tag, TaskWithTags } from "@/lib/types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
+import TagsBar from "@/app/components/TagsBar";
+import { useTagsFilter } from "@/lib/hooks";
 
 const TASK_PRIORITY_LABELS: Record<number, string> = {
   1: "High",
@@ -25,10 +27,11 @@ export default function TasksOverview() {
     later: 0
   });
   const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
-  const [activeTags, setActiveTags] = useState<number[]>([]);
   const [tasks, setTasks] = useState<Partial<TaskWithTags>[] | undefined>(undefined);
   const [lastTaskId, setLastTaskId] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(true);
+
+  const { activeTags, handleTagsSelection } = useTagsFilter();
 
   const loadTasks = async (resetStates = false): Promise<void> => {
     if (resetStates) {
@@ -181,16 +184,6 @@ export default function TasksOverview() {
     }
   }
 
-  const handleTagsSelection = (tag: number): void => {
-    setActiveTags(prev => {
-      if (prev.includes(tag)) {
-        return prev.filter(t => t !== tag);
-      } else {
-        return [...prev, tag];
-      }
-    });
-  }
-
   useEffect(() => {
     loadTaskCounts();
   }, []);
@@ -199,18 +192,6 @@ export default function TasksOverview() {
     loadTasks(true); // Reset states/query params
     loadTags();
   }, [quickFilter, activeTags]);
-
-  const sortedTags = useMemo(() => {
-    return [...tags].sort((a, b) => {
-      const aIsActive = activeTags.includes(a.id);
-      const bIsActive = activeTags.includes(b.id);
-
-      if (aIsActive && !bIsActive) return -1;
-      if (!aIsActive && bIsActive) return 1;
-
-      return 0;
-    });
-  }, [tags, activeTags]);
 
   const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: number | undefined, isCompleted: number | undefined): Promise<void> => {
     e.preventDefault();
@@ -293,17 +274,7 @@ export default function TasksOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {sortedTags.map((tag) => (
-          <button
-            key={tag.id}
-            className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-full whitespace-nowrap cursor-pointer`}
-            onClick={() => handleTagsSelection(tag.id)}
-          >
-            #{tag.name}
-          </button>
-        ))}
-      </section>
+      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection}/>
       <section>
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
