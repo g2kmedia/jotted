@@ -1,15 +1,16 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import debounce from "lodash.debounce";
 import { Editor } from "@/app/components/DynamicEditor";
 import type { Note } from "@/lib/types"
 import type { Block } from "@blocknote/core";
-import { ArrowLeft, Check, Trash2, RotateCcw, Pin } from "lucide-react";
+import { ArrowLeft, Trash2, RotateCcw, Pin } from "lucide-react";
 import { toast } from "sonner";
-import { useScrollVisibility, useDeleteRecord } from "@/lib/hooks";
+import { useScrollVisibility, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import { useRouter } from "next/navigation";
+import TagsInput from "@/app/components/TagsInput";
 
 type EditorNote = Omit<Note, "content"> & {
   content: Block[]
@@ -50,10 +51,10 @@ export default function Note(
   const [route, setRoute] = useState<string | null>(null);
   const [note, setNote] = useState<Partial<EditorNote> | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
-  const [saveStatus, setSaveStatus] = useState<"saved" | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"saved" | null>("saved");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const inputTagsRef = useRef<HTMLInputElement>(null);
 
+  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags  });
   const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
 
@@ -159,57 +160,6 @@ export default function Note(
     debouncedSave({ content: newDocument, content_plaintext: plainText }, route);
   }
 
-  const handleTagsChange = async (): Promise<void> => {
-    let inputArr;
-
-    if (!inputTagsRef.current?.value) {
-      inputArr = [""];
-    } else {
-      inputArr = inputTagsRef.current.value.trim().split(/\s+/);
-    }
-
-    const newTags: string[] = [];
-
-    for (const input of inputArr) {
-      if (
-        (
-          input.startsWith("#") &&
-          input.length > 1 &&
-          input.indexOf("#", 1) === -1 // Only a single "#" allowed
-        ) ||
-        input === ""
-      ) {
-        newTags.push(input);
-      } else {
-        toast.error("Invalid tags");
-        return;
-      }
-    }
-
-    try {
-      const res = await fetch(`/api/notes/tags/${route}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          updates: newTags,
-          currentTags: tags
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to update tags: ${res.status}`)
-
-      }
-
-      setTags(newTags)
-      toast.success("Tags updated");
-
-    } catch (error) {
-      console.error("Failed to update tags:", error);
-      toast.error("Failed to update tags. Please try again.");
-    }
-  }
-
   if (!note) return null;
 
   return (
@@ -265,18 +215,7 @@ export default function Note(
       </div>
 
       <article>
-        <div className="flex p-2">
-          <input
-            ref={inputTagsRef}
-            type="text"
-            defaultValue={tags?.join(" ")}
-            placeholder="add tags..."
-            className="w-full text-right font-light text-muted-foreground outline-hidden peer"
-          />
-          <button onMouseDown={handleTagsChange} className="w-0 peer-focus:w-auto peer-focus:px-2 opacity-0 peer-focus:opacity-100 overflow-hidden transition-opacity cursor-pointer hover:text-accent">
-            <Check />
-          </button>
-        </div>
+        <TagsInput tags={tags} onSubmit={handleTagsUpdate}/>
         <h1 className="my-3"><input
           type="text"
           value={note.title}
