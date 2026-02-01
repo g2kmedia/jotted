@@ -2,7 +2,12 @@ import { Tag } from "@/lib/types";
 import { useMemo } from "react";
 
 export default function TagsBar(
-    { tags, activeTags, onTagSelect }: { tags: Omit<Tag, "created_at">[], activeTags: number[], onTagSelect: (tagId: number) => void }
+    { tags, activeTags, onTagSelect, className }: {
+        tags: Omit<Tag,"created_at">[],
+        activeTags: number[],
+        onTagSelect: (tagId: number) => void,
+        className?: string
+    }
 ) {
     const sortedTags = useMemo(() => {
         return [...tags].sort((a, b) => {
@@ -16,7 +21,7 @@ export default function TagsBar(
     }, [tags, activeTags]);
 
     return (
-        <section className="flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <section className={`flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}>
             {sortedTags.map((tag) => (
                 <button
                     key={tag.id}

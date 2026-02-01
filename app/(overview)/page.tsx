@@ -125,13 +125,13 @@ export default function Home() {
     >
       <section className="overflow-y-auto min-h-0">
         {tasks.length === 0 ? (
-          <h1 className="text-xl">No tasks for today</h1>
+          <h1 className="text-xl slide-in-left">No tasks for today</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background px-1.5 pb-1.5 text-xl">
+            <h1 className="sticky top-0 z-10 bg-background px-1.5 pb-1.5 text-xl slide-in-left">
               Today's tasks <span className="text-muted-foreground italic">({tasks.length})</span>
             </h1>
-            <section>
+            <section className="slide-in-right">
               {tasks.map((task) => {
                 return (
                   <Link href={`/tasks/${task.id}`} key={task.id}>
@@ -184,13 +184,13 @@ export default function Home() {
 
       <section className="overflow-y-auto min-h-0">
         {notes.length === 0 ? (
-          <h1 className="pt-2 mb-4 boborder-foreground text-xl">No pinned notes</h1>
+          <h1 className="pt-2 mb-4 boborder-foreground text-xl slide-in-left">No pinned notes</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl">
+            <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl slide-in-left">
               Pinned notes <span className="text-muted-foreground italic">({notes.length})</span>
             </h1>
-            <section>
+            <section className="slide-in-right">
               {notes.map((note) => {
                 return (
                   <Link href={`/notes/${note.id}`} key={note.id}>

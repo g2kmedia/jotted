@@ -62,7 +62,7 @@ export default function SearchResults() {
 
     return (
         <>
-            <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
+            <section className="mb-6 grid grid-cols-2 gap-2 text-xl slide-in-right">
                 <button
                     className={`${quickFilter === "notes" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
                     onClick={() => setQuickFilter(prev => prev === "notes" ? null : "notes")}
@@ -78,9 +78,9 @@ export default function SearchResults() {
                     <span>{resultsCount.tasks}</span>
                 </button>
             </section>
-            <section>
+            <section className="slide-in-bottom">
                 {displayResults.length === 0 ? (
-                    <p>No results found</p>
+                    <p className="text-center">No results found</p>
                 ) : (
                     displayResults.map(item => (
                         <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>

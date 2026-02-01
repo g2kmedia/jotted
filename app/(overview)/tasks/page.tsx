@@ -230,7 +230,7 @@ export default function TasksOverview() {
 
   return (
     <>
-      <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
+      <section className="mb-6 grid grid-cols-2 gap-2 text-xl slide-in-right">
         <button
           className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "today" ? null : "today")}
@@ -274,8 +274,8 @@ export default function TasksOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection}/>
-      <section>
+      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className="slide-in-left" />
+      <section className="slide-in-bottom">
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0
