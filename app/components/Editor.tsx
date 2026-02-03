@@ -60,6 +60,7 @@ export default function Editor({
         <BlockNoteView
             editor={editor}
             theme={customTheme}
+            className="slide-in-bottom"
         />
     );
 }

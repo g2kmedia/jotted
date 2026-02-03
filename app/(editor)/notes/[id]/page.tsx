@@ -215,14 +215,14 @@ export default function Note(
       </div>
 
       <article>
-        <TagsInput tags={tags} onSubmit={handleTagsUpdate}/>
-        <h1 className="my-3"><input
+        <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right"/>
+        <h1 className="my-3 slide-in-left"><input
           type="text"
           value={note.title}
           onChange={handleTitleChange}
           className="w-full text-center text-3xl font-bold focus-visible:outline-none"
         /></h1>
-        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
+        <Editor initialContent={note.content as Block[]} onChange={handleContentChange}/>
       </article >
 
       <ConfirmDeleteDialog

@@ -154,8 +154,8 @@ export default function Task(
                 </ul>
             </nav>
             <section className="p-2">
-                <TagsInput tags={tags} onSubmit={handleTagsUpdate}/>
-                <form onSubmit={handleTaskChange} className="flex flex-col">
+                <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right" />
+                <form onSubmit={handleTaskChange} className="flex flex-col slide-in-bottom">
                     <label htmlFor="title"></label>
                     <input
                         id="title"

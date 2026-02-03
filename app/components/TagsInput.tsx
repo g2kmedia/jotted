@@ -2,7 +2,11 @@ import { Check } from "lucide-react";
 import { useRef } from "react";
 
 export default function TagsInput(
-    { tags, onSubmit }: { tags?: string[], onSubmit: (value: string) => void }
+    { tags, onSubmit, className }: {
+        tags?: string[],
+        onSubmit: (value: string) => void
+        className?: string
+    }
 ) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -13,7 +17,7 @@ export default function TagsInput(
     }
 
     return (
-        <div className="flex p-2">
+        <div className={`flex p-2 ${className}`}>
             <input
                 ref={inputRef}
                 type="text"
