@@ -11,6 +11,8 @@ import { useScrollVisibility, useDeleteRecord, useTagsUpdate } from "@/lib/hooks
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import { useRouter } from "next/navigation";
 import TagsInput from "@/app/components/TagsInput";
+import { queueChanges, saveNoteLocally } from "@/lib/indexeddb";
+import { syncPendingChanges } from "@/lib/sync";
 
 type EditorNote = Omit<Note, "content"> & {
   content: Block[]
@@ -51,10 +53,10 @@ export default function Note(
   const [route, setRoute] = useState<string | null>(null);
   const [note, setNote] = useState<Partial<EditorNote> | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
-  const [saveStatus, setSaveStatus] = useState<"saved" | null>("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved & synced" | "saved" | null>("saved");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags  });
+  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags });
   const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
 
@@ -91,6 +93,20 @@ export default function Note(
     loadNote();
   }, [route]);
 
+  useEffect(() => {
+    const handleOnline = async () => {
+      const synced = await syncPendingChanges();
+
+      if (synced && saveStatus === "saved") {
+        setSaveStatus("saved & synced");
+      }
+    }
+
+    window.addEventListener("online", handleOnline);
+
+    return () => window.removeEventListener("online", handleOnline);
+  }, []);
+
   const pinNote = async (): Promise<void> => {
     const currentPinStatus = note?.is_pinned;
     const newPinStatus = note?.is_pinned === 0 ? 1 : 0;
@@ -124,25 +140,58 @@ export default function Note(
     debounce(async (newDocument: Partial<EditorNote>, currentRoute: string | null) => {
       if (!currentRoute) return;
 
-      try {
-        const res = await fetch(`/api/notes/${currentRoute}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newDocument)
+      // Save locally
+      const noteUpdate = {
+        id: currentRoute,
+        ...note,
+        ...newDocument,
+        updated_at: new Date().toISOString()
+      };
+
+      await saveNoteLocally(noteUpdate);
+
+      // Sync to server if online, else queue the changes
+      if (navigator.onLine) {
+        try {
+          const res = await fetch(`/api/notes/${currentRoute}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newDocument)
+          });
+
+          if (res.ok) {
+            setSaveStatus("saved & synced");
+          } else {
+            await queueChanges({
+              recordId: `note-${currentRoute}`,
+              recordType: "note",
+              operation: "update",
+              data: { id: currentRoute, ...newDocument }
+            });
+
+            setSaveStatus("saved");
+          }
+
+        } catch (error) {
+          await queueChanges({
+            recordId: `note-${currentRoute}`,
+            recordType: "note",
+            operation: "update",
+            data: { id: currentRoute, ...newDocument }
+          });
+
+          setSaveStatus("saved");
+        }
+      } else {
+        await queueChanges({
+          recordId: `note-${currentRoute}`,
+          recordType: "note",
+          operation: "update",
+          data: { id: currentRoute, ...newDocument }
         });
 
-        if (!res.ok) {
-          toast.error("Failed to save note");
-          return;
-        }
-
         setSaveStatus("saved");
-
-      } catch (error) {
-        console.error("Failed to update note:", error);
-        toast.error("Failed to save note");
       }
-
     }, 500), []
   );
 
@@ -215,14 +264,14 @@ export default function Note(
       </div>
 
       <article>
-        <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right"/>
+        <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right" />
         <h1 className="my-3 slide-in-left"><input
           type="text"
           value={note.title}
           onChange={handleTitleChange}
           className="w-full text-center text-3xl font-bold focus-visible:outline-none"
         /></h1>
-        <Editor initialContent={note.content as Block[]} onChange={handleContentChange}/>
+        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
       </article >
 
       <ConfirmDeleteDialog
