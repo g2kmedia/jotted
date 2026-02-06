@@ -76,7 +76,6 @@ export default function NotesOverview() {
       });
 
       setLastNoteId(newNotes[newNotes.length - 1].id);
-      setIsInitialLoad(false);
 
     } catch (error) {
       console.error("Failed to load notes:", error);
@@ -115,6 +114,14 @@ export default function NotesOverview() {
     loadTags();
   }, [quickFilter, activeTags]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!notes) return null;
 
   return (
@@ -135,7 +142,7 @@ export default function NotesOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""}/>
+      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />
       <section className="slide-in-bottom">
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">

@@ -114,7 +114,6 @@ export default function TasksOverview() {
       });
 
       setLastTaskId(newTasks[newTasks.length - 1].id);
-      setIsInitialLoad(false);
 
     } catch (error) {
       console.error("Failed to load tasks:", error);
@@ -194,6 +193,14 @@ export default function TasksOverview() {
     loadTasks(true); // Reset states/query params
     loadTags();
   }, [quickFilter, activeTags]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: number | undefined, isCompleted: number | undefined): Promise<void> => {
     e.preventDefault();
@@ -276,8 +283,8 @@ export default function TasksOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className="slide-in-left" />
-      <section className={isInitialLoad ? "slide-in-bottom" : ""}>
+      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />
+      <section className="slide-in-bottom">
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0
@@ -310,15 +317,15 @@ export default function TasksOverview() {
                           const dueDateLuxon = DateTime.fromJSDate(dueDate);
 
                           if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
-                              return <li className={`pr-2 ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>;
-                            }
+                            return <li className={`pr-2 ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>;
+                          }
 
                           return (
-                              <>
-                                <li className={`pr-2 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>
-                                <li className={`pr-5 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
-                              </>
-                            );
+                            <>
+                              <li className={`pr-2 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>
+                              <li className={`pr-5 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
+                            </>
+                          );
                         }
                         )()}
                         {task.priority && (
