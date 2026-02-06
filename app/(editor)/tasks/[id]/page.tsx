@@ -3,11 +3,12 @@
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
 import { useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
-import type { Task } from "@/lib/types";
-import { ArrowLeft, Check, CircleCheck, RotateCcw, Trash2 } from "lucide-react";
+import type { Task, TaskUpdate } from "@/lib/types";
+import debounce from "lodash.debounce";
+import { ArrowLeft, CircleCheck, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function Task(
@@ -16,6 +17,7 @@ export default function Task(
     const [route, setRoute] = useState<string | null>(null);
     const [task, setTask] = useState<Partial<Task> | undefined>(undefined);
     const [tags, setTags] = useState<string[]>([]);
+    const [saveStatus, setSaveStatus] = useState<"saved & synced" | "saved" | null>("saved");
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", route, tags, setTags });
@@ -83,39 +85,47 @@ export default function Task(
         router.push("/tasks");
     }
 
-    const handleTaskChange = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const deboundeSave = useCallback(
+        debounce(async (updates: TaskUpdate, currentRoute: string | null) => {
+            if (!currentRoute) return;
+
+            // Save locally -> TODO
+
+            // Sync to server if online, else queue the changes
+            if (navigator.onLine) {
+                try {
+                    const res = await fetch(`/api/tasks/${currentRoute}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(updates)
+                    });
+
+                    if (res.ok) {
+                        setSaveStatus("saved & synced");
+                    }
+
+                } catch (error) {
+
+                }
+            }
+        }, 500), []
+    );
+
+    const handleTaskChange = (e: React.ChangeEvent<HTMLFormElement>): void => {
+        setSaveStatus(null);
 
         const formData = new FormData(e.currentTarget);
-        const date = formData.get("date");
-        const time = formData.get("time") || "00:00";
-        const priority = formData.get("priority");
+        const formObject = Object.fromEntries(formData);
 
-        const taskData = {
-            title: formData.get("title"),
-            content: formData.get("description"),
-            due_date: date ? new Date(`${date}T${time}`).toISOString() : null,
-            ...(priority !== null && { priority: priority === "" ? null : Number(priority) })
-        };
+        const { date, time, priority, ...rest } = formObject;
 
-        try {
-            const res = await fetch(`/api/tasks/${route}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(taskData)
-            });
-
-            if (!res.ok) {
-                throw new Error(`Failed to update task: ${res.status}`);
-            }
-
-            toast.success("Task saved");
-            router.push("/tasks");
-
-        } catch (error) {
-            console.error("Failed to update task:", error);
-            toast.error("Failed to save task. Please try again.");
+        const taskUpdate = {
+            ...rest,
+            due_date: date ? new Date(`${date}T${time || "00:00"}`).toISOString() : null,
+            priority: priority ? Number(priority) : null
         }
+
+        deboundeSave(taskUpdate, route);
     }
 
     if (!task) return null;
@@ -153,9 +163,16 @@ export default function Task(
                     </li>
                 </ul>
             </nav>
+
+            <div className="my-1 py-1 flex items-center justify-center bg-background">
+                <span className="text-xs text-muted-foreground/70 italic">
+                    {saveStatus || '\u00A0'}
+                </span>
+            </div>
+
             <section className="p-2">
                 <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right" />
-                <form onSubmit={handleTaskChange} className="flex flex-col slide-in-bottom">
+                <form onChange={handleTaskChange} className="flex flex-col slide-in-bottom">
                     <label htmlFor="title"></label>
                     <input
                         id="title"
@@ -166,10 +183,10 @@ export default function Task(
                         className="w-full my-2 p-2 border rounded-2xl outline-none"
                     />
 
-                    <label htmlFor="description"></label>
+                    <label htmlFor="content"></label>
                     <textarea
-                        id="description"
-                        name="description"
+                        id="content"
+                        name="content"
                         defaultValue={task.content}
                         placeholder="Description"
                         className="h-20 w-full my-2 p-2 border rounded-2xl resize-none outline-none"
@@ -208,10 +225,6 @@ export default function Task(
                         <option value="2">Medium</option>
                         <option value="3">Low</option>
                     </select>
-
-                    <button type="submit" className="w-full my-10 p-2 bg-accent border rounded-2xl cursor-pointer hover:text-background">
-                        <Check className="mx-auto" />
-                    </button>
                 </form>
             </section>
 

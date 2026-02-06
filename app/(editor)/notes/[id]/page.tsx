@@ -137,14 +137,14 @@ export default function Note(
   }
 
   const debouncedSave = useCallback(
-    debounce(async (newDocument: Partial<EditorNote>, currentRoute: string | null) => {
+    debounce(async (updates: Partial<EditorNote>, currentRoute: string | null) => {
       if (!currentRoute) return;
 
       // Save locally
       const noteUpdate = {
         id: currentRoute,
         ...note,
-        ...newDocument,
+        ...updates,
         updated_at: new Date().toISOString()
       };
 
@@ -156,17 +156,18 @@ export default function Note(
           const res = await fetch(`/api/notes/${currentRoute}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newDocument)
+            body: JSON.stringify(updates)
           });
 
           if (res.ok) {
             setSaveStatus("saved & synced");
+
           } else {
             await queueChanges({
               recordId: `note-${currentRoute}`,
               recordType: "note",
               operation: "update",
-              data: { id: currentRoute, ...newDocument }
+              data: { id: currentRoute, ...updates }
             });
 
             setSaveStatus("saved");
@@ -177,7 +178,7 @@ export default function Note(
             recordId: `note-${currentRoute}`,
             recordType: "note",
             operation: "update",
-            data: { id: currentRoute, ...newDocument }
+            data: { id: currentRoute, ...updates }
           });
 
           setSaveStatus("saved");
@@ -187,7 +188,7 @@ export default function Note(
           recordId: `note-${currentRoute}`,
           recordType: "note",
           operation: "update",
-          data: { id: currentRoute, ...newDocument }
+          data: { id: currentRoute, ...updates }
         });
 
         setSaveStatus("saved");
@@ -221,7 +222,7 @@ export default function Note(
           <li>
             <ArrowLeft
               onClick={(e) => {
-                if (saveStatus !== "saved") {
+                if (!saveStatus) {
                   if (!confirm("You have unsaved changes. Do you stil want to leave?")) {
                     return;
                   }

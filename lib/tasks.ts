@@ -1,5 +1,5 @@
 import { db } from "@/lib/database";
-import { Task, TaskWithTags } from "./types";
+import { Task, TaskUpdate, TaskWithTags } from "./types";
 import { DateTime } from "luxon";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
@@ -174,15 +174,6 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         ...row,
         tags: JSON.parse(row.tags) as string[]
     }));
-}
-
-type TaskUpdate = {
-    title: string
-    content?: string
-    due_date?: string
-    priority?: number
-    is_completed?: number
-    is_deleted?: number
 }
 
 export function updateTask(id: string, updates: TaskUpdate): any {
