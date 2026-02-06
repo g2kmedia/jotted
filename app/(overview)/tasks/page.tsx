@@ -30,6 +30,7 @@ export default function TasksOverview() {
   const [tasks, setTasks] = useState<Partial<TaskWithTags>[] | undefined>(undefined);
   const [lastTaskId, setLastTaskId] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const { activeTags, handleTagsSelection } = useTagsFilter();
 
@@ -113,6 +114,7 @@ export default function TasksOverview() {
       });
 
       setLastTaskId(newTasks[newTasks.length - 1].id);
+      setIsInitialLoad(false);
 
     } catch (error) {
       console.error("Failed to load tasks:", error);
@@ -230,7 +232,7 @@ export default function TasksOverview() {
 
   return (
     <>
-      <section className="mb-6 grid grid-cols-2 gap-2 text-xl slide-in-right">
+      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-right" : ""}`}>
         <button
           className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "today" ? null : "today")}
@@ -275,7 +277,7 @@ export default function TasksOverview() {
         </button>
       </section>
       <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className="slide-in-left" />
-      <section className="slide-in-bottom">
+      <section className={isInitialLoad ? "slide-in-bottom" : ""}>
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0

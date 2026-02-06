@@ -14,6 +14,7 @@ export default function NotesOverview() {
   const [notes, setNotes] = useState<Partial<NoteWithTags>[] | undefined>(undefined);
   const [lastNoteId, setLastNoteId] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const { activeTags, handleTagsSelection } = useTagsFilter();
 
@@ -75,6 +76,7 @@ export default function NotesOverview() {
       });
 
       setLastNoteId(newNotes[newNotes.length - 1].id);
+      setIsInitialLoad(false);
 
     } catch (error) {
       console.error("Failed to load notes:", error);
@@ -117,7 +119,7 @@ export default function NotesOverview() {
 
   return (
     <>
-      <section className="mb-6 grid grid-cols-2 gap-2 text-xl slide-in-right">
+      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-right" : ""}`}>
         <button
           className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(prev => prev === "pinned" ? null : "pinned")}
@@ -133,7 +135,7 @@ export default function NotesOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className="slide-in-left"/>
+      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""}/>
       <section className="slide-in-bottom">
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
