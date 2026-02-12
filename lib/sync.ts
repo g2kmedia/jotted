@@ -10,7 +10,7 @@ export const syncPendingChanges = async (): Promise<boolean> => {
     for (const change of changes) {
         try {
             if (change.operation === "update") {
-                const res = await fetch(`/api/notes/${change.data.id}`, {
+                const res = await fetch(`/api/${change.recordType}/${change.data.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(change.data)

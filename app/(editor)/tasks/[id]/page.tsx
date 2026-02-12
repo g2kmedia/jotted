@@ -3,9 +3,10 @@
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
 import { useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
+import { queueChanges } from "@/lib/indexeddb";
 import type { Task, TaskUpdate } from "@/lib/types";
 import debounce from "lodash.debounce";
-import { ArrowLeft, CircleCheck, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, CircleCheck, CloudCheck, RotateCcw, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -17,7 +18,7 @@ export default function Task(
     const [route, setRoute] = useState<string | null>(null);
     const [task, setTask] = useState<Partial<Task> | undefined>(undefined);
     const [tags, setTags] = useState<string[]>([]);
-    const [saveStatus, setSaveStatus] = useState<"saved & synced" | "saved" | null>("saved");
+    const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", route, tags, setTags });
@@ -89,7 +90,13 @@ export default function Task(
         debounce(async (updates: TaskUpdate, currentRoute: string | null) => {
             if (!currentRoute) return;
 
-            // Save locally -> TODO
+            // Save locally
+            const taskUpdate = {
+                id: currentRoute,
+                ...task,
+                ...updates,
+                updated_at: new Date().toISOString()
+            };
 
             // Sync to server if online, else queue the changes
             if (navigator.onLine) {
@@ -101,13 +108,23 @@ export default function Task(
                     });
 
                     if (res.ok) {
-                        setSaveStatus("saved & synced");
+                        setSaveStatus("synced");
+                        return;
                     }
 
                 } catch (error) {
-
+                    console.error("Sync failed:", error);
                 }
             }
+
+            await queueChanges({
+                recordId: `task-${currentRoute}`,
+                recordType: "tasks",
+                operation: "update",
+                data: { id: currentRoute, ...updates }
+            });
+
+            setSaveStatus("saved");
         }, 500), []
     );
 
@@ -164,10 +181,10 @@ export default function Task(
                 </ul>
             </nav>
 
-            <div className="my-1 py-1 flex items-center justify-center bg-background">
-                <span className="text-xs text-muted-foreground/70 italic">
-                    {saveStatus || '\u00A0'}
-                </span>
+            <div className="h-6 my-1 py-1 flex items-center justify-center bg-background text-muted-foreground/50">
+                {saveStatus === "synced" && <CloudCheck />}
+                {saveStatus === "saved" && <Save />}
+                {!saveStatus && <span>{'\u00A0'}</span>}
             </div>
 
             <section className="p-2">

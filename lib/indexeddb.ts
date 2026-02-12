@@ -1,9 +1,11 @@
+import { Note, Task } from "./types";
+
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
 
 interface PendingChanges {
     recordId: string;
-    recordType: "note";
+    recordType: "notes" | "tasks";
     operation: "create" | "update" | "delete";
     data: any;
     timestamp: number;
@@ -25,6 +27,11 @@ export const openDB = (): Promise<IDBDatabase> => {
                 db.createObjectStore("notes", { keyPath: "id" });
             }
 
+            // Store tasks locally
+            if (!db.objectStoreNames.contains("tasks")) {
+                db.createObjectStore("tasks", { keyPath: "id" });
+            }
+
             // Store pending sync operations
             if (!db.objectStoreNames.contains("pendingChanges")) {
                 const pendingStore = db.createObjectStore("pendingChanges", { keyPath: "recordId" });
@@ -39,6 +46,13 @@ export const saveNoteLocally = async (note: any): Promise<void> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readwrite");
     tx.objectStore("notes").put(note);
+}
+
+// Save task locally
+export const saveTaskLocally = async (task: any): Promise<void> => {
+    const db = await openDB();
+    const tx = db.transaction("tasks", "readwrite");
+    tx.objectStore("tasks").put(task);
 }
 
 // Queue changes for sync

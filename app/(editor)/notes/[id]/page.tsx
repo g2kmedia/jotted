@@ -5,14 +5,13 @@ import debounce from "lodash.debounce";
 import { Editor } from "@/app/components/DynamicEditor";
 import type { Note } from "@/lib/types"
 import type { Block } from "@blocknote/core";
-import { ArrowLeft, Trash2, RotateCcw, Pin } from "lucide-react";
+import { ArrowLeft, Trash2, RotateCcw, Pin, Save, CloudCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useScrollVisibility, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import { useRouter } from "next/navigation";
 import TagsInput from "@/app/components/TagsInput";
 import { queueChanges, saveNoteLocally } from "@/lib/indexeddb";
-import { syncPendingChanges } from "@/lib/sync";
 
 type EditorNote = Omit<Note, "content"> & {
   content: Block[]
@@ -53,7 +52,7 @@ export default function Note(
   const [route, setRoute] = useState<string | null>(null);
   const [note, setNote] = useState<Partial<EditorNote> | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
-  const [saveStatus, setSaveStatus] = useState<"saved & synced" | "saved" | null>("saved");
+  const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags });
@@ -92,20 +91,6 @@ export default function Note(
 
     loadNote();
   }, [route]);
-
-  useEffect(() => {
-    const handleOnline = async () => {
-      const synced = await syncPendingChanges();
-
-      if (synced && saveStatus === "saved") {
-        setSaveStatus("saved & synced");
-      }
-    }
-
-    window.addEventListener("online", handleOnline);
-
-    return () => window.removeEventListener("online", handleOnline);
-  }, []);
 
   const pinNote = async (): Promise<void> => {
     const currentPinStatus = note?.is_pinned;
@@ -160,39 +145,23 @@ export default function Note(
           });
 
           if (res.ok) {
-            setSaveStatus("saved & synced");
-
-          } else {
-            await queueChanges({
-              recordId: `note-${currentRoute}`,
-              recordType: "note",
-              operation: "update",
-              data: { id: currentRoute, ...updates }
-            });
-
-            setSaveStatus("saved");
+            setSaveStatus("synced");
+            return;
           }
 
         } catch (error) {
-          await queueChanges({
-            recordId: `note-${currentRoute}`,
-            recordType: "note",
-            operation: "update",
-            data: { id: currentRoute, ...updates }
-          });
-
-          setSaveStatus("saved");
+          console.error("Sync failed", error);
         }
-      } else {
-        await queueChanges({
-          recordId: `note-${currentRoute}`,
-          recordType: "note",
-          operation: "update",
-          data: { id: currentRoute, ...updates }
-        });
-
-        setSaveStatus("saved");
       }
+
+      await queueChanges({
+        recordId: `note-${currentRoute}`,
+        recordType: "notes",
+        operation: "update",
+        data: { id: currentRoute, ...updates }
+      });
+
+      setSaveStatus("saved");
     }, 500), []
   );
 
@@ -258,10 +227,10 @@ export default function Note(
         </ul>
       </nav>
 
-      <div className="my-1 py-1 flex items-center justify-center bg-background">
-        <span className="text-xs text-muted-foreground/70 italic">
-          {saveStatus || '\u00A0'}
-        </span>
+      <div className="h-6 my-1 py-1 flex items-center justify-center bg-background text-muted-foreground/50">
+        {saveStatus === "synced" && <CloudCheck />}
+        {saveStatus === "saved" && <Save />}
+        {!saveStatus && <span>{'\u00A0'}</span>}
       </div>
 
       <article>
