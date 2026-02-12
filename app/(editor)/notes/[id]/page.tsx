@@ -9,9 +9,10 @@ import { ArrowLeft, Trash2, RotateCcw, Pin, Save, CloudCheck } from "lucide-reac
 import { toast } from "sonner";
 import { useScrollVisibility, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
-import { useRouter } from "next/navigation";
 import TagsInput from "@/app/components/TagsInput";
 import { queueChanges, saveNoteLocally } from "@/lib/indexeddb";
+import Link from "next/link";
+import { syncPendingChanges } from "@/lib/sync";
 
 type EditorNote = Omit<Note, "content"> & {
   content: Block[]
@@ -59,8 +60,6 @@ export default function Note(
   const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
 
-  const router = useRouter();
-
   useEffect(() => {
     const getParams = async (): Promise<void> => {
       const { id } = await params;
@@ -91,6 +90,18 @@ export default function Note(
 
     loadNote();
   }, [route]);
+
+  useEffect(() => {
+    const handleSyncCompleted = () => {
+      if (saveStatus === "saved") {
+        setSaveStatus("synced");
+      }
+    };
+
+    window.addEventListener('sync-completed', handleSyncCompleted);
+
+    return () => window.removeEventListener('sync-completed', handleSyncCompleted);
+  }, [saveStatus]);
 
   const pinNote = async (): Promise<void> => {
     const currentPinStatus = note?.is_pinned;
@@ -126,33 +137,12 @@ export default function Note(
       if (!currentRoute) return;
 
       // Save locally
-      const noteUpdate = {
+      await saveNoteLocally({
         id: currentRoute,
         ...note,
         ...updates,
         updated_at: new Date().toISOString()
-      };
-
-      await saveNoteLocally(noteUpdate);
-
-      // Sync to server if online, else queue the changes
-      if (navigator.onLine) {
-        try {
-          const res = await fetch(`/api/notes/${currentRoute}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updates)
-          });
-
-          if (res.ok) {
-            setSaveStatus("synced");
-            return;
-          }
-
-        } catch (error) {
-          console.error("Sync failed", error);
-        }
-      }
+      });
 
       await queueChanges({
         recordId: `note-${currentRoute}`,
@@ -162,6 +152,14 @@ export default function Note(
       });
 
       setSaveStatus("saved");
+
+      if (navigator.onLine) {
+        syncPendingChanges()
+          .then(success => {
+            if (success) setSaveStatus("synced");
+          });
+      }
+
     }, 500), []
   );
 
@@ -189,17 +187,9 @@ export default function Note(
         `}>
         <ul className="h-full flex justify-between items-center w-full">
           <li>
-            <ArrowLeft
-              onClick={(e) => {
-                if (!saveStatus) {
-                  if (!confirm("You have unsaved changes. Do you stil want to leave?")) {
-                    return;
-                  }
-                }
-                router.push("/notes");
-              }}
-              className="hover:cursor-pointer"
-            />
+            <Link href={"/notes"}>
+              <ArrowLeft className="hover:cursor-pointer" />
+            </Link>
           </li>
           <li>
             {note.is_trashed === 0 ? (

@@ -3,7 +3,8 @@
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
 import { useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
-import { queueChanges } from "@/lib/indexeddb";
+import { queueChanges, saveTaskLocally } from "@/lib/indexeddb";
+import { syncPendingChanges } from "@/lib/sync";
 import type { Task, TaskUpdate } from "@/lib/types";
 import debounce from "lodash.debounce";
 import { ArrowLeft, CircleCheck, CloudCheck, RotateCcw, Save, Trash2 } from "lucide-react";
@@ -56,6 +57,18 @@ export default function Task(
         loadTask();
     }, [route]);
 
+    useEffect(() => {
+        const handleSyncCompleted = () => {
+            if (saveStatus === "saved") {
+                setSaveStatus("synced");
+            }
+        };
+
+        window.addEventListener('sync-completed', handleSyncCompleted);
+
+        return () => window.removeEventListener('sync-completed', handleSyncCompleted);
+    }, [saveStatus]);
+
     const completeTask = async (): Promise<void> => {
         const currentCompletionStatus = task?.is_completed;
         const newCompletionStatus = task?.is_completed === 0 ? 1 : 0;
@@ -91,31 +104,12 @@ export default function Task(
             if (!currentRoute) return;
 
             // Save locally
-            const taskUpdate = {
+            await saveTaskLocally({
                 id: currentRoute,
                 ...task,
                 ...updates,
                 updated_at: new Date().toISOString()
-            };
-
-            // Sync to server if online, else queue the changes
-            if (navigator.onLine) {
-                try {
-                    const res = await fetch(`/api/tasks/${currentRoute}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(updates)
-                    });
-
-                    if (res.ok) {
-                        setSaveStatus("synced");
-                        return;
-                    }
-
-                } catch (error) {
-                    console.error("Sync failed:", error);
-                }
-            }
+            });
 
             await queueChanges({
                 recordId: `task-${currentRoute}`,
@@ -125,6 +119,14 @@ export default function Task(
             });
 
             setSaveStatus("saved");
+
+            if (navigator.onLine) {
+                syncPendingChanges()
+                    .then(success => {
+                        if (success) setSaveStatus("synced");
+                    });
+            }
+
         }, 500), []
     );
 

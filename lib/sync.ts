@@ -31,5 +31,9 @@ export const syncPendingChanges = async (): Promise<boolean> => {
         }
     }
 
+    if (allSucceeded) {
+        window.dispatchEvent(new CustomEvent("sync-completed"));
+    }
+
     return allSucceeded;
 }
