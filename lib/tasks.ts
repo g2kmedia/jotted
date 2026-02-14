@@ -1,14 +1,26 @@
 import { db } from "@/lib/database";
-import { Task, TaskUpdate, TaskWithTags } from "./types";
+import { Task, TaskWithTags } from "./types";
 import { DateTime } from "luxon";
 
 const ALLOWED_COLUMNS = ["id", "title", "content", "created_at", "updated_at", "due_date", "priority", "is_completed", "is_trashed"] as const;
 
-export function createTask(): number | bigint {
-    const stmt = db.prepare('INSERT INTO task (title, content) VALUES (?, ?)');
-    const createdTaskId = stmt.run('New Untitled Task', '');
+export function createTask(taskData: Task): void {
+    const stmt = db.prepare(`
+        INSERT INTO task (id, title, content, created_at, updated_at, due_date, priority, is_completed, is_trashed)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
-    return createdTaskId.lastInsertRowid;
+    stmt.run(
+        taskData.id,
+        taskData.title,
+        taskData.content,
+        taskData.created_at,
+        taskData.updated_at,
+        taskData.due_date,
+        taskData.priority,
+        taskData.is_completed,
+        taskData.is_trashed
+    );
 }
 
 export function getTask(id: string, columns?: string[]): Partial<Task> {
@@ -176,7 +188,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
     }));
 }
 
-export function updateTask(id: string, updates: TaskUpdate): any {
+export function updateTask(id: string, updates: Partial<Task>): any {
     const columns = Object.keys(updates);
 
     if (!columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))) {

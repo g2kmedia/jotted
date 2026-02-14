@@ -1,5 +1,5 @@
 export type Note = {
-    id: string | number
+    id: string
     title: string
     content: string
     content_plaintext: string
@@ -10,13 +10,13 @@ export type Note = {
 }
 
 export type Task = {
-    id: number
+    id: string
     title: string
     content: string
-    created_at: Date
-    updated_at: Date
-    due_date: string
-    priority: number
+    created_at: string
+    updated_at: string
+    due_date?: string
+    priority?: number
     is_completed: number
     is_trashed: number
 }
@@ -33,13 +33,4 @@ export type NoteWithTags = Partial<Note> & {
 
 export type TaskWithTags = Partial<Task> & {
     tags?: string[]
-}
-
-export type TaskUpdate = {
-    title?: string
-    content?: string
-    due_date?: string | null
-    priority?: number | null
-    is_completed?: number
-    is_deleted?: number
 }

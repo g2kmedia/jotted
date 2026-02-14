@@ -1,5 +1,3 @@
-import { Note, Task } from "./types";
-
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
 
@@ -41,18 +39,42 @@ export const openDB = (): Promise<IDBDatabase> => {
     });
 }
 
-// Save note locally
+// Save locally
 export const saveNoteLocally = async (note: any): Promise<void> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readwrite");
     tx.objectStore("notes").put(note);
 }
 
-// Save task locally
 export const saveTaskLocally = async (task: any): Promise<void> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readwrite");
     tx.objectStore("tasks").put(task);
+}
+
+// Delete locally
+export const deleteNoteLocally = async (noteId: string): Promise<void> => {
+    const db = await openDB();
+    const tx = db.transaction("notes", "readwrite");
+
+    const request = tx.objectStore("notes").delete(noteId);
+
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+}
+
+export const deleteTaskLocally = async (taskId: string): Promise<void> => {
+    const db = await openDB();
+    const tx = db.transaction("tasks", "readwrite");
+
+    const request = tx.objectStore("tasks").delete(taskId);
+
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
 }
 
 // Queue changes for sync

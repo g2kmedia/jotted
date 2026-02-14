@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useScrollVisibility, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
-import { queueChanges, saveNoteLocally } from "@/lib/indexeddb";
+import { deleteNoteLocally, queueChanges, saveNoteLocally } from "@/lib/indexeddb";
 import Link from "next/link";
 import { syncPendingChanges } from "@/lib/sync";
 
@@ -136,19 +136,24 @@ export default function Note(
     debounce(async (updates: Partial<EditorNote>, currentRoute: string | null) => {
       if (!currentRoute) return;
 
+      const updatedAt = new Date().toISOString();
+
       // Save locally
       await saveNoteLocally({
         id: currentRoute,
-        ...note,
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: updatedAt
       });
 
       await queueChanges({
         recordId: `note-${currentRoute}`,
         recordType: "notes",
         operation: "update",
-        data: { id: currentRoute, ...updates }
+        data: {
+          id: currentRoute,
+          ...updates,
+          updated_at: updatedAt
+        }
       });
 
       setSaveStatus("saved");
@@ -177,6 +182,26 @@ export default function Note(
     debouncedSave({ content: newDocument, content_plaintext: plainText }, route);
   }
 
+  const deleteEmptyNote = async (): Promise<void> => {
+    if (!route) return;
+
+    try {
+      await deleteNoteLocally(route);
+
+      await queueChanges({
+        recordId: `note-${route}`,
+        recordType: "notes",
+        operation: "delete",
+        data: { id: route }
+      });
+
+      if (navigator.onLine) syncPendingChanges();
+
+    } catch (error) {
+      console.error("Failed to delete empty note:", error);
+    }
+  }
+
   if (!note) return null;
 
   return (
@@ -187,7 +212,14 @@ export default function Note(
         `}>
         <ul className="h-full flex justify-between items-center w-full">
           <li>
-            <Link href={"/notes"}>
+            <Link
+              href={"/notes"}
+              onClick={() => {
+                if (!note.title?.trim() && !note.content_plaintext?.trim()) {
+                  deleteEmptyNote();
+                }
+              }}
+            >
               <ArrowLeft className="hover:cursor-pointer" />
             </Link>
           </li>
@@ -200,7 +232,7 @@ export default function Note(
               />
             ) : (
               <RotateCcw
-                onClick={() => handleTrash("notes", route, note, setNote)}
+                onClick={() => handleTrash("notes", route, note.is_trashed!)}
                 className="text-accent hover:cursor-pointer"
               />
             )}
@@ -208,7 +240,7 @@ export default function Note(
           <li>
             <Trash2
               onClick={() => note.is_trashed === 0
-                ? handleTrash("notes", route, note, setNote)
+                ? handleTrash("notes", route, note.is_trashed)
                 : setShowDeleteDialog(true)
               }
               className="text-destructive hover:cursor-pointer"
@@ -229,6 +261,7 @@ export default function Note(
           type="text"
           value={note.title}
           onChange={handleTitleChange}
+          placeholder="Enter a title"
           className="w-full text-center text-3xl font-bold focus-visible:outline-none"
         /></h1>
         <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />

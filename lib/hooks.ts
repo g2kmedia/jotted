@@ -1,6 +1,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
+import { syncPendingChanges } from "./sync";
 
 export function useTagsFilter() {
     const [activeTags, setActiveTags] = useState<number[]>([]);
@@ -86,34 +88,30 @@ export function useScrollVisibility(threshold = 10): boolean {
 export const useDeleteRecord = () => {
     const router = useRouter();
 
-    const handleTrash = async <T extends { is_trashed?: number }>(
-        recordType: string,
+    const handleTrash = async (
+        recordType: "notes" | "tasks",
         id: string | null,
-        record: T,
-        setRecord: React.Dispatch<React.SetStateAction<T | undefined>>
+        trashStatus: number,
     ): Promise<void> => {
-        const currentTrashStatus = record.is_trashed ?? 0;
-        const newTrashStatus = record.is_trashed === 0 ? 1 : 0;
+        const newTrashStatus = trashStatus === 0 ? 1 : 0;
 
-        // Optimistically update
-        setRecord(prev => prev ? { ...prev, is_trashed: newTrashStatus } : prev);
+        const update = {
+            id: id,
+            is_trashed: newTrashStatus,
+        };
 
-        try {
-            const res = await fetch(`/api/${recordType}/${id}`, {
-                method: "PATCH",
-                body: JSON.stringify({ is_trashed: newTrashStatus })
-            });
+        if (recordType === "notes") saveNoteLocally(update);
+        if (recordType === "tasks") saveTaskLocally(update);
 
-            if (!res.ok) {
-                // Rollback on error
-                setRecord(prev => prev ? { ...prev, is_trashed: currentTrashStatus } : prev);
-                return;
-            }
-        } catch (error) {
-            // Rollback on error
-            setRecord(prev => prev ? { ...prev, is_trashed: currentTrashStatus } : prev);
-            toast.error("Failed to move to trash");
-            return;
+        await queueChanges({
+            recordId: `${recordType}-${id}`,
+            recordType: recordType,
+            operation: "update",
+            data: update
+        });
+
+        if (navigator.onLine) {
+            syncPendingChanges();
         }
 
         toast.success(newTrashStatus === 1 ? "Trashed" : "Restored");
@@ -121,7 +119,7 @@ export const useDeleteRecord = () => {
     }
 
     const handleDelete = async (
-        recordType: string,
+        recordType: "notes" | "tasks",
         id: string | null,
     ): Promise<void> => {
         try {

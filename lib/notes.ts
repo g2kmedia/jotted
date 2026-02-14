@@ -3,11 +3,22 @@ import type { Note, NoteWithTags } from "./types";
 
 const ALLOWED_COLUMNS: (keyof Note)[] = ["id", "title", "content", "content_plaintext", "created_at", "updated_at", "is_pinned", "is_trashed"];
 
-export function createNote(): number | bigint {
-    const stmt = db.prepare('INSERT INTO note (title, content) VALUES (?, ?)');
-    const createdNoteId = stmt.run('New Untitled Note', '');
+export function createNote(noteData: Note): void {
+    const stmt = db.prepare(`
+        INSERT INTO note (id, title, content, content_plaintext, created_at, updated_at, is_pinned, is_trashed)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
-    return createdNoteId.lastInsertRowid;
+    stmt.run(
+        noteData.id,
+        noteData.title,
+        noteData.content,
+        noteData.content_plaintext,
+        noteData.created_at,
+        noteData.updated_at,
+        noteData.is_pinned,
+        noteData.is_trashed
+    );
 }
 
 export function getNote(id: string, columns?: string[]): Partial<Note> {

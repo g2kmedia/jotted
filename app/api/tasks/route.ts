@@ -1,11 +1,17 @@
 import { createTask, getAllTasks } from "@/lib/tasks";
 import { NextRequest } from "next/server";
 
-export async function POST() {
+export async function POST(
+    request: NextRequest
+) {
     try {
-        const taskId = createTask();
-        return Response.json({ taskId });
+        const taskData = await request.json();
+
+        createTask(taskData);
+
+        return Response.json({});
     } catch (error) {
+        console.error("Failed to create task:", error);
         return Response.json({
             error: "Failed to create task"
         }, { status: 500 });

@@ -1,16 +1,20 @@
 import { createNote, getAllNotes } from "@/lib/notes";
 import { NextRequest } from "next/server";
 
-export async function POST() {
+export async function POST(
+    request: NextRequest
+) {
     try {
-        const noteId = createNote();
-        return Response.json({ noteId });
+        const noteData = await request.json()
+
+        createNote(noteData);
+
+        return Response.json({});
     } catch (error) {
+        console.error("Failed to create note", error)
         return Response.json({
             error: "Failed to create note"
-        }, {
-            status: 500
-        });
+        }, { status: 500 });
     }
 }
 

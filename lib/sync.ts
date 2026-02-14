@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { getPendingChanges, markSynced } from "./indexeddb"
 
 export const syncPendingChanges = async (): Promise<boolean> => {
@@ -9,24 +10,51 @@ export const syncPendingChanges = async (): Promise<boolean> => {
 
     for (const change of changes) {
         try {
-            if (change.operation === "update") {
-                const res = await fetch(`/api/${change.recordType}/${change.data.id}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(change.data)
-                })
+            switch (change.operation) {
+                case "create":
+                    const createRes = await fetch(`/api/${change.recordType}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(change.data)
+                    });
 
-                if (res.ok) {
-                    await markSynced(change.recordId);
-                } else {
-                    allSucceeded = false;
-                }
+                    if (createRes.ok) {
+                        await markSynced(change.recordId);
+                    } else {
+                        allSucceeded = false;
+                    }
+                    break;
+
+                case "update":
+                    const updateRes = await fetch(`/api/${change.recordType}/${change.data.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(change.data)
+                    })
+
+                    if (updateRes.ok) {
+                        await markSynced(change.recordId);
+                    } else {
+                        allSucceeded = false;
+                    }
+                    break;
+
+                case "delete":
+                    const deleteRes = await fetch(`/api/${change.recordType}/${change.data.id}`, {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" }
+                    });
+
+                    if (deleteRes.ok) {
+                        await markSynced(change.recordId);
+                    } else {
+                        allSucceeded = false;
+                    }
+                    break;
             }
-
-            // TODO: Add "create" and "delete" operations later
-
         } catch (error) {
             console.error("Failed to sync DBs", error);
+            toast.error("Failed to sync");
             allSucceeded = false;
         }
     }

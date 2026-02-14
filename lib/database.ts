@@ -9,12 +9,12 @@ const initDd = (): void => {
     // Note
     const createNoteTable = `
         CREATE TABLE IF NOT EXISTS note (
-            id INTEGER PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            content TEXT DEFAULT '',
-            content_plaintext TEXT DEFAULT '',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            id TEXT PRIMARY KEY,
+            title VARCHAR(255),
+            content TEXT,
+            content_plaintext TEXT,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
             is_pinned BOOLEAN DEFAULT 0,
             is_trashed BOOLEAN DEFAULT 0
         )
@@ -24,24 +24,14 @@ const initDd = (): void => {
     const createNotePinnedIndex = 'CREATE INDEX IF NOT EXISTS idx_note_pinned ON note(is_pinned)';
     const createNoteUpdatedIndex = 'CREATE INDEX IF NOT EXISTS idx_note_updated_at ON note(updated_at)';
 
-    const createNoteUpdateTrigger = `
-        CREATE TRIGGER IF NOT EXISTS update_note_timestamp
-        AFTER UPDATE ON note
-        WHEN OLD.updated_at = NEW.updated_at
-        BEGIN
-            UPDATE note SET updated_at = CURRENT_TIMESTAMP
-            WHERE id = NEW.id;
-        END
-    `;
-
     // Task
     const createTaskTable = `
         CREATE TABLE IF NOT EXISTS task (
-            id INTEGER PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
+            id TEXT PRIMARY KEY,
+            title VARCHAR(255),
             content TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
             due_date DATETIME,
             priority INTEGER CHECK((priority >= 0 AND priority <= 3) OR priority IS NULL),
             is_completed BOOLEAN DEFAULT 0,
@@ -55,19 +45,10 @@ const initDd = (): void => {
     const createTaskPriorityIndex = 'CREATE INDEX IF NOT EXISTS idx_task_priority ON task(priority)';
     const createTaskActiveIndex = 'CREATE INDEX IF NOT EXISTS idx_task_active ON task(is_trashed, is_completed)';
 
-    const createTaskUpdateTrigger = `
-        CREATE TRIGGER IF NOT EXISTS update_task_timestamp
-        AFTER UPDATE ON task
-        BEGIN
-            UPDATE task SET updated_at = CURRENT_TIMESTAMP
-            WHERE id = NEW.id;
-        END
-    `;
-
     // Tag
     const createTagTable = `
         CREATE TABLE IF NOT EXISTS tag (
-            id INTEGER PRIMARY KEY,
+            id TEXT PRIMARY KEY,
             name VARCHAR(50) UNIQUE NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -76,16 +57,16 @@ const initDd = (): void => {
     // Junction tables
     const createNoteTagTable = `
         CREATE TABLE IF NOT EXISTS note_tag (
-            note_id INTEGER REFERENCES note(id) ON DELETE CASCADE,
-            tag_id INTEGER REFERENCES tag(id) ON DELETE CASCADE,
+            note_id TEXT REFERENCES note(id) ON DELETE CASCADE,
+            tag_id TEXT REFERENCES tag(id) ON DELETE CASCADE,
             PRIMARY KEY (note_id, tag_id)
         )
     `;
 
     const createTaskTagTable = `
         CREATE TABLE IF NOT EXISTS task_tag (
-            task_id INTEGER REFERENCES task(id) ON DELETE CASCADE,
-            tag_id INTEGER REFERENCES tag(id) ON DELETE CASCADE,
+            task_id TEXT REFERENCES task(id) ON DELETE CASCADE,
+            tag_id TEXT REFERENCES tag(id) ON DELETE CASCADE,
             PRIMARY KEY (task_id, tag_id)
         )
     `;
@@ -103,7 +84,7 @@ const initDd = (): void => {
         AFTER INSERT ON note
         BEGIN
             INSERT INTO note_fts(rowid, title, content_plaintext)
-            VALUES (NEW.id, NEW.title, NEW.content_plaintext);
+            VALUES (NEW.rowid, NEW.title, NEW.content_plaintext);
         END
     `;
 
@@ -112,7 +93,7 @@ const initDd = (): void => {
         AFTER UPDATE OF title, content_plaintext ON note
         BEGIN
             UPDATE note_fts SET title = NEW.title, content_plaintext = NEW.content_plaintext
-            WHERE rowid = NEW.id;
+            WHERE rowid = NEW.rowid;
         END
     `;
 
@@ -120,7 +101,7 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS note_fts_delete
         AFTER DELETE ON note
         BEGIN
-            DELETE FROM note_fts WHERE rowid = OLD.id;
+            DELETE FROM note_fts WHERE rowid = OLD.rowid;
         END
     `;
 
@@ -136,7 +117,7 @@ const initDd = (): void => {
         AFTER INSERT ON task
         BEGIN
             INSERT INTO task_fts(rowid, title, content)
-            VALUES (NEW.id, NEW.title, NEW.content);
+            VALUES (NEW.rowid, NEW.title, NEW.content);
         END
     `;
 
@@ -145,7 +126,7 @@ const initDd = (): void => {
         AFTER UPDATE OF title, content ON task
         BEGIN
             UPDATE task_fts SET title = NEW.title, content = NEW.content
-            WHERE rowid = NEW.id;
+            WHERE rowid = NEW.rowid;
         END
     `;
 
@@ -153,7 +134,7 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS task_fts_delete
         AFTER DELETE ON task
         BEGIN
-            DELETE FROM task_fts WHERE rowid = OLD.id;
+            DELETE FROM task_fts WHERE rowid = OLD.rowid;
         END
     `;
 
@@ -163,14 +144,12 @@ const initDd = (): void => {
         db.exec(createNoteTrashedIndex);
         db.exec(createNotePinnedIndex);
         db.exec(createNoteUpdatedIndex);
-        db.exec(createNoteUpdateTrigger);
         db.exec(createTaskTable);
         db.exec(createTaskTrashedIndex);
         db.exec(createTaskCompletedIndex);
         db.exec(createTaskDueDateIndex);
         db.exec(createTaskPriorityIndex);
         db.exec(createTaskActiveIndex);
-        db.exec(createTaskUpdateTrigger);
         db.exec(createTagTable);
         db.exec(createNoteTagTable);
         db.exec(createTaskTagTable);
