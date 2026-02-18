@@ -21,7 +21,6 @@
     "better-sqlite3": "^12.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.525.0",
     "luxon": "^3.7.2",
     "nanoid": "^5.1.6",
@@ -36,7 +35,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "19.2.4",
     "@types/react-dom": "19.2.3",

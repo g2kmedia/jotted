@@ -1,5 +1,49 @@
 import { toast } from "sonner";
-import { getPendingChanges, markSynced } from "./indexeddb"
+import { getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
+import { EditorNote, Task } from "./types";
+
+export const offlineSaveAndSync = async <T extends EditorNote | Task>(
+    id: string,
+    recordType: "notes" | "tasks",
+    dbOperation: "create" | "update" | "delete",
+    updates: Partial<T>,
+    setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
+): Promise<void> => {
+    const updatedAt = new Date().toISOString();
+
+    try {
+        const dataToSaveLocally = {
+            id: id,
+            ...updates,
+            updated_at: updatedAt
+        };
+
+        const savedData = recordType === "notes"
+            ? await saveNoteLocally(dataToSaveLocally)
+            : await saveTaskLocally(dataToSaveLocally);
+
+        await queueChanges({
+            recordId: `${recordType}-${id}`,
+            recordType: recordType,
+            operation: dbOperation,
+            data: savedData
+        });
+
+        setSaveStatus("saved");
+
+        if (navigator.onLine) {
+            syncPendingChanges()
+                .then(success => {
+                    if (success) setSaveStatus("synced");
+                })
+                .catch(error => console.error("Sync failed:", error));
+        }
+    } catch (error) {
+        console.error("Failed to save offline and sync:", error);
+        setSaveStatus(null);
+        throw error;
+    }
+}
 
 export const syncPendingChanges = async (): Promise<boolean> => {
     const changes = await getPendingChanges();

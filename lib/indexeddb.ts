@@ -43,14 +43,47 @@ export const openDB = (): Promise<IDBDatabase> => {
 export const saveNoteLocally = async (note: any): Promise<void> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readwrite");
-    tx.objectStore("notes").put(note);
-}
+    const store = tx.objectStore("notes");
+
+    const existingData = await new Promise((resolve, reject) => {
+        const req = store.get(note.id);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+
+    const mergedData = { ...(existingData || {}), ...note };
+
+    await new Promise<void>((resolve, reject) => {
+        const req = store.put(mergedData);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+
+    return mergedData;
+};
 
 export const saveTaskLocally = async (task: any): Promise<void> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readwrite");
-    tx.objectStore("tasks").put(task);
-}
+    const store = tx.objectStore("tasks");
+
+    const existingData = await new Promise((resolve, reject) => {
+        const req = store.get(task.id);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+
+    const mergedData = { ...(existingData || {}), ...task };
+
+    await new Promise<void>((resolve, reject) => {
+        const req = store.put(mergedData);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+
+    return mergedData;
+};
+
 
 // Delete locally
 export const deleteNoteLocally = async (noteId: string): Promise<void> => {

@@ -1,3 +1,5 @@
+import { Block } from "@blocknote/core"
+
 export type Note = {
     id: string
     title: string
@@ -25,6 +27,10 @@ export type Tag = {
     id: number
     name: string
     created_at: string
+}
+
+export type EditorNote = Omit<Note, "content"> & {
+  content: Block[]
 }
 
 export type NoteWithTags = Partial<Note> & {

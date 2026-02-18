@@ -1,8 +1,40 @@
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
 import { syncPendingChanges } from "./sync";
+
+export function useDebouncedCallback<T>(
+    callback: (data: T) => Promise<void>,
+    delay: number
+) {
+    const timeoutRef = useRef<NodeJS.Timeout>(null);
+    const callbackRef = useRef<typeof callback>(callback);
+
+    useEffect(() => {
+        callbackRef.current = callback;
+    }, [callback]);
+
+    const debounced = useCallback((data: T) => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+            callbackRef.current(data);
+        }, delay);
+    }, [delay]);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    return debounced;
+}
 
 export function useTagsFilter() {
     const [activeTags, setActiveTags] = useState<number[]>([]);

@@ -1,22 +1,18 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react";
-import debounce from "lodash.debounce";
+import { useEffect, useRef, useState } from "react";
 import { Editor } from "@/app/components/DynamicEditor";
-import type { Note } from "@/lib/types"
-import type { Block } from "@blocknote/core";
+import type { EditorNote, Note } from "@/lib/types"
 import { ArrowLeft, Trash2, RotateCcw, Pin, Save, CloudCheck } from "lucide-react";
 import { toast } from "sonner";
-import { useScrollVisibility, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
+import { useScrollVisibility, useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
 import { deleteNoteLocally, queueChanges, saveNoteLocally } from "@/lib/indexeddb";
 import Link from "next/link";
-import { syncPendingChanges } from "@/lib/sync";
+import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
+import { Block } from "@blocknote/core";
 
-type EditorNote = Omit<Note, "content"> & {
-  content: Block[]
-}
 
 const extractPlaintextFromBlocks = (blocks: Block[]): string => {
   if (!blocks || blocks.length === 0) return "";
@@ -55,6 +51,8 @@ export default function Note(
   const [tags, setTags] = useState<string[]>([]);
   const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const pendingUpdatesRef = useRef<Partial<EditorNote>>({});
 
   const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags });
   const isVisible = useScrollVisibility();
@@ -104,54 +102,29 @@ export default function Note(
   }, [saveStatus]);
 
   const pinNote = async (): Promise<void> => {
+    if (!route) return;
+
     const currentPinStatus = note?.is_pinned;
     const newPinStatus = note?.is_pinned === 0 ? 1 : 0;
+    const updatedAt = new Date().toISOString();
 
-    // Optimistically update
+    // Optimistic update
     setNote(prev => prev ? { ...prev, is_pinned: newPinStatus } : prev);
 
     try {
-      const res = await fetch(`/api/notes/${route}`, {
-        method: "PATCH",
-        body: JSON.stringify({ is_pinned: newPinStatus })
-      });
-
-      if (!res.ok) {
-        // Rollback on error
-        setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
-        toast.error("Failed to pin");
-        return;
-      }
-    } catch (error) {
-      // Rollback on error
-      setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
-      toast.error("Failed to pin");
-      return;
-    }
-
-    toast.success(newPinStatus === 1 ? "Note pinned" : "Note unpinned");
-  }
-
-  const debouncedSave = useCallback(
-    debounce(async (updates: Partial<EditorNote>, currentRoute: string | null) => {
-      if (!currentRoute) return;
-
-      const updatedAt = new Date().toISOString();
-
-      // Save locally
       await saveNoteLocally({
-        id: currentRoute,
-        ...updates,
+        id: route,
+        is_pinned: newPinStatus,
         updated_at: updatedAt
       });
 
       await queueChanges({
-        recordId: `note-${currentRoute}`,
+        recordId: `notes-${route}`,
         recordType: "notes",
         operation: "update",
         data: {
-          id: currentRoute,
-          ...updates,
+          id: route,
+          is_pinned: newPinStatus,
           updated_at: updatedAt
         }
       });
@@ -164,8 +137,33 @@ export default function Note(
             if (success) setSaveStatus("synced");
           });
       }
+    } catch (error) {
+      // Rollback on error
+      setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
 
-    }, 500), []
+      console.error("Failed to pin note:", error);
+      toast.error("Failed to pin note");
+    }
+  }
+
+  const debouncedSave = useDebouncedCallback<Partial<EditorNote>>(
+    async (updates) => {
+      if (!route) return;
+
+      try {
+        await offlineSaveAndSync(
+          route,
+          "notes",
+          "update",
+          updates,
+          setSaveStatus
+        );
+
+        pendingUpdatesRef.current = {};
+      } catch (error) {
+        toast.error("Failed to save note", { id: "save-note-error" });
+      }
+    }, 500
   );
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -173,13 +171,23 @@ export default function Note(
 
     setSaveStatus(null);
     setNote(prev => prev ? { ...prev, title: newTitle } : undefined);
-    debouncedSave({ title: newTitle }, route);
+
+    const updates = { ...pendingUpdatesRef.current, title: newTitle };
+    pendingUpdatesRef.current = updates;
+    debouncedSave(updates);
   }
 
   const handleContentChange = (newDocument: Block[]): void => {
     setSaveStatus(null);
     const plainText = extractPlaintextFromBlocks(newDocument);
-    debouncedSave({ content: newDocument, content_plaintext: plainText }, route);
+
+    const updates = {
+      ...pendingUpdatesRef.current,
+      content: newDocument,
+      content_plaintext: plainText
+    };
+    pendingUpdatesRef.current = updates;
+    debouncedSave(updates);
   }
 
   const deleteEmptyNote = async (): Promise<void> => {
@@ -189,7 +197,7 @@ export default function Note(
       await deleteNoteLocally(route);
 
       await queueChanges({
-        recordId: `note-${route}`,
+        recordId: `notes-${route}`,
         recordType: "notes",
         operation: "delete",
         data: { id: route }

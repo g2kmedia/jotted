@@ -69,6 +69,7 @@ export default function Task(
         return () => window.removeEventListener('sync-completed', handleSyncCompleted);
     }, [saveStatus]);
 
+    // CHANGE TO OFFLINE FIRST
     const completeTask = async (): Promise<void> => {
         const currentCompletionStatus = task?.is_completed;
         const newCompletionStatus = task?.is_completed === 0 ? 1 : 0;
@@ -110,32 +111,37 @@ export default function Task(
 
             const updatedAt = new Date().toISOString();
 
-            // Save locally
-            await saveTaskLocally({
-                id: currentRoute,
-                ...task,
-                ...updates,
-                updated_at: updatedAt
-            });
-
-            await queueChanges({
-                recordId: `task-${currentRoute}`,
-                recordType: "tasks",
-                operation: "update",
-                data: {
+            try {
+                await saveTaskLocally({
                     id: currentRoute,
+                    ...task,
                     ...updates,
                     updated_at: updatedAt
+                });
+
+                await queueChanges({
+                    recordId: `task-${currentRoute}`,
+                    recordType: "tasks",
+                    operation: "update",
+                    data: {
+                        id: currentRoute,
+                        ...updates,
+                        updated_at: updatedAt
+                    }
+                });
+
+                setSaveStatus("saved");
+
+                if (navigator.onLine) {
+                    syncPendingChanges()
+                        .then(success => {
+                            if (success) setSaveStatus("synced");
+                        });
                 }
-            });
-
-            setSaveStatus("saved");
-
-            if (navigator.onLine) {
-                syncPendingChanges()
-                    .then(success => {
-                        if (success) setSaveStatus("synced");
-                    });
+            } catch (error) {
+                console.error("Failed to save task:", error);
+                setSaveStatus(null);
+                toast.error("Failed to save task", { id: "save-task-error" });
             }
 
         }, 500), []
