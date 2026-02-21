@@ -1,3 +1,5 @@
+import { Note, Task } from "./types";
+
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
 
@@ -10,6 +12,10 @@ interface PendingChanges {
     synced: boolean;
 }
 
+type localNote = Note & {
+    tags: string[];
+}
+
 export const openDB = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -20,17 +26,14 @@ export const openDB = (): Promise<IDBDatabase> => {
         request.onupgradeneeded = (e) => {
             const db = (e.target as IDBOpenDBRequest).result;
 
-            // Store notes locally
             if (!db.objectStoreNames.contains("notes")) {
                 db.createObjectStore("notes", { keyPath: "id" });
             }
 
-            // Store tasks locally
             if (!db.objectStoreNames.contains("tasks")) {
                 db.createObjectStore("tasks", { keyPath: "id" });
             }
 
-            // Store pending sync operations
             if (!db.objectStoreNames.contains("pendingChanges")) {
                 const pendingStore = db.createObjectStore("pendingChanges", { keyPath: "recordId" });
                 pendingStore.createIndex("synced", "synced", { unique: false });
@@ -40,7 +43,7 @@ export const openDB = (): Promise<IDBDatabase> => {
 }
 
 // Save locally
-export const saveNoteLocally = async (note: any): Promise<void> => {
+export const saveNoteLocally = async (note: any): Promise<localNote> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readwrite");
     const store = tx.objectStore("notes");
@@ -62,7 +65,7 @@ export const saveNoteLocally = async (note: any): Promise<void> => {
     return mergedData;
 };
 
-export const saveTaskLocally = async (task: any): Promise<void> => {
+export const saveTaskLocally = async (task: any): Promise<Task> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readwrite");
     const store = tx.objectStore("tasks");
@@ -83,6 +86,27 @@ export const saveTaskLocally = async (task: any): Promise<void> => {
 
     return mergedData;
 };
+
+// Get locally
+export const getNoteLocally = async (noteId?: string): Promise<Note | Note[]> => {
+    const db = await openDB();
+    const tx = db.transaction("notes", "readonly");
+    const store = tx.objectStore("notes");
+
+    if (noteId) {
+        return new Promise((resolve, reject) => {
+            const request = store.get(noteId);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    return new Promise((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
 
 
 // Delete locally

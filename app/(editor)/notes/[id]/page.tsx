@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useScrollVisibility, useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
-import { deleteNoteLocally, queueChanges, saveNoteLocally } from "@/lib/indexeddb";
+import { deleteNoteLocally, queueChanges } from "@/lib/indexeddb";
 import Link from "next/link";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { Block } from "@blocknote/core";
@@ -106,37 +106,18 @@ export default function Note(
 
     const currentPinStatus = note?.is_pinned;
     const newPinStatus = note?.is_pinned === 0 ? 1 : 0;
-    const updatedAt = new Date().toISOString();
 
     // Optimistic update
     setNote(prev => prev ? { ...prev, is_pinned: newPinStatus } : prev);
 
     try {
-      await saveNoteLocally({
-        id: route,
-        is_pinned: newPinStatus,
-        updated_at: updatedAt
-      });
-
-      await queueChanges({
-        recordId: `notes-${route}`,
-        recordType: "notes",
-        operation: "update",
-        data: {
-          id: route,
-          is_pinned: newPinStatus,
-          updated_at: updatedAt
-        }
-      });
-
-      setSaveStatus("saved");
-
-      if (navigator.onLine) {
-        syncPendingChanges()
-          .then(success => {
-            if (success) setSaveStatus("synced");
-          });
-      }
+      await offlineSaveAndSync(
+        route,
+        "notes",
+        "update",
+        { is_pinned: newPinStatus },
+        setSaveStatus
+      );
     } catch (error) {
       // Rollback on error
       setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
@@ -279,7 +260,7 @@ export default function Note(
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         onConfirm={() => {
-          handleDelete("notes", route);
+          handleDelete("notes", route!);
           setShowDeleteDialog(false)
         }}
         recordType="note"

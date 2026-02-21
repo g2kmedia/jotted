@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
+import { deleteNoteLocally, deleteTaskLocally, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
 import { syncPendingChanges } from "./sync";
 
 export function useDebouncedCallback<T>(
@@ -152,15 +152,21 @@ export const useDeleteRecord = () => {
 
     const handleDelete = async (
         recordType: "notes" | "tasks",
-        id: string | null,
+        id: string,
     ): Promise<void> => {
         try {
-            const res = await fetch(`/api/${recordType}/${id}`, { method: "DELETE" });
+            recordType === "notes"
+                ? await deleteNoteLocally(id)
+                : await deleteTaskLocally(id);
 
-            if (!res.ok) {
-                toast.error("Failed to permanently delete");
-                return;
-            }
+            await queueChanges({
+                recordId: `${recordType}-${id}`,
+                recordType: recordType,
+                operation: "delete",
+                data: { id: id }
+            });
+
+            if (navigator.onLine) syncPendingChanges();
 
             toast.success("Permanently deleted");
             router.push(`/${recordType}`);
