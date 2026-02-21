@@ -54,7 +54,7 @@ export default function Note(
 
   const pendingUpdatesRef = useRef<Partial<EditorNote>>({});
 
-  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags });
+  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags, setSaveStatus });
   const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
 

@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import { db } from "@/lib/database";
 import { Tag } from "./types";
 import { DateTime } from "luxon";
@@ -14,8 +15,8 @@ export function updateNoteTags(id: string, updates: string[], currentTags: strin
     try {
         const transaction = db.transaction(() => {
             if (toAdd.length > 0) {
-                const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (name) VALUES (?)`);
-                toAdd.forEach(tag => insertTagStmt.run(tag));
+                const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (id, name) VALUES (?, ?)`);
+                toAdd.forEach(tag => insertTagStmt.run(nanoid(), tag));
 
                 const insertRelationStmt = db.prepare(`
                     INSERT INTO note_tag (note_id, tag_id)

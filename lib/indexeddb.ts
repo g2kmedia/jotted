@@ -1,4 +1,4 @@
-import { Note, Task } from "./types";
+import { localNote, Task } from "./types";
 
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
@@ -10,10 +10,6 @@ interface PendingChanges {
     data: any;
     timestamp: number;
     synced: boolean;
-}
-
-type localNote = Note & {
-    tags: string[];
 }
 
 export const openDB = (): Promise<IDBDatabase> => {
@@ -88,7 +84,7 @@ export const saveTaskLocally = async (task: any): Promise<Task> => {
 };
 
 // Get locally
-export const getNoteLocally = async (noteId?: string): Promise<Note | Note[]> => {
+export const getNoteLocally = async (noteId?: string): Promise<localNote | localNote[]> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readonly");
     const store = tx.objectStore("notes");

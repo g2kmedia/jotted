@@ -1,13 +1,14 @@
 import { toast } from "sonner";
 import { getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
-import { EditorNote, Task } from "./types";
+import { localNote, localTask, Task } from "./types";
 
-export const offlineSaveAndSync = async <T extends EditorNote | Task>(
+export const offlineSaveAndSync = async <T extends localNote | localTask>(
     id: string,
     recordType: "notes" | "tasks",
     dbOperation: "create" | "update" | "delete",
     updates: Partial<T>,
-    setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
+    setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>,
+    tags?: { currentTags: string[] },
 ): Promise<void> => {
     const updatedAt = new Date().toISOString();
 
@@ -26,7 +27,7 @@ export const offlineSaveAndSync = async <T extends EditorNote | Task>(
             recordId: `${recordType}-${id}`,
             recordType: recordType,
             operation: dbOperation,
-            data: savedData
+            data: tags ? { ...savedData, currentTags: tags.currentTags } : savedData
         });
 
         setSaveStatus("saved");
@@ -70,10 +71,20 @@ export const syncPendingChanges = async (): Promise<boolean> => {
                     break;
 
                 case "update":
-                    const updateRes = await fetch(`/api/${change.recordType}/${change.data.id}`, {
+                    const isTagUpdate = !!change.data.currentTags;
+
+                    const updateUrl = isTagUpdate
+                        ? `/api/${change.recordType}/tags/${change.data.id}`
+                        : `/api/${change.recordType}/${change.data.id}`;
+
+                    const updateBody = isTagUpdate
+                        ? { updates: change.data.tags, currentTags: change.data.currentTags }
+                        : change.data;
+
+                    const updateRes = await fetch(updateUrl, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(change.data)
+                        body: JSON.stringify(updateBody)
                     })
 
                     if (updateRes.ok) {

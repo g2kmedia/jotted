@@ -33,6 +33,14 @@ export type EditorNote = Omit<Note, "content"> & {
   content: Block[]
 }
 
+export type localNote = EditorNote & {
+    tags?: string[];
+}
+
+export type localTask = Task & {
+    tags?: string[];
+}
+
 export type NoteWithTags = Partial<Note> & {
     tags?: string[]
 }

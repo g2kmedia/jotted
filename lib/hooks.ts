@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { deleteNoteLocally, deleteTaskLocally, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
-import { syncPendingChanges } from "./sync";
+import { offlineSaveAndSync, syncPendingChanges } from "./sync";
 
 export function useDebouncedCallback<T>(
     callback: (data: T) => Promise<void>,
@@ -51,7 +51,13 @@ export function useTagsFilter() {
 }
 
 export function useTagsUpdate(
-    { recordType, route, tags, setTags }: { recordType: string, route: string | null, tags: string[], setTags: (tags: string[]) => void }
+    { recordType, route, tags, setTags, setSaveStatus }: {
+        recordType: "notes" | "tasks",
+        route: string | null,
+        tags: string[],
+        setTags: (tags: string[]) => void,
+        setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
+    }
 ) {
     const handleTagsUpdate = async (inputValue: string): Promise<void> => {
         const inputArr = inputValue ? inputValue.trim().split(/\s+/) : [""];
@@ -74,13 +80,14 @@ export function useTagsUpdate(
         }
 
         try {
-            const res = await fetch(`/api/${recordType}/tags/${route}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ updates: newTags, currentTags: tags })
-            });
-
-            if (!res.ok) throw new Error(`Failed to update tags: ${res.status}`);
+            await offlineSaveAndSync(
+                route!,
+                recordType,
+                "update",
+                { tags: newTags },
+                setSaveStatus,
+                { currentTags: tags }
+            );
 
             setTags(newTags);
             toast.success("Tags updated");
