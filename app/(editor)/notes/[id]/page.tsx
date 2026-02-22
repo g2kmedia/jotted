@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useScrollVisibility, useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
-import { deleteNoteLocally, queueChanges } from "@/lib/indexeddb";
+import { deleteNoteLocally, getNoteLocally, queueChanges, saveNoteLocally } from "@/lib/indexeddb";
 import Link from "next/link";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { Block } from "@blocknote/core";
@@ -71,20 +71,42 @@ export default function Note(
     if (!route) return;
 
     const loadNote = async (): Promise<void> => {
-      const res = await fetch(`/api/notes/${route}?columns=title,content,is_pinned,is_trashed&tags=true`, { method: "GET" });
+      try {
+        const noteData = await getNoteLocally(route);
 
-      if (!res.ok) {
-        throw new Error(`Failed to fetch data: ${res.status}`);
+        if (noteData) {
+          setNote(noteData);
+          setTags(noteData.tags ?? []);
+          return;
+        }
+
+      } catch (error) {
+        console.error("Local DB fail:", error);
       }
 
-      const data = await res.json();
-      data.note.content = data.note.content ? JSON.parse(data.note.content) : "";
+      try {
+        const res = await fetch(`/api/notes/${route}?columns=title,content,is_pinned,is_trashed&tags=true`, { method: "GET" });
 
-      const addHashtagToTags = data.tags.map((tag: string) => "#" + tag);
+        const noteData = await res.json();
+        noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
 
-      setNote(data.note);
-      setTags(addHashtagToTags)
-    };
+        const addHashtagToTags = noteData.tags.map((tag: string) => "#" + tag);
+
+        // Cache note to IndexedDB
+        await saveNoteLocally({
+          ...noteData.note,
+          id: route,
+          tags: noteData.tags.map((tag: string) => "#" + tag)
+        });
+
+        setNote(noteData.note);
+        setTags(addHashtagToTags)
+        
+      } catch (error) {
+        console.error("Failed to fetch note:", error);
+        throw error;
+      }
+    }
 
     loadNote();
   }, [route]);

@@ -30,7 +30,8 @@ export type Tag = {
 }
 
 export type EditorNote = Omit<Note, "content"> & {
-  content: Block[]
+  content: Block[],
+  tags?: string[]
 }
 
 export type localNote = EditorNote & {

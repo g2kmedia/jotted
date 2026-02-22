@@ -1,4 +1,4 @@
-import { localNote, Task } from "./types";
+import { EditorNote, localNote, Task } from "./types";
 
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
@@ -84,21 +84,13 @@ export const saveTaskLocally = async (task: any): Promise<Task> => {
 };
 
 // Get locally
-export const getNoteLocally = async (noteId?: string): Promise<localNote | localNote[]> => {
+export const getNoteLocally = async (noteId: string): Promise<EditorNote | undefined> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readonly");
     const store = tx.objectStore("notes");
-
-    if (noteId) {
-        return new Promise((resolve, reject) => {
-            const request = store.get(noteId);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
+    const request = store.get(noteId);
 
     return new Promise((resolve, reject) => {
-        const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
