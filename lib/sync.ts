@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
-import { localNote, localTask, Task } from "./types";
+import { localNote, localTask } from "./types";
 
 export const offlineSaveAndSync = async <T extends localNote | localTask>(
     id: string,
@@ -13,21 +13,15 @@ export const offlineSaveAndSync = async <T extends localNote | localTask>(
     const updatedAt = new Date().toISOString();
 
     try {
-        const dataToSaveLocally = {
-            id: id,
-            ...updates,
-            updated_at: updatedAt
-        };
-
         const savedData = recordType === "notes"
-            ? await saveNoteLocally(dataToSaveLocally)
-            : await saveTaskLocally(dataToSaveLocally);
+            ? await saveNoteLocally({ id, updated_at: updatedAt, ...updates as Partial<localNote> })
+            : await saveTaskLocally({ id, updated_at: updatedAt, ...updates as Partial<localTask> });
 
         await queueChanges({
-            recordId: `${recordType}-${id}`,
+            recordId: tags ? `${recordType}-${id}-tags` : `${recordType}-${id}`,
             recordType: recordType,
             operation: dbOperation,
-            data: tags ? { ...savedData, currentTags: tags.currentTags } : savedData
+            data: tags ? { id, updated_at: updatedAt, currentTags: tags.currentTags, tags: savedData.tags } : savedData
         });
 
         setSaveStatus("saved");
@@ -71,23 +65,34 @@ export const syncPendingChanges = async (): Promise<boolean> => {
                     break;
 
                 case "update":
-                    const isTagUpdate = !!change.data.currentTags;
+                    const { tags, currentTags, ...recordData } = change.data;
+                    const isTagsOnlyUpdate = change.recordId.endsWith("-tags");
 
-                    const updateUrl = isTagUpdate
-                        ? `/api/${change.recordType}/tags/${change.data.id}`
-                        : `/api/${change.recordType}/${change.data.id}`;
+                    const requests = [];
 
-                    const updateBody = isTagUpdate
-                        ? { updates: change.data.tags, currentTags: change.data.currentTags }
-                        : change.data;
+                    if (!isTagsOnlyUpdate) {
+                        requests.push(
+                            fetch(`/api/${change.recordType}/${change.data.id}`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(recordData)
+                            })
+                        );
+                    }
 
-                    const updateRes = await fetch(updateUrl, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(updateBody)
-                    })
+                    if (currentTags) {
+                        requests.push(
+                            fetch(`/api/${change.recordType}/tags/${change.data.id}`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ updates: tags, currentTags })
+                            })
+                        );
+                    }
 
-                    if (updateRes.ok) {
+                    const results = await Promise.all(requests);
+
+                    if (results.every(res => res.ok)) {
                         await markSynced(change.recordId);
                     } else {
                         allSucceeded = false;

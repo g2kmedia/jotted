@@ -1,6 +1,6 @@
 import { Block } from "@blocknote/core"
 
-export type Note = {
+export type ServerNote = {
     id: string
     title: string
     content: string
@@ -11,7 +11,21 @@ export type Note = {
     is_trashed: number
 }
 
-export type Task = {
+export type localNote = {
+    id: string
+    title: string
+    content: Block[]
+    content_plaintext: string
+    created_at: string
+    updated_at: string
+    is_pinned: number
+    is_trashed: number
+    tags: string[]
+}
+
+export type Note = ServerNote | localNote
+
+export type ServerTask = {
     id: string
     title: string
     content: string
@@ -23,24 +37,35 @@ export type Task = {
     is_trashed: number
 }
 
+export type localTask = {
+    id: string
+    title: string
+    content: string
+    created_at: string
+    updated_at: string
+    due_date?: string
+    priority?: number
+    is_completed: number
+    is_trashed: number
+    tags: string[]
+}
+
+export type Task = ServerTask | localTask
+
 export type Tag = {
     id: number
     name: string
     created_at: string
 }
 
-export type EditorNote = Omit<Note, "content"> & {
-  content: Block[],
-  tags?: string[]
-}
+// export type EditorNote = Omit<Note, "content"> & {
+//   content: Block[],
+//   tags?: string[]
+// }
 
-export type localNote = EditorNote & {
-    tags?: string[];
-}
-
-export type localTask = Task & {
-    tags?: string[];
-}
+// export type localTask = Task & {
+//     tags?: string[];
+// }
 
 export type NoteWithTags = Partial<Note> & {
     tags?: string[]

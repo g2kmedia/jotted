@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Editor } from "@/app/components/DynamicEditor";
-import type { EditorNote, Note } from "@/lib/types"
+import type { localNote, Note } from "@/lib/types"
 import { ArrowLeft, Trash2, RotateCcw, Pin, Save, CloudCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useScrollVisibility, useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
@@ -47,12 +47,12 @@ export default function Note(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const [route, setRoute] = useState<string | null>(null);
-  const [note, setNote] = useState<Partial<EditorNote> | undefined>(undefined);
+  const [note, setNote] = useState<localNote | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const pendingUpdatesRef = useRef<Partial<EditorNote>>({});
+  const pendingUpdatesRef = useRef<Partial<localNote>>({});
 
   const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags, setSaveStatus });
   const isVisible = useScrollVisibility();
@@ -124,7 +124,7 @@ export default function Note(
   const pinNote = async (): Promise<void> => {
     if (!route) return;
 
-    const currentPinStatus = note?.is_pinned;
+    const currentPinStatus = note!.is_pinned;
     const newPinStatus = note?.is_pinned === 0 ? 1 : 0;
 
     // Optimistic update
@@ -147,7 +147,7 @@ export default function Note(
     }
   }
 
-  const debouncedSave = useDebouncedCallback<Partial<EditorNote>>(
+  const debouncedSave = useDebouncedCallback<Partial<localNote>>(
     async (updates) => {
       if (!route) return;
 
@@ -171,7 +171,7 @@ export default function Note(
     const newTitle = e.target.value;
 
     setSaveStatus(null);
-    setNote(prev => prev ? { ...prev, title: newTitle } : undefined);
+    setNote(prev => prev ? { ...prev, title: newTitle } : null);
 
     const updates = { ...pendingUpdatesRef.current, title: newTitle };
     pendingUpdatesRef.current = updates;
@@ -212,6 +212,7 @@ export default function Note(
   }
 
   if (!note) return null;
+  if (!route) return null;
 
   return (
     <>

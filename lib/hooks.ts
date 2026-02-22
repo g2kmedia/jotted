@@ -128,7 +128,7 @@ export const useDeleteRecord = () => {
 
     const handleTrash = async (
         recordType: "notes" | "tasks",
-        id: string | null,
+        id: string,
         trashStatus: number,
     ): Promise<void> => {
         const newTrashStatus = trashStatus === 0 ? 1 : 0;

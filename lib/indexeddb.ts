@@ -1,4 +1,4 @@
-import { EditorNote, localNote, Task } from "./types";
+import { localNote, localTask, Task } from "./types";
 
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
@@ -39,7 +39,9 @@ export const openDB = (): Promise<IDBDatabase> => {
 }
 
 // Save locally
-export const saveNoteLocally = async (note: any): Promise<localNote> => {
+export const saveNoteLocally = async (
+    note: Partial<localNote> & { id: string }
+): Promise<localNote> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readwrite");
     const store = tx.objectStore("notes");
@@ -58,10 +60,12 @@ export const saveNoteLocally = async (note: any): Promise<localNote> => {
         req.onerror = () => reject(req.error);
     });
 
-    return mergedData;
+    return mergedData as localNote;
 };
 
-export const saveTaskLocally = async (task: any): Promise<Task> => {
+export const saveTaskLocally = async (
+    task: Partial<localTask> & { id: string }
+): Promise<localTask> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readwrite");
     const store = tx.objectStore("tasks");
@@ -80,15 +84,27 @@ export const saveTaskLocally = async (task: any): Promise<Task> => {
         req.onerror = () => reject(req.error);
     });
 
-    return mergedData;
+    return mergedData as localTask;
 };
 
 // Get locally
-export const getNoteLocally = async (noteId: string): Promise<EditorNote | undefined> => {
+export const getNoteLocally = async (noteId: string): Promise<localNote | undefined> => {
     const db = await openDB();
     const tx = db.transaction("notes", "readonly");
     const store = tx.objectStore("notes");
     const request = store.get(noteId);
+
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+export const getTaskLocally = async (taskId: string): Promise<Task | undefined> => {
+    const db = await openDB();
+    const tx = db.transaction("tasks", "readonly");
+    const store = tx.objectStore("tasks");
+    const request = store.get(taskId);
 
     return new Promise((resolve, reject) => {
         request.onsuccess = () => resolve(request.result);
