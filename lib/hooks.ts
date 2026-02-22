@@ -56,11 +56,11 @@ export function useTagsUpdate(
         route: string | null,
         tags: string[],
         setTags: (tags: string[]) => void,
-        setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
+        setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
     }
 ) {
     const handleTagsUpdate = async (inputValue: string): Promise<void> => {
-        const inputArr = inputValue ? inputValue.trim().split(/\s+/) : [""];
+        const inputArr = inputValue ? inputValue.trim().split(/\s+/) : [];
         const newTags: string[] = [];
 
         for (const input of inputArr) {
@@ -69,8 +69,7 @@ export function useTagsUpdate(
                     input.startsWith("#") &&
                     input.length > 1 &&
                     input.indexOf("#", 1) === -1 // Only a single "#" allowed
-                ) ||
-                input === ""
+                )
             ) {
                 newTags.push(input);
             } else {
@@ -84,9 +83,9 @@ export function useTagsUpdate(
                 route!,
                 recordType,
                 "update",
-                { tags: newTags },
+                { tags: newTags.map(tag => tag.slice(1)) },
                 setSaveStatus,
-                { currentTags: tags }
+                { currentTags: tags.map(tag => tag.slice(1)) }
             );
 
             setTags(newTags);

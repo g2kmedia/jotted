@@ -76,7 +76,7 @@ export default function Note(
 
         if (noteData) {
           setNote(noteData);
-          setTags(noteData.tags ?? []);
+          setTags((noteData.tags ?? []).map((tag: string) => "#" + tag));
           return;
         }
 
@@ -90,17 +90,15 @@ export default function Note(
         const noteData = await res.json();
         noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
 
-        const addHashtagToTags = noteData.tags.map((tag: string) => "#" + tag);
-
         // Cache note to IndexedDB
         await saveNoteLocally({
           ...noteData.note,
           id: route,
-          tags: noteData.tags.map((tag: string) => "#" + tag)
+          tags: noteData.tags ?? []
         });
 
         setNote(noteData.note);
-        setTags(addHashtagToTags)
+        setTags((noteData.tags ?? []).map((tag: string) => "#" + tag));
         
       } catch (error) {
         console.error("Failed to fetch note:", error);

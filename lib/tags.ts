@@ -4,12 +4,11 @@ import { Tag } from "./types";
 import { DateTime } from "luxon";
 
 export function updateNoteTags(id: string, updates: string[], currentTags: string[]): { success: boolean } {
-    // slice to remove "#" from the tags
     const toAdd = updates.flatMap(tag =>
-        !currentTags.includes(tag) && tag ? [tag.slice(1)] : [] // Check if tag is defined to prevent inserting empty space as tag
+        !currentTags.includes(tag) && tag ? [tag] : [] // Check if tag is defined to prevent inserting empty space as tag
     );
     const toRemove = currentTags.flatMap(tag =>
-        !updates.includes(tag) ? [tag.slice(1)] : []
+        !updates.includes(tag) ? [tag] : []
     );
 
     try {
