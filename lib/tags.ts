@@ -190,19 +190,18 @@ export function getAllTasksTags(params: tasksTagsApiParams): Partial<Tag>[] {
 }
 
 export function updateTaskTags(id: string, updates: string[], currentTags: string[]): { success: boolean } {
-    // slice to remove "#" from the tags
     const toAdd = updates.flatMap(tag =>
-        !currentTags.includes(tag) && tag ? [tag.slice(1)] : [] // Check if tag is defined to prevent inserting empty space as tag
+        !currentTags.includes(tag) && tag ? [tag] : [] // Check if tag is defined to prevent inserting empty space as tag
     );
     const toRemove = currentTags.flatMap(tag =>
-        !updates.includes(tag) ? [tag.slice(1)] : []
+        !updates.includes(tag) ? [tag] : []
     );
 
     try {
         const transaction = db.transaction(() => {
             if (toAdd.length > 0) {
-                const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (name) VALUES (?)`);
-                toAdd.forEach(tag => insertTagStmt.run(tag));
+                const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (id, name) VALUES (?, ?)`);
+                toAdd.forEach(tag => insertTagStmt.run(nanoid(), tag));
 
                 const insertRelationStmt = db.prepare(`
                     INSERT INTO task_tag (task_id, tag_id)
@@ -219,8 +218,6 @@ export function updateTaskTags(id: string, updates: string[], currentTags: strin
                 )
             `);
                 toRemove.forEach(tag => removeStmt.run(id, tag));
-
-                //cleanupOrphanTags();
             }
         });
 

@@ -100,7 +100,7 @@ export const getNoteLocally = async (noteId: string): Promise<localNote | undefi
     });
 }
 
-export const getTaskLocally = async (taskId: string): Promise<Task | undefined> => {
+export const getTaskLocally = async (taskId: string): Promise<localTask | undefined> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readonly");
     const store = tx.objectStore("tasks");

@@ -125,7 +125,7 @@ export default function Note(
     if (!route) return;
 
     const currentPinStatus = note!.is_pinned;
-    const newPinStatus = note?.is_pinned === 0 ? 1 : 0;
+    const newPinStatus = note!.is_pinned === 0 ? 1 : 0;
 
     // Optimistic update
     setNote(prev => prev ? { ...prev, is_pinned: newPinStatus } : prev);

@@ -31,8 +31,8 @@ export type ServerTask = {
     content: string
     created_at: string
     updated_at: string
-    due_date?: string
-    priority?: number
+    due_date: string
+    priority: number
     is_completed: number
     is_trashed: number
 }
@@ -43,8 +43,8 @@ export type localTask = {
     content: string
     created_at: string
     updated_at: string
-    due_date?: string
-    priority?: number
+    due_date: string | null
+    priority: number | null
     is_completed: number
     is_trashed: number
     tags: string[]
