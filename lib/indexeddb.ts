@@ -3,11 +3,16 @@ import { localNote, localTask, Task } from "./types";
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
 
+type PendingData =
+    | localNote
+    | localTask
+    | { type: "tags"; id: string; updated_at: string; currentTags: string[]; tags: string[]; }; // for tags only updates
+
 interface PendingChanges {
     recordId: string;
     recordType: "notes" | "tasks";
     operation: "create" | "update" | "delete";
-    data: any;
+    data: PendingData;
     timestamp: number;
     synced: boolean;
 }

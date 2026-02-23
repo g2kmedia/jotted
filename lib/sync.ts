@@ -21,7 +21,8 @@ export const offlineSaveAndSync = async <T extends localNote | localTask>(
             recordId: tags ? `${recordType}-${id}-tags` : `${recordType}-${id}`,
             recordType: recordType,
             operation: dbOperation,
-            data: tags ? { id, updated_at: updatedAt, currentTags: tags.currentTags, tags: savedData.tags } : savedData
+            data: tags
+                ? { type: "tags", id, updated_at: updatedAt, currentTags: tags.currentTags, tags: savedData.tags } : savedData
         });
 
         setSaveStatus("saved");
@@ -65,38 +66,40 @@ export const syncPendingChanges = async (): Promise<boolean> => {
                     break;
 
                 case "update":
-                    const { tags, currentTags, ...recordData } = change.data;
-                    const isTagsOnlyUpdate = change.recordId.endsWith("-tags");
+                    const requests: Promise<Response>[] = [];
 
-                    const requests = [];
+                    // Record update (non-tags data)
+                    if (!('type' in change.data && change.data.type === 'tags')) {
+                        const { tags, ...recordData } = change.data;
 
-                    if (!isTagsOnlyUpdate) {
-                        requests.push(
-                            fetch(`/api/${change.recordType}/${change.data.id}`, {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify(recordData)
-                            })
-                        );
+                        requests.push(fetch(`/api/${change.recordType}/${change.data.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(recordData)
+                        }));
                     }
 
-                    if (currentTags) {
-                        requests.push(
-                            fetch(`/api/${change.recordType}/tags/${change.data.id}`, {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ updates: tags, currentTags })
-                            })
-                        );
+                    // Tags update
+                    if ('type' in change.data && change.data.type === 'tags') {
+                        const { tags, currentTags } = change.data;
+
+                        requests.push(fetch(`/api/${change.recordType}/tags/${change.data.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ updates: tags, currentTags })
+                        }));
                     }
 
-                    const results = await Promise.all(requests);
+                    if (requests.length > 0) {
+                        const results = await Promise.all(requests);
 
-                    if (results.every(res => res.ok)) {
-                        await markSynced(change.recordId);
-                    } else {
-                        allSucceeded = false;
+                        if (results.every(res => res.ok)) {
+                            await markSynced(change.recordId);
+                        } else {
+                            allSucceeded = false;
+                        }
                     }
+
                     break;
 
                 case "delete":
