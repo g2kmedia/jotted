@@ -69,7 +69,10 @@ export const syncPendingChanges = async (): Promise<boolean> => {
                     const requests: Promise<Response>[] = [];
 
                     // Record update (non-tags data)
-                    if (!('type' in change.data && change.data.type === 'tags')) {
+                    if (
+                        !("type" in change.data && change.data.type === "tags")
+                        && "tags" in change.data
+                    ) {
                         const { tags, ...recordData } = change.data;
 
                         requests.push(fetch(`/api/${change.recordType}/${change.data.id}`, {
@@ -80,7 +83,7 @@ export const syncPendingChanges = async (): Promise<boolean> => {
                     }
 
                     // Tags update
-                    if ('type' in change.data && change.data.type === 'tags') {
+                    if ("type" in change.data && change.data.type === "tags") {
                         const { tags, currentTags } = change.data;
 
                         requests.push(fetch(`/api/${change.recordType}/tags/${change.data.id}`, {

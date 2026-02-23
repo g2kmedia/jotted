@@ -6,7 +6,8 @@ const DB_VERSION = 1;
 type PendingData =
     | localNote
     | localTask
-    | { type: "tags"; id: string; updated_at: string; currentTags: string[]; tags: string[]; }; // for tags only updates
+    | { type: "tags"; id: string; updated_at: string; currentTags: string[]; tags: string[]; } // tags only updates
+    | { id: string }; // delete stub
 
 interface PendingChanges {
     recordId: string;
