@@ -87,7 +87,6 @@ export function useTagsUpdate(
             );
 
             setTags(newTags);
-            toast.success("Tags updated");
         } catch (error) {
             console.error("Failed to update tags:", error);
             toast.error("Failed to update tags. Please try again.");
