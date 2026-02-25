@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { deleteTask, getTask, updateTask } from "@/lib/tasks";
 import { getTaskTags, updateTaskTags } from '@/lib/tags';
+import { db } from '@/lib/database';
 
 export async function GET(
     request: NextRequest,
@@ -29,7 +30,15 @@ export async function PATCH(
 ) {
     try {
         const route = await params;
-        const {tags, ...taskUpdates} = await request.json();
+        const { tags, ...taskUpdates } = await request.json();
+
+        const currentServerRecord = db.prepare(`
+            SELECT updated_at FROM task WHERE id = ?    
+        `).get(route.id) as { updated_at: string };
+
+        if (new Date(taskUpdates.updated_at) <= new Date(currentServerRecord.updated_at)) {
+            return Response.json({ error: 'Stale update' }, { status: 412 });
+        }
 
         const taskUpdateRes = updateTask(route.id, taskUpdates || {});
         const tagsUpdateRes = updateTaskTags(route.id, tags || []);
@@ -47,7 +56,7 @@ export async function PATCH(
 
 export async function DELETE(
     request: Request,
-    { params } : { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const route = await params;

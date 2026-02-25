@@ -7,7 +7,7 @@ interface PendingChanges {
     recordId: string;
     recordType: "notes" | "tasks";
     operation: "create" | "update" | "delete";
-    data: Partial<localNote | localTask>;
+    data: Partial<localNote | localTask> & { id: string };
     timestamp: number;
     synced: boolean;
 }

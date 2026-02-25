@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
+import { deleteNoteLocally, deleteTaskLocally, getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
 import { localNote, localTask } from "./types";
 
 export const offlineSaveAndSync = async (
@@ -41,10 +41,10 @@ export const offlineSaveAndSync = async (
 
 export const syncPendingChanges = async (): Promise<boolean> => {
     const changes = await getPendingChanges();
-
     if (changes.length === 0) return true;
 
     let allSucceeded = true;
+    let refreshedRecordsCount = 0;
 
     for (const change of changes) {
         try {
@@ -72,16 +72,20 @@ export const syncPendingChanges = async (): Promise<boolean> => {
 
                     if (updateRes.ok) {
                         await markSynced(change.recordId);
+                    } else if (updateRes.status == 412) {
+                        // Stale cache - delete local record and pending change
+                        change.recordType === "notes" ? await deleteNoteLocally(change.data.id) : await deleteTaskLocally(change.data.id);
+
+                        await markSynced(change.recordId);
+
+                        refreshedRecordsCount++;
                     } else {
                         allSucceeded = false;
                     }
                     break;
 
                 case "delete":
-                    const deleteRes = await fetch(`/api/${change.recordType}/${change.data.id}`, {
-                        method: "DELETE",
-                        headers: { "Content-Type": "application/json" }
-                    });
+                    const deleteRes = await fetch(`/api/${change.recordType}/${change.data.id}`, { method: "DELETE" });
 
                     if (deleteRes.ok) {
                         await markSynced(change.recordId);
@@ -95,6 +99,13 @@ export const syncPendingChanges = async (): Promise<boolean> => {
             toast.error("Failed to sync");
             allSucceeded = false;
         }
+    }
+
+    if (refreshedRecordsCount > 0) {
+        toast.info(
+            `${refreshedRecordsCount} update(s) refreshed from server. Please reload the page.`,
+            { duration: 8000 }
+        );
     }
 
     if (allSucceeded) {
