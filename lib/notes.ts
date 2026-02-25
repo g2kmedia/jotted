@@ -37,7 +37,7 @@ export function getNote(id: string, columns?: string[]): Partial<Note> {
         throw new Error("Note not found");
     }
 
-    return note;
+    return note as Partial<Note>;
 }
 
 type notesApiParams = {
@@ -141,15 +141,21 @@ export function updateNote(id: string, updates: Partial<Note>): number {
         columns[i] === "content" ? JSON.stringify(v) : v
     );
 
-    const stmt = db.prepare(`UPDATE note SET ${setClause} WHERE id = ?`);
-    const info = stmt.run(...values, id);
+    const update = db.transaction(() => {
+        const stmt = db.prepare(`UPDATE note SET ${setClause} WHERE id = ?`);
+        return stmt.run(...values, id);
+    });
 
+    const info = update();
     return info.changes;
 }
 
 export function deleteNote(id: string): number {
-    const stmt = db.prepare('DELETE FROM note WHERE id = ?');
-    const info = stmt.run(id);
+    const remove = db.transaction(() => {
+        const stmt = db.prepare('DELETE FROM note WHERE id = ?');
+        return stmt.run(id);
+    });
 
+    const info = remove();
     return info.changes;
 }

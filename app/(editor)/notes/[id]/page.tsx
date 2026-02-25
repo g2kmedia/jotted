@@ -274,7 +274,7 @@ export default function Note(
           placeholder="Enter a title"
           className="w-full text-center text-3xl font-bold focus-visible:outline-none"
         /></h1>
-        <Editor initialContent={note.content} onChange={handleContentChange} />
+        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
       </article >
 
       <ConfirmDeleteDialog

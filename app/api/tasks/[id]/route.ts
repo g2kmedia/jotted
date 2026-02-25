@@ -37,7 +37,7 @@ export async function PATCH(
         `).get(route.id) as { updated_at: string };
 
         if (new Date(taskUpdates.updated_at) <= new Date(currentServerRecord.updated_at)) {
-            return Response.json({ error: 'Stale update' }, { status: 412 });
+            return Response.json({ error: "Stale update" }, { status: 412 });
         }
 
         const taskUpdateRes = updateTask(route.id, taskUpdates || {});

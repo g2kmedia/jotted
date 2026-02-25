@@ -1,3 +1,4 @@
+import { db } from "@/lib/database";
 import { deleteNote, getNote, updateNote } from "@/lib/notes";
 import { getNoteTags, updateNoteTags } from "@/lib/tags";
 import { NextRequest } from "next/server";
@@ -18,7 +19,7 @@ export async function GET(
         return Response.json({ note, tags });
     } catch (error) {
         return Response.json({
-            error: "Note not found"
+            error: "Could not get note"
         }, { status: 404 });
     }
 }
@@ -29,30 +30,26 @@ export async function PATCH(
 ) {
     try {
         const route = await params;
-        const { tags, ...noteData } = await request.json()
+        const { tags, ...noteUpdates } = await request.json();
 
-        const updatesNote = updateNote(route.id, noteData)
+        const currentServerRecord = db.prepare(`
+            SELECT updated_at FROM note WHERE id = ?
+        `).get(route.id) as { updated_at: string };
 
-        if (updatesNote === 0) {
-            return Response.json({
-                msg: "0 updates were made"
-            }, { status: 200 });
+        if (new Date(noteUpdates.updated_at) <= new Date(currentServerRecord.updated_at)) {
+            return Response.json({ error: "Stale update" }, { status: 412 });
         }
 
-        const updatesTags = updateNoteTags(route.id, tags);
-
-        if (!updatesTags.success) {
-            console.warn("Tags update failed: ", updatesTags);
-        }
+        const noteUpdateRes = updateNote(route.id, noteUpdates || {});
+        const tagsUpdateRes = updateNoteTags(route.id, tags || []);
 
         return Response.json({
-            msg: "Update successful"
+            msg: `Update successful: ${noteUpdateRes} Note updates & ${tagsUpdateRes} Tag updates`
         }, { status: 200 });
 
     } catch (error) {
-        console.error('Error updating note:', error);
         return Response.json({
-            error: "Could not update note"
+            error: `Could not update note: ${error}`
         }, { status: 400 });
     }
 }

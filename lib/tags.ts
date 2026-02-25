@@ -3,9 +3,18 @@ import { db } from "@/lib/database";
 import { Tag } from "./types";
 import { DateTime } from "luxon";
 
-export function updateNoteTags(id: string, updates: string[]): { success: boolean } {
-    const currentTagsResults = getNoteTags(id);
-    const currentTags = currentTagsResults || [];
+interface TagRow {
+    name: string;
+}
+
+export function updateNoteTags(id: string, updates: string[]): number {
+    const currentTagsQuery = db.prepare(`
+        SELECT t.name FROM tag t
+        JOIN note_tag nt ON t.id = nt.tag_id
+        WHERE nt.note_id = ?    
+    `);
+
+    const currentTags = (currentTagsQuery.all(id) as TagRow[]).map(row => row.name);
 
     const toAdd = updates.flatMap(tag =>
         !currentTags.includes(tag) && tag ? [tag] : [] // Check if tag is defined to prevent inserting empty space as tag
@@ -14,38 +23,38 @@ export function updateNoteTags(id: string, updates: string[]): { success: boolea
         !updates.includes(tag) ? [tag] : []
     );
 
-    try {
-        const transaction = db.transaction(() => {
-            if (toAdd.length > 0) {
-                const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (id, name) VALUES (?, ?)`);
-                toAdd.forEach(tag => insertTagStmt.run(nanoid(), tag));
+    const transaction = db.transaction(() => {
+        let changes = 0;
 
-                const insertRelationStmt = db.prepare(`
+        if (toAdd.length > 0) {
+            const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (id, name) VALUES (?, ?)`);
+            toAdd.forEach(tag => insertTagStmt.run(nanoid(), tag));
+
+            const insertRelationStmt = db.prepare(`
                     INSERT INTO note_tag (note_id, tag_id)
                     SELECT ?, id FROM tag WHERE name = ?
             `);
-                toAdd.forEach(tag => insertRelationStmt.run(id, tag));
-            }
+            toAdd.forEach(tag => {
+                changes += insertRelationStmt.run(id, tag).changes;
+            });
+        }
 
-            if (toRemove.length > 0) {
-                const removeStmt = db.prepare(`
+        if (toRemove.length > 0) {
+            const removeStmt = db.prepare(`
                     DELETE FROM note_tag
                     WHERE note_id = ? AND tag_id = (
                         SELECT id FROM tag WHERE name = ?
                 )
             `);
-                toRemove.forEach(tag => removeStmt.run(id, tag));
-            }
-        });
+            toRemove.forEach(tag => {
+                changes += removeStmt.run(id, tag).changes;
+            });
+        }
 
-        transaction();
+        return { changes };
+    });
 
-        return { success: true };
-
-    } catch (error) {
-        console.error("Transaction failed", error);
-        return { success: false };
-    }
+    return transaction().changes;
 }
 
 export function getNoteTags(noteId: string): string[] {
@@ -192,10 +201,6 @@ export function getAllTasksTags(params: tasksTagsApiParams): Partial<Tag>[] {
     return result;
 }
 
-interface TagRow {
-    name: string;
-}
-
 export function updateTaskTags(id: string, updates: string[]): number {
     const currentTagsQuery = db.prepare(`
         SELECT t.name FROM tag t
@@ -217,9 +222,7 @@ export function updateTaskTags(id: string, updates: string[]): number {
 
         if (toAdd.length > 0) {
             const insertTagStmt = db.prepare(`INSERT OR IGNORE INTO tag (id, name) VALUES (?, ?)`);
-            toAdd.forEach(tag => {
-                changes += insertTagStmt.run(nanoid(), tag).changes;
-            });
+            toAdd.forEach(tag => insertTagStmt.run(nanoid(), tag));
 
             const insertRelationStmt = db.prepare(`
                     INSERT INTO task_tag (task_id, tag_id)

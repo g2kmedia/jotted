@@ -14,7 +14,7 @@ export type ServerNote = {
 export type localNote = {
     id: string
     title: string
-    content: Block[]
+    content: Block[] | ""
     content_plaintext: string
     created_at: string
     updated_at: string
