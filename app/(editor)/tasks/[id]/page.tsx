@@ -23,7 +23,7 @@ export default function Task(
 
     const pendingUpdatesRef = useRef<Partial<localTask>>({});
 
-    const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", route, tags, setTags, setSaveStatus });
+    const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", route, setTags, setSaveStatus });
     const { handleTrash, handleDelete } = useDeleteRecord();
 
     const router = useRouter();
@@ -54,7 +54,7 @@ export default function Task(
                 console.error("Local DB fail:", error);
             }
             try {
-                const res = await fetch(`/api/tasks/${route}?columns=title,content,due_date,priority,is_completed,is_trashed&tags=true`, { method: "GET" });
+                const res = await fetch(`/api/tasks/${route}`, { method: "GET" });
 
                 const taskData = await res.json();
 

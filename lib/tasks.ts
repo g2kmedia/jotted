@@ -24,18 +24,13 @@ export function createTask(taskData: Task): void {
 }
 
 export function getTask(id: string, columns?: string[]): Partial<Task> {
-    let selectedColumns = " * ";
-
-    if (columns) {
-        const allColumnsValid = columns.every(col => ALLOWED_COLUMNS.includes(col as any));
-
-        if (!allColumnsValid) {
-            console.log(columns, allColumnsValid)
-            throw new Error("Invalid column name");
-        }
-
-        selectedColumns = columns.join(", ");
+    if (columns &&
+        !columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))
+    ) {
+        throw new Error("Invalid column name");
     }
+
+    const selectedColumns = columns ? columns.join(", ") : " * ";
 
     const stmt = db.prepare(`SELECT ${selectedColumns} FROM task WHERE id = ?`);
     const task = stmt.get(id);
@@ -188,7 +183,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
     }));
 }
 
-export function updateTask(id: string, updates: Partial<Task>): any {
+export function updateTask(id: string, updates: Partial<Task>): number {
     const columns = Object.keys(updates);
 
     if (!columns.every(col => (ALLOWED_COLUMNS as readonly string[]).includes(col))) {

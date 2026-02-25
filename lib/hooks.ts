@@ -51,10 +51,9 @@ export function useTagsFilter() {
 }
 
 export function useTagsUpdate(
-    { recordType, route, tags, setTags, setSaveStatus }: {
+    { recordType, route, setTags, setSaveStatus }: {
         recordType: "notes" | "tasks",
         route: string | null,
-        tags: string[],
         setTags: (tags: string[]) => void,
         setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
     }
@@ -85,7 +84,6 @@ export function useTagsUpdate(
                 "update",
                 { tags: newTags.map(tag => tag.slice(1)) },
                 setSaveStatus,
-                { currentTags: tags.map(tag => tag.slice(1)) }
             );
 
             setTags(newTags);

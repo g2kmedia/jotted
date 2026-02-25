@@ -54,7 +54,7 @@ export default function Note(
 
   const pendingUpdatesRef = useRef<Partial<localNote>>({});
 
-  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, tags, setTags, setSaveStatus });
+  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, setTags, setSaveStatus });
   const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
 
@@ -85,7 +85,7 @@ export default function Note(
       }
 
       try {
-        const res = await fetch(`/api/notes/${route}?columns=title,content,is_pinned,is_trashed&tags=true`, { method: "GET" });
+        const res = await fetch(`/api/notes/${route}`, { method: "GET" });
 
         const noteData = await res.json();
         noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
@@ -274,7 +274,7 @@ export default function Note(
           placeholder="Enter a title"
           className="w-full text-center text-3xl font-bold focus-visible:outline-none"
         /></h1>
-        <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
+        <Editor initialContent={note.content} onChange={handleContentChange} />
       </article >
 
       <ConfirmDeleteDialog

@@ -8,7 +8,7 @@ export async function PATCH(
         const route = await params;
         const body = await request.json()
 
-        const updatesResult = updateNoteTags(route.id, body.updates, body.currentTags);
+        const updatesResult = updateNoteTags(route.id, body.updates);
 
         if (!updatesResult.success) {
             return Response.json({

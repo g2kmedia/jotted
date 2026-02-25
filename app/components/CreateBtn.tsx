@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Note, Task } from "@/lib/types";
+import { localNote, localTask, Task } from "@/lib/types";
 import { queueChanges, saveNoteLocally, saveTaskLocally } from "@/lib/indexeddb";
 import { syncPendingChanges } from "@/lib/sync";
 
@@ -22,7 +22,7 @@ export default function CreateBtn({ className }: { className?: string }) {
         try {
             const noteId = nanoid();
 
-            const newNote: Note = {
+            const newNote: localNote = {
                 id: noteId,
                 title: "",
                 content: "",
@@ -30,7 +30,8 @@ export default function CreateBtn({ className }: { className?: string }) {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
                 is_pinned: 0,
-                is_trashed: 0
+                is_trashed: 0,
+                tags: []
             };
 
             await saveNoteLocally(newNote);
@@ -56,14 +57,17 @@ export default function CreateBtn({ className }: { className?: string }) {
         try {
             const taskId = nanoid();
 
-            const newTask: Task = {
+            const newTask: localTask = {
                 id: taskId,
                 title: "",
                 content: "",
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
+                due_date: null,
+                priority: null,
                 is_completed: 0,
-                is_trashed: 0
+                is_trashed: 0,
+                tags: []
             };
 
             await saveTaskLocally(newTask);

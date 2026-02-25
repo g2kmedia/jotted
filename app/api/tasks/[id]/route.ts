@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { deleteTask, getTask, updateTask } from "@/lib/tasks";
-import { getTaskTags } from '@/lib/tags';
+import { getTaskTags, updateTaskTags } from '@/lib/tags';
 
 export async function GET(
     request: NextRequest,
@@ -10,7 +10,7 @@ export async function GET(
         const route = await params;
         const { searchParams } = request.nextUrl;
         const columns = searchParams.get("columns")?.split(",");
-        const includeTags = searchParams.get("tags") === "true";
+        const includeTags = searchParams.get("tags") !== "false"; // defaults true
 
         const task = getTask(route.id, columns);
         const tags = includeTags ? getTaskTags(route.id) : undefined;
@@ -29,23 +29,18 @@ export async function PATCH(
 ) {
     try {
         const route = await params;
-        const body = await request.json();
+        const {tags, ...taskUpdates} = await request.json();
 
-        const updatesResult = updateTask(route.id, body);
-
-        if (updatesResult === 0) {
-            return Response.json({
-                msg: "0 update were made"
-            }, { status: 200 });
-        }
+        const taskUpdateRes = updateTask(route.id, taskUpdates || {});
+        const tagsUpdateRes = updateTaskTags(route.id, tags || []);
 
         return Response.json({
-            msg: "Update successful"
+            msg: `Update successful: ${taskUpdateRes} Task updates & ${tagsUpdateRes} Tag updates`
         }, { status: 200 });
 
     } catch (error) {
         return Response.json({
-            error: "Could not update task"
+            error: `Could not update task: ${error}`
         }, { status: 400 });
     }
 }

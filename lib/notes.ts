@@ -1,9 +1,9 @@
 import { db } from "@/lib/database";
-import type { Note, NoteWithTags } from "./types";
+import type { localNote, Note, NoteWithTags } from "./types";
 
 const ALLOWED_COLUMNS: (keyof Note)[] = ["id", "title", "content", "content_plaintext", "created_at", "updated_at", "is_pinned", "is_trashed"];
 
-export function createNote(noteData: Note): void {
+export function createNote(noteData: localNote): void {
     const stmt = db.prepare(`
         INSERT INTO note (id, title, content, content_plaintext, created_at, updated_at, is_pinned, is_trashed)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)

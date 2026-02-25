@@ -1,5 +1,5 @@
 import { deleteNote, getNote, updateNote } from "@/lib/notes";
-import { getNoteTags } from "@/lib/tags";
+import { getNoteTags, updateNoteTags } from "@/lib/tags";
 import { NextRequest } from "next/server";
 
 export async function GET(
@@ -10,11 +10,11 @@ export async function GET(
         const route = await params;
         const { searchParams } = request.nextUrl;
         const columns = searchParams.get("columns")?.split(",");
-        const includeTags = searchParams.get("tags") === "true";
+        const includeTags = searchParams.get("tags") !== "false"; // defaults true
 
         const note = getNote(route.id, columns);
         const tags = includeTags ? getNoteTags(route.id) : undefined;
-        
+
         return Response.json({ note, tags });
     } catch (error) {
         return Response.json({
@@ -29,14 +29,20 @@ export async function PATCH(
 ) {
     try {
         const route = await params;
-        const body = await request.json()
+        const { tags, ...noteData } = await request.json()
 
-        const updatesResult = updateNote(route.id, body)
+        const updatesNote = updateNote(route.id, noteData)
 
-        if (updatesResult === 0) {
+        if (updatesNote === 0) {
             return Response.json({
                 msg: "0 updates were made"
             }, { status: 200 });
+        }
+
+        const updatesTags = updateNoteTags(route.id, tags);
+
+        if (!updatesTags.success) {
+            console.warn("Tags update failed: ", updatesTags);
         }
 
         return Response.json({
