@@ -73,8 +73,6 @@ export default function TasksOverview() {
         case "later":
           url.searchParams.set("has_due_date", "false");
           break;
-        default:
-          break;
       }
 
       if (lastQueriedRecord && !resetStates) {

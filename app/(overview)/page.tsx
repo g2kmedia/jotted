@@ -1,6 +1,8 @@
 "use client"
 
-import { NoteWithTags, TaskWithTags } from "@/lib/types";
+import { getAllNotesLocally, getAllTasksLocally } from "@/lib/indexeddb";
+import { offlineSaveAndSync } from "@/lib/sync";
+import { localNote, localTask } from "@/lib/types";
 import { Circle, Pin } from "lucide-react";
 import { DateTime } from "luxon";
 import Link from "next/link";
@@ -14,67 +16,105 @@ const TASK_PRIORITY_LABELS: Record<number, string> = {
 };
 
 const now = DateTime.now();
+const endOfDay = now.endOf("day").toISO();
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Partial<TaskWithTags>[] | undefined>(undefined);
-  const [notes, setNotes] = useState<Partial<NoteWithTags>[] | undefined>(undefined);
+  const [tasks, setTasks] = useState<localTask[] | null>(null);
+  const [notes, setNotes] = useState<localNote[] | null>(null);
 
   const loadTasks = async (): Promise<void> => {
-    const url = new URL("/api/tasks", window.location.origin);
-    url.searchParams.set("columns", "id,title,due_date,priority,is_completed");
-    url.searchParams.set("is_completed", "0");
+    if (navigator.onLine) {
+      const url = new URL("/api/tasks", window.location.origin);
+      url.searchParams.set("is_completed", "0");
+      url.searchParams.set("is_trashed", "0");
+      url.searchParams.set("due_date_end", endOfDay);
 
-    const endOfDay = now.endOf("day").toISO();
-    url.searchParams.set("due_date_end", endOfDay);
+      try {
+        const res = await fetch(url, { method: "GET" });
 
-    const finalUrl = url.pathname + url.search;
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tasks: ${res.status}`);
+        }
 
-    try {
-      const res = await fetch(finalUrl, { method: "GET" });
+        const { tasks: tasksToday } = await res.json();
 
-      if (!res.ok) {
-        throw new Error(`Failed to fetch tasks: ${res.status}`);
+        if (tasksToday.length === 0) {
+          setTasks([]);
+          return;
+        }
+
+        setTasks(tasksToday);
+        console.log(tasksToday)
+
+      } catch (error) {
+        console.error("Failed to load tasks from server:", error);
       }
+    } else {
+      try {
+        const tasksToday = await getAllTasksLocally(
+          "today",
+          endOfDay,
+          null,
+          [],
+          100
+        );
 
-      const { tasks: newTasks } = await res.json();
+        if (tasksToday.length === 0) {
+          setTasks([]);
+          return;
+        }
 
-      if (newTasks.length === 0) {
-        setTasks([]);
-        return;
+        const sortByDueDate = tasksToday.sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
+        setTasks(sortByDueDate);
+
+      } catch (error) {
+        console.error("Failed to load tasks locally:", error);
       }
-
-      setTasks(newTasks);
-
-    } catch (error) {
-      console.error("Failed to load tasks:", error);
     }
   }
 
   const loadNotes = async (): Promise<void> => {
-    const url = new URL("/api/notes", window.location.origin);
-    url.searchParams.set("columns", "id,title,is_pinned");
-    url.searchParams.set("is_pinned", "1");
+    if (navigator.onLine) {
+      const url = new URL("/api/notes", window.location.origin);
+      url.searchParams.set("is_pinned", "1");
 
-    const finalUrl = url.pathname + url.search;
+      try {
+        const res = await fetch(url, { method: "GET" });
 
-    try {
-      const res = await fetch(finalUrl, { method: "GET" });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch notes: ${res.status}`);
+        }
 
-      if (!res.ok) {
-        throw new Error(`Failed to fetch notes: ${res.status}`);
+        const { notes: newNotes } = await res.json();
+
+        if (newNotes === 0) {
+          setNotes([]);
+          return;
+        }
+
+        setNotes(newNotes);
+
+      } catch (error) {
+        console.error("Failed to load notes from server:", error);
       }
+    } else {
+      try {
+        const pinnedNotes = await getAllNotesLocally(
+          "pinned",
+          null,
+          [],
+          50
+        );
 
-      const { notes: newNotes } = await res.json();
+        if (pinnedNotes.length === 0) {
+          setNotes([]);
+        }
 
-      if (newNotes === 0) {
-        setNotes([]);
-        return;
+        setNotes(pinnedNotes);
+
+      } catch (error) {
+        console.error("Failed to load notes locally:", error);
       }
-
-      setNotes(newNotes);
-
-    } catch (error) {
-      console.error("Failed to load notes:", error);
     }
   }
 
@@ -83,34 +123,31 @@ export default function Home() {
     loadNotes();
   }, []);
 
-  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: number | undefined, isCompleted: number | undefined): Promise<void> => {
+  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, isCompleted: number): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
 
     const newCompletedStatus = isCompleted === 0 ? 1 : 0;
 
     // Optimistically update UI
-    setTasks(prev => prev?.map(task =>
-      task.id === id ? { ...task, is_completed: newCompletedStatus } : task
-    ));
+    setTasks(prev => prev ? prev.map(task => {
+      return task.id === id ? { ...task, is_completed: newCompletedStatus } : task;
+    }
+    ) : prev);
 
     try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ is_completed: newCompletedStatus })
-      });
-
-      if (!res.ok) {
-        // Rollback on error
-        setTasks(prev => prev?.map(task =>
-          task.id === id ? { ...task, is_completed: isCompleted } : task
-        ));
-      }
+      await offlineSaveAndSync(
+        id,
+        "tasks",
+        "update",
+        { is_completed: newCompletedStatus }
+      );
     } catch (error) {
       // Rollback on error
-      setTasks(prev => prev?.map(task =>
-        task.id === id ? { ...task, is_completed: isCompleted } : task
-      ));
+      setTasks(prev => prev ? prev.map(task => {
+        return task.id === id ? { ...task, is_completed: isCompleted } : task;
+      }
+      ) : prev);
 
       toast.error("Failed to update task");
     }
