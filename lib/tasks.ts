@@ -49,7 +49,7 @@ type tasksApiParams = {
     dueDateStart?: string
     dueDateEnd?: string
     hasDueDate?: string
-    idBefore?: number
+    lastQueriedRecord?: { id: string, updated_at: string }
     tags?: string[]
     limit?: number
 }
@@ -66,7 +66,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         dueDateStart,
         dueDateEnd,
         hasDueDate,
-        idBefore,
+        lastQueriedRecord,
         tags = [],
         limit = 20
     } = params;
@@ -80,7 +80,7 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
         : "task.*";
 
     const whereClauses: string[] = [];
-    const queryParams: (string | number)[] = [];
+    const queryParams = [];
 
     if (isCompleted) {
         whereClauses.push('task.is_completed = ?');
@@ -88,13 +88,18 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
     }
 
     if (isTrashed) {
-        whereClauses.push('is_trashed = ?');
+        whereClauses.push('task.is_trashed = ?');
         queryParams.push(isTrashed);
     }
 
-    if (idBefore) {
-        whereClauses.push('task.id < ?');
-        queryParams.push(idBefore);
+    if (lastQueriedRecord) {
+        const clause = "task.updated_at < ? OR (task.updated_at = ? AND task.id < ?)";
+        whereClauses.push(`(${clause})`);
+        queryParams.push(
+            lastQueriedRecord.updated_at,
+            lastQueriedRecord.updated_at,
+            lastQueriedRecord.id
+        );
     }
 
     if (dueDateStart || dueDateEnd) {
@@ -136,9 +141,10 @@ export function getAllTasks(params: tasksApiParams): TaskWithTags[] | null {
     if (tags.length > 0) {
         const placeholders = tags.map(() => '?').join(",");
         whereClauses.push(`task.id IN (
-            SELECT DISTINCT task_tag.task_id
-            FROM task_tag
-            WHERE task_tag.tag_id IN (${placeholders})
+            SELECT DISTINCT tt.task_id
+            FROM task_tag tt
+            JOIN tag t ON tt.tag_id = t.id
+            WHERE t.name IN (${placeholders})
         )`);
         queryParams.push(...tags);
     }
@@ -213,7 +219,7 @@ export function deleteTask(id: string): number {
 }
 
 export function getTaskCounts(
-    params: { timezone: string, isCompleted: string | undefined }
+    params: { timezone: string, isCompleted: string | undefined, isTrashed: string | undefined }
 ): {
     today: number;
     week: number;
@@ -222,7 +228,8 @@ export function getTaskCounts(
 } {
     const {
         timezone,
-        isCompleted
+        isCompleted,
+        isTrashed
     } = params;
 
     let whereClause = 'WHERE 1=1';
@@ -231,6 +238,11 @@ export function getTaskCounts(
     if (isCompleted) {
         whereClause += ' AND is_completed = ?';
         queryParams.push(isCompleted);
+    }
+
+    if (isTrashed) {
+        whereClause += ' AND is_trashed = ?';
+        queryParams.push(isTrashed);
     }
 
     const today = DateTime.now().setZone(timezone);

@@ -2,17 +2,18 @@
 
 import TagsBar from "@/app/components/TagsBar";
 import { useTagsFilter } from "@/lib/hooks";
-import { NoteWithTags, Tag } from "@/lib/types";
+import { getAllNotesLocally, getAllNotesTagsLocally } from "@/lib/indexeddb";
+import { localNote } from "@/lib/types";
 import { Pin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
-  const [quickFilter, setQuickFilter] = useState<string | null>(null);
-  const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
-  const [notes, setNotes] = useState<Partial<NoteWithTags>[] | undefined>(undefined);
-  const [lastNoteId, setLastNoteId] = useState<number | null>(null);
+  const [quickFilter, setQuickFilter] = useState<"pinned" | "trashed" | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [notes, setNotes] = useState<localNote[] | null>(null);
+  const [lastQueriedRecord, setLastQueriedRecord] = useState<{ id: string, updated_at: string } | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -20,92 +21,133 @@ export default function NotesOverview() {
 
   const loadNotes = async (resetStates = false): Promise<void> => {
     if (resetStates) {
-      setNotes(undefined);
-      setLastNoteId(null);
+      setNotes(null);
+      setLastQueriedRecord(null);
       setHasMore(true);
     }
 
     if (!hasMore && !resetStates) return;
 
-    const url = new URL("/api/notes", window.location.origin);
+    if (navigator.onLine) {
+      const url = new URL("/api/notes", window.location.origin);
 
-    url.searchParams.set("columns", "id,title,updated_at,is_pinned");
-
-    if (quickFilter === "pinned") {
-      url.searchParams.set("is_pinned", "1");
-    } else if (quickFilter === "trashed") {
-      url.searchParams.set("is_trashed", "1");
-    } else {
-      url.searchParams.set("is_trashed", "0");
-    }
-
-    if (lastNoteId && !resetStates) {
-      url.searchParams.set("id_before", lastNoteId.toString());
-    }
-
-    if (activeTags.length > 0) {
-      url.searchParams.set("tags", activeTags.join());
-    }
-
-    try {
-      const res = await fetch(url, { method: "GET" });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch notes: ${res.status}`);
+      if (quickFilter === "pinned") {
+        url.searchParams.set("is_pinned", "1");
+        url.searchParams.set("is_trashed", "0");
+      } else if (quickFilter === "trashed") {
+        url.searchParams.set("is_trashed", "1");
+      } else {
+        url.searchParams.set("is_trashed", "0");
       }
 
-      const { notes: newNotes } = await res.json();
+      if (lastQueriedRecord && !resetStates) {
+        url.searchParams.set("last_queried_record", JSON.stringify(lastQueriedRecord));
+      }
 
-      if (newNotes.length === 0) {
-        setHasMore(false);
+      if (activeTags.length > 0) {
+        url.searchParams.set("tags", activeTags.join());
+      }
 
-        if (resetStates || !notes) {
-          setNotes([]);
+      try {
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch notes: ${res.status}`);
         }
 
-        return;
+        const { notes: newNotes } = await res.json();
+
+        if (newNotes.length === 0) {
+          setHasMore(false);
+
+          if (resetStates || !notes) {
+            setNotes([]);
+          }
+
+          return;
+        }
+
+        setNotes(prev => {
+          if (resetStates || !prev) return newNotes;
+
+          const existingIds = new Set(prev.map(note => note.id));
+          const uniqueNewNotes = newNotes.filter((note: localNote) => !existingIds.has(note.id));
+
+          return [...prev, ...uniqueNewNotes];
+        });
+
+        const lastRecord = newNotes[newNotes.length - 1];
+        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
+
+      } catch (error) {
+        console.error("Failed to load notes from server:", error);
       }
+    } else {
+      try {
+        const results = await getAllNotesLocally(
+          quickFilter,
+          resetStates ? null : lastQueriedRecord,
+          activeTags,
+          20
+        );
 
-      setNotes(prev => {
-        if (resetStates || !prev) return newNotes;
+        const newNotes = results;
 
-        const existingIds = new Set(prev.map(note => note.id));
-        const uniqueNewNotes = newNotes.filter((note: Partial<NoteWithTags>) => !existingIds.has(note.id));
+        if (!newNotes || newNotes.length === 0) {
+          setHasMore(false);
 
-        return [...prev, ...uniqueNewNotes];
-      });
+          if (resetStates || !notes) {
+            setNotes([]);
+          }
 
-      setLastNoteId(newNotes[newNotes.length - 1].id);
+          return;
+        }
 
-    } catch (error) {
-      console.error("Failed to load notes:", error);
+        setNotes(prev => {
+          if (resetStates || !prev) return newNotes;
+
+          const existingIds = new Set(prev.map(note => note.id));
+          const uniqueNewNotes = newNotes.filter(note => !existingIds.has(note.id));
+
+          return [...prev, ...uniqueNewNotes];
+        });
+
+        const lastRecord = newNotes[newNotes.length - 1];
+        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
+      } catch (error) {
+        console.error("Failed to load notes locally:", error);
+      }
     }
   }
 
   const loadTags = async (): Promise<void> => {
-    try {
-      const url = new URL("/api/notes/tags", window.location.origin);
-
-      if (quickFilter === "pinned") {
-        url.searchParams.set("is_pinned", "1");
-      } else if (quickFilter === "trashed") {
-        url.searchParams.set("is_trashed", "1");
-      } else {
-        url.searchParams.set("is_pinned", "0");
+    if (navigator.onLine) {
+      try {
+        const url = new URL("/api/notes/tags", window.location.origin);
         url.searchParams.set("is_trashed", "0");
+
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tags: ${res.status}`);
+        }
+
+        const { tags } = await res.json();
+
+        setTags(tags);
+
+      } catch (error) {
+        console.error("Failed to load tags from server:", error);
       }
+    } else {
+      try {
+        const tags = await getAllNotesTagsLocally();
 
-      const res = await fetch(url, { method: "GET" });
+        setTags(tags);
 
-      if (!res.ok) {
-        throw new Error(`Failed to fetch tags: ${res.status}`);
+      } catch (error) {
+        console.error("Failed to load tags locally:", error);
       }
-
-      const { tags } = await res.json();
-      setTags(tags);
-
-    } catch (error) {
-      console.error("Failed to load tags:", error);
     }
   }
 
@@ -142,7 +184,8 @@ export default function NotesOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />
+      {quickFilter !== "trashed"
+        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />}
       <section className="slide-in-bottom">
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">

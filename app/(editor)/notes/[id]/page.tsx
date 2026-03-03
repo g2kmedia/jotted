@@ -99,7 +99,7 @@ export default function Note(
 
         setNote(noteData.note);
         setTags((noteData.tags ?? []).map((tag: string) => "#" + tag));
-        
+
       } catch (error) {
         console.error("Failed to fetch note:", error);
         throw error;
@@ -237,7 +237,7 @@ export default function Note(
             {note.is_trashed === 0 ? (
               <Pin
                 onClick={() => pinNote()}
-                fill={note.is_pinned === 1 ? "currentColor" : ""}
+                fill={note.is_pinned === 1 ? "currentColor" : "none"}
                 className="hover:cursor-pointer"
               />
             ) : (
@@ -266,7 +266,7 @@ export default function Note(
       </div>
 
       <article>
-        <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right" />
+        <TagsInput tags={tags} onBlur={handleTagsUpdate} className="slide-in-right" />
         <h1 className="my-3 slide-in-left"><input
           type="text"
           value={note.title}

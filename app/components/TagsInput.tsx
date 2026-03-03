@@ -1,17 +1,17 @@
 import { useRef } from "react";
 
 export default function TagsInput(
-    { tags, onSubmit, className }: {
-        tags?: string[],
-        onSubmit: (value: string) => void
-        className?: string
+    { tags, onBlur, className }: {
+        tags?: string[];
+        onBlur: (value: string) => void;
+        className?: string;
     }
 ) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const handleSubmit = () => {
         if (inputRef.current) {
-            onSubmit(inputRef.current.value);
+            onBlur(inputRef.current.value);
         }
     }
 

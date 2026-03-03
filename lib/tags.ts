@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid';
 import { db } from "@/lib/database";
-import { Tag } from "./types";
 import { DateTime } from "luxon";
 
 interface TagRow {
@@ -74,22 +73,19 @@ type notesTagsApiParams = {
     isTrashed?: string
 }
 
-export function getAllNotesTags(params: notesTagsApiParams): Partial<Tag>[] {
-    const {
-        isPinned,
-        isTrashed
-    } = params;
+export function getAllNotesTags(params: notesTagsApiParams): string[] {
+    const { isPinned, isTrashed } = params;
 
     const whereClauses: string[] = [];
     const queryParams: string[] = [];
 
     if (isPinned) {
-        whereClauses.push('is_pinned = ?');
+        whereClauses.push('note.is_pinned = ?');
         queryParams.push(isPinned);
     }
 
     if (isTrashed) {
-        whereClauses.push('is_trashed = ?');
+        whereClauses.push('note.is_trashed = ?');
         queryParams.push(isTrashed);
     }
 
@@ -98,22 +94,22 @@ export function getAllNotesTags(params: notesTagsApiParams): Partial<Tag>[] {
         : "";
 
     const query = `
-        SELECT DISTINCT tag.id, tag.name
+        SELECT DISTINCT tag.name
         FROM tag
         WHERE EXISTS (
             SELECT 1
             FROM note_tag
             JOIN note ON note.id = note_tag.note_id
-            ${finalWhereClause}
             AND note_tag.tag_id = tag.id
+            ${finalWhereClause}
         )
         ORDER BY tag.name ASC
     `;
 
     const stmt = db.prepare(query);
-    const result = stmt.all(...queryParams) as Partial<Tag>[];
+    const result = stmt.all(...queryParams) as { name: string }[];
 
-    return result;
+    return result.map(row => row.name);
 }
 
 export function getTaskTags(noteId: string): string[] {
@@ -137,7 +133,7 @@ type tasksTagsApiParams = {
     hasDueDate?: string
 }
 
-export function getAllTasksTags(params: tasksTagsApiParams): Partial<Tag>[] {
+export function getAllTasksTags(params: tasksTagsApiParams): string[] {
     const {
         isCompleted,
         isTrashed,
@@ -183,22 +179,22 @@ export function getAllTasksTags(params: tasksTagsApiParams): Partial<Tag>[] {
         : "";
 
     const query = `
-        SELECT DISTINCT tag.id, tag.name
+        SELECT DISTINCT tag.name
         FROM tag
         WHERE EXISTS (
             SELECT 1
             FROM task_tag
             JOIN task ON task.id = task_tag.task_id
-            ${finalWhereClause}
             AND task_tag.tag_id = tag.id
+            ${finalWhereClause}
         )
         ORDER BY tag.name ASC
     `;
 
     const stmt = db.prepare(query);
-    const result = stmt.all(...queryParams) as Partial<Tag>[];
+    const result = stmt.all(...queryParams) as { name: string}[];
 
-    return result;
+    return result.map(row => row.name);
 }
 
 export function updateTaskTags(id: string, updates: string[]): number {

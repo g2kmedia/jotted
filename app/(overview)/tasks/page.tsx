@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { Circle, Trash2 } from 'lucide-react';
 import { useEffect, useState } from "react";
-import { Tag, TaskWithTags } from "@/lib/types";
+import { localTask } from "@/lib/types";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 import TagsBar from "@/app/components/TagsBar";
 import { useTagsFilter } from "@/lib/hooks";
+import { getAllTasksLocally, getAllTasksTagsLocally, getTaskCountsLocally } from "@/lib/indexeddb";
+import { offlineSaveAndSync } from "@/lib/sync";
 
 const TASK_PRIORITY_LABELS: Record<number, string> = {
   1: "High",
@@ -26,9 +28,9 @@ export default function TasksOverview() {
     scheduled: 0,
     later: 0
   });
-  const [tags, setTags] = useState<Omit<Tag, "created_at">[]>([]);
-  const [tasks, setTasks] = useState<Partial<TaskWithTags>[] | undefined>(undefined);
-  const [lastTaskId, setLastTaskId] = useState<number | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<localTask[] | null>(null);
+  const [lastQueriedRecord, setLastQueriedRecord] = useState<{ id: string, updated_at: string } | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -36,119 +38,19 @@ export default function TasksOverview() {
 
   const loadTasks = async (resetStates = false): Promise<void> => {
     if (resetStates) {
-      setTasks(undefined);
-      setLastTaskId(null);
+      setTasks(null);
+      setLastQueriedRecord(null);
       setHasMore(true);
-    } else if (!hasMore) {
-      return;
     }
 
-    const url = new URL("/api/tasks", window.location.origin);
+    if (!hasMore && !resetStates) return;
 
-    url.searchParams.set("columns", "id,title,due_date,priority,is_completed");
-
-    if (quickFilter === "completed") {
-      url.searchParams.set("is_completed", "1");
-    } else if (quickFilter === "trashed") {
-      url.searchParams.set("is_trashed", "1");
-    } else {
-      url.searchParams.set("is_completed", "0");
-      url.searchParams.set("is_trashed", "0");
-    }
-
-    switch (quickFilter) {
-      case "today":
-        const endOfDay = now.endOf("day").toISO();
-        url.searchParams.set("due_date_end", endOfDay);
-        break;
-      case "week":
-        const endOfWeek = now.endOf("week").toISO();
-        url.searchParams.set("due_date_end", endOfWeek);
-        break;
-      case "scheduled":
-        url.searchParams.set("has_due_date", "true");
-        break;
-      case "later":
-        url.searchParams.set("has_due_date", "false");
-        break;
-      default:
-        break;
-    }
-
-    if (lastTaskId && !resetStates) {
-      url.searchParams.set("id_before", lastTaskId.toString());
-    }
-
-    if (activeTags.length > 0) {
-      url.searchParams.set("tags", activeTags.join());
-    }
-
-    const finalUrl = url.pathname + url.search;
-
-    try {
-      const res = await fetch(finalUrl, { method: "GET" });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch tasks: ${res.status}`);
-      }
-
-      const { tasks: newTasks } = await res.json();
-
-      if (newTasks.length === 0) {
-        setHasMore(false);
-
-        if (resetStates || !tasks) {
-          setTasks([]);
-        }
-
-        return;
-      }
-
-      setTasks(prev => {
-        if (resetStates || !prev) return newTasks;
-
-        const existingIds = new Set(prev.map(task => task.id));
-        const uniqueNewTasks = newTasks.filter((task: Partial<TaskWithTags>) => !existingIds.has(task.id));
-
-        return [...prev, ...uniqueNewTasks];
-      });
-
-      setLastTaskId(newTasks[newTasks.length - 1].id);
-
-    } catch (error) {
-      console.error("Failed to load tasks:", error);
-    }
-  }
-
-  const loadTaskCounts = async (): Promise<void> => {
-    try {
-      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-      const url = new URL("/api/tasks/counts", window.location.origin);
-
-      url.searchParams.set("timezone", userTimezone);
-      url.searchParams.set("is_completed", "0");
-      url.searchParams.set("is_trashed", "0");
-
-      const res = await fetch(url, { method: "GET" });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch task counts: ${res.status}`);
-      }
-
-      const counts = await res.json();
-      setTaskCounts(counts);
-    } catch (error) {
-      console.error("Failed to load task counts:", error);
-    }
-  }
-
-  const loadTags = async (): Promise<void> => {
-    try {
-      const url = new URL("/api/tasks/tags", window.location.origin);
+    if (navigator.onLine) {
+      const url = new URL("/api/tasks", window.location.origin);
 
       if (quickFilter === "completed") {
         url.searchParams.set("is_completed", "1");
+        url.searchParams.set("is_trashed", "0");
       } else if (quickFilter === "trashed") {
         url.searchParams.set("is_trashed", "1");
       } else {
@@ -158,10 +60,12 @@ export default function TasksOverview() {
 
       switch (quickFilter) {
         case "today":
-          url.searchParams.set("due_date_end", now.endOf("day").toISO());
+          const endOfDay = now.endOf("day").toISO();
+          url.searchParams.set("due_date_end", endOfDay);
           break;
         case "week":
-          url.searchParams.set("due_date_end", now.endOf("week").toISO());
+          const endOfWeek = now.endOf("week").toISO();
+          url.searchParams.set("due_date_end", endOfWeek);
           break;
         case "scheduled":
           url.searchParams.set("has_due_date", "true");
@@ -169,19 +73,155 @@ export default function TasksOverview() {
         case "later":
           url.searchParams.set("has_due_date", "false");
           break;
+        default:
+          break;
       }
 
-      const res = await fetch(url, { method: "GET" });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch tags: ${res.status}`);
+      if (lastQueriedRecord && !resetStates) {
+        url.searchParams.set("last_queried_record", JSON.stringify(lastQueriedRecord));
       }
 
-      const { tags } = await res.json();
-      setTags(tags);
+      if (activeTags.length > 0) {
+        url.searchParams.set("tags", activeTags.join());
+      }
 
-    } catch (error) {
-      console.error("Failed to load tags:", error);
+      try {
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tasks: ${res.status}`);
+        }
+
+        const { tasks: newTasks } = await res.json();
+
+        if (newTasks.length === 0) {
+          setHasMore(false);
+
+          if (resetStates || !tasks) {
+            setTasks([]);
+          }
+
+          return;
+        }
+
+        setTasks(prev => {
+          if (resetStates || !prev) return newTasks;
+
+          const existingIds = new Set(prev.map(task => task.id));
+          const uniqueNewTasks = newTasks.filter((task: localTask) => !existingIds.has(task.id));
+
+          return [...prev, ...uniqueNewTasks];
+        });
+
+        const lastRecord = newTasks[newTasks.length - 1];
+        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
+
+      } catch (error) {
+        console.error("Failed to load tasks from server:", error);
+      }
+    } else {
+      try {
+        let dueDate: string | null = null;
+        quickFilter === "today" ? dueDate = now.endOf("day").toISO() : null;
+        quickFilter === "week" ? dueDate = now.endOf("week").toISO() : null;
+
+        const results = await getAllTasksLocally(
+          quickFilter,
+          dueDate,
+          resetStates ? null : lastQueriedRecord,
+          activeTags,
+          20
+        );
+
+        const newTasks = results;
+
+        if (!newTasks || newTasks.length === 0) {
+          setHasMore(false);
+
+          if (resetStates || !tasks) {
+            setTasks([]);
+          }
+
+          return;
+        }
+
+        setTasks(prev => {
+          if (resetStates || !prev) return newTasks;
+
+          const existingIds = new Set(prev.map(task => task.id));
+          const uniqueNewTasks = newTasks.filter(task => !existingIds.has(task.id));
+
+          return [...prev, ...uniqueNewTasks];
+        })
+
+        const lastRecord = newTasks[newTasks.length - 1];
+        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
+      } catch (error) {
+        console.error("Failed to load tasks locally:", error);
+      }
+    }
+  }
+
+  const loadTaskCounts = async (): Promise<void> => {
+    if (navigator.onLine) {
+      try {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        const url = new URL("/api/tasks/counts", window.location.origin);
+
+        url.searchParams.set("timezone", userTimezone);
+        url.searchParams.set("is_completed", "0");
+        url.searchParams.set("is_trashed", "0");
+
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch task counts: ${res.status}`);
+        }
+
+        const counts = await res.json();
+        setTaskCounts(counts);
+      } catch (error) {
+        console.error("Failed to load task counts from server:", error);
+      }
+    } else {
+      try {
+        const counts = await getTaskCountsLocally();
+        setTaskCounts(counts);
+      } catch (error) {
+        console.error("Failed to load task counts locally:", error);
+      }
+    }
+  }
+
+  const loadTags = async (): Promise<void> => {
+    if (navigator.onLine) {
+      try {
+        const url = new URL("/api/tasks/tags", window.location.origin);
+        url.searchParams.set("is_completed", "0");
+        url.searchParams.set("is_trashed", "0");
+
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tags: ${res.status}`);
+        }
+
+        const { tags } = await res.json();
+        setTags(tags);
+
+      } catch (error) {
+        console.error("Failed to load tags from server:", error);
+      }
+    } else {
+      try {
+        const tags = await getAllTasksTagsLocally();
+
+        setTags(tags);
+
+      } catch (error) {
+        console.error("Failed to load tags locally:", error);
+      }
     }
   }
 
@@ -202,34 +242,31 @@ export default function TasksOverview() {
     return () => clearTimeout(timer);
   }, []);
 
-  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: number | undefined, isCompleted: number | undefined): Promise<void> => {
+  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, isCompleted: number): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
 
     const newCompletedStatus = isCompleted === 0 ? 1 : 0;
 
     // Optimistically update UI
-    setTasks(prev => prev?.map(task =>
-      task.id === id ? { ...task, is_completed: newCompletedStatus } : task
-    ));
+    setTasks(prev => prev ? prev.map(task => {
+      return task.id === id ? { ...task, is_completed: newCompletedStatus } : task;
+    }
+    ) : prev);
 
     try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ is_completed: newCompletedStatus })
-      });
-
-      if (!res.ok) {
-        // Rollback on error
-        setTasks(prev => prev?.map(task =>
-          task.id === id ? { ...task, is_completed: isCompleted } : task
-        ));
-      }
+      await offlineSaveAndSync(
+        id,
+        "tasks",
+        "update",
+        { is_completed: newCompletedStatus }
+      );
     } catch (error) {
       // Rollback on error
-      setTasks(prev => prev?.map(task =>
-        task.id === id ? { ...task, is_completed: isCompleted } : task
-      ));
+      setTasks(prev => prev ? prev.map(task => {
+        return task.id === id ? { ...task, is_completed: isCompleted } : task;
+      }
+      ) : prev);
 
       toast.error("Failed to update task");
     }
@@ -283,7 +320,8 @@ export default function TasksOverview() {
           <span><Trash2 /></span>
         </button>
       </section>
-      <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />
+      {quickFilter !== "trashed"
+        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />}
       <section className="slide-in-bottom">
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">

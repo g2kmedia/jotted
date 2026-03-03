@@ -27,11 +27,14 @@ export async function GET(
         const columns = searchParams.get("columns")?.split(",") || undefined;
         const isPinned = searchParams.get("is_pinned") || undefined;
         const isTrashed = searchParams.get("is_trashed") || undefined;
-        const idBefore = Number(searchParams.get("id_before")) || undefined;
+
+        const lastQueriedRecordStr = searchParams.get("last_queried_record");
+        const lastQueriedRecord = lastQueriedRecordStr ? JSON.parse(lastQueriedRecordStr) : undefined;
+
         const tags = searchParams.get("tags")?.split(",") || undefined;
         const limit = Number(searchParams.get("limit")) || undefined;
 
-        const queryParams = { columns, isPinned, isTrashed, idBefore, tags, limit };
+        const queryParams = { columns, isPinned, isTrashed, lastQueriedRecord, tags, limit };
         
         const notes = getAllNotes(queryParams);
 

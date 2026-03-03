@@ -37,9 +37,9 @@ export function useDebouncedCallback<T>(
 }
 
 export function useTagsFilter() {
-    const [activeTags, setActiveTags] = useState<number[]>([]);
+    const [activeTags, setActiveTags] = useState<string[]>([]);
 
-    const handleTagsSelection = (tagId: number): void => {
+    const handleTagsSelection = (tagId: string): void => {
         setActiveTags(prev =>
             prev.includes(tagId)
                 ? prev.filter(t => t !== tagId)
@@ -130,10 +130,9 @@ export const useDeleteRecord = () => {
     ): Promise<void> => {
         const newTrashStatus = trashStatus === 0 ? 1 : 0;
 
-        const update = {
-            id: id,
-            is_trashed: newTrashStatus,
-        };
+        const update = recordType === "notes"
+            ? { id: id, is_trashed: newTrashStatus, is_pinned: 0 }
+            : { id: id, is_trashed: newTrashStatus };
 
         if (recordType === "notes") saveNoteLocally(update);
         if (recordType === "tasks") saveTaskLocally(update);

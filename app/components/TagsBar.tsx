@@ -1,18 +1,17 @@
-import { Tag } from "@/lib/types";
 import { useMemo } from "react";
 
 export default function TagsBar(
     { tags, activeTags, onTagSelect, className }: {
-        tags: Omit<Tag,"created_at">[],
-        activeTags: number[],
-        onTagSelect: (tagId: number) => void,
+        tags: string[],
+        activeTags: string[],
+        onTagSelect: (tagId: string) => void,
         className?: string
     }
 ) {
     const sortedTags = useMemo(() => {
         return [...tags].sort((a, b) => {
-            const aIsActive = activeTags.includes(a.id);
-            const bIsActive = activeTags.includes(b.id);
+            const aIsActive = activeTags.includes(a);
+            const bIsActive = activeTags.includes(b);
 
             if (aIsActive && !bIsActive) return -1;
             if (!aIsActive && bIsActive) return 1;
@@ -24,11 +23,11 @@ export default function TagsBar(
         <section className={`flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}>
             {sortedTags.map((tag) => (
                 <button
-                    key={tag.id}
-                    className={`${activeTags.includes(tag.id) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-full whitespace-nowrap cursor-pointer`}
-                    onClick={() => onTagSelect(tag.id)}
+                    key={tag}
+                    className={`${activeTags.includes(tag) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-full whitespace-nowrap cursor-pointer`}
+                    onClick={() => onTagSelect(tag)}
                 >
-                    #{tag.name}
+                    #{tag}
                 </button>
             ))}
         </section>

@@ -1,4 +1,5 @@
 import { localNote, localTask } from "./types";
+import { DateTime } from "luxon";
 
 const DB_NAME = "jotted";
 const DB_VERSION = 1;
@@ -10,6 +11,13 @@ interface PendingChanges {
     data: Partial<localNote | localTask> & { id: string };
     timestamp: number;
     synced: boolean;
+}
+
+const requestToPromise = <T>(req: IDBRequest): Promise<T> => {
+    return new Promise<T>((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
 }
 
 export const openDB = (): Promise<IDBDatabase> => {
@@ -25,11 +33,16 @@ export const openDB = (): Promise<IDBDatabase> => {
             if (!db.objectStoreNames.contains("notes")) {
                 const notesStore = db.createObjectStore("notes", { keyPath: "id" });
                 notesStore.createIndex("updated_at", "updated_at", { unique: false });
+                notesStore.createIndex("pinned_trashed", ["is_pinned", "is_trashed"], { unique: false });
+                notesStore.createIndex("tags", "tags", { multiEntry: true });
             }
 
             if (!db.objectStoreNames.contains("tasks")) {
                 const tasksStore = db.createObjectStore("tasks", { keyPath: "id" });
                 tasksStore.createIndex("updated_at", "updated_at", { unique: false });
+                tasksStore.createIndex("completed_trashed", ["is_completed", "is_trashed"], { unique: false });
+                tasksStore.createIndex("incompleted_due", ["is_completed", "is_trashed", "due_date"], { unique: false });
+                tasksStore.createIndex("tags", "tags", { multiEntry: true });
             }
 
             if (!db.objectStoreNames.contains("pendingChanges")) {
@@ -75,7 +88,7 @@ const pruneIfNeeded = (store: IDBObjectStore, storeType: "notes" | "tasks", maxR
 
             const index = store.index("updated_at");
 
-            const cursorReq = index.openCursor(); // ascending = oldest first
+            const cursorReq = index.openCursor(); // ascending
 
             cursorReq.onsuccess = () => {
                 const cursor = cursorReq.result;
@@ -169,6 +182,83 @@ export const getNoteLocally = async (noteId: string): Promise<localNote | undefi
     });
 }
 
+export const getAllNotesLocally = async (
+    quickFilter: "pinned" | "trashed" | null = null,
+    lastQueriedRecord: { id: string; updated_at: string } | null = null,
+    tags: string[] = [],
+    limit = 20
+): Promise<localNote[]> => {
+    const db = await openDB();
+    const tx = db.transaction("notes", "readonly");
+    const store = tx.objectStore("notes");
+    const index = store.index("pinned_trashed");
+
+    let allNotes: localNote[] = [];
+
+    if (quickFilter === null) {
+        const normalReq = index.getAll(IDBKeyRange.only([0, 0]));
+        const pinnedReq = index.getAll(IDBKeyRange.only([1, 0]));
+
+        const normalNotes = await new Promise<localNote[]>((resolve, reject) => {
+            normalReq.onsuccess = () => resolve(normalReq.result);
+            normalReq.onerror = () => reject(normalReq.error);
+        });
+
+        const pinnedNotes = await new Promise<localNote[]>((resolve, reject) => {
+            pinnedReq.onsuccess = () => resolve(pinnedReq.result);
+            pinnedReq.onerror = () => reject(pinnedReq.error);
+        });
+
+        allNotes = [...normalNotes, ...pinnedNotes];
+    } else {
+        const pin = quickFilter === "pinned" ? 1 : 0;
+        const trash = quickFilter === "trashed" ? 1 : 0;
+        const range = IDBKeyRange.only([pin, trash]);
+
+        const request = index.getAll(range);
+        allNotes = await new Promise<localNote[]>((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    let filteredNotes = allNotes.filter(note =>
+        !tags.length || tags.some(t => note.tags.includes(t))
+    );
+
+    filteredNotes.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+
+    if (lastQueriedRecord) {
+        const lastIdx = filteredNotes.findIndex(note => note.id === lastQueriedRecord.id);
+        if (lastIdx !== -1) {
+            filteredNotes = filteredNotes.slice(lastIdx + 1);
+        }
+    }
+
+    return filteredNotes.slice(0, limit);
+};
+
+export const getAllNotesTagsLocally = async (): Promise<string[]> => {
+    const db = await openDB();
+    const tx = db.transaction("notes", "readonly");
+    const store = tx.objectStore("notes");
+    const tagsIndex = store.index("tags");
+
+    const request = tagsIndex.getAll();
+
+    const notes = await new Promise<localNote[]>((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+
+    // Filter out trashed notes
+    const nonTrashedNotes = notes.filter(note => note.is_trashed !== 1);
+
+    const allTags = nonTrashedNotes.flatMap(note => note.tags);
+    return [...new Set(allTags)];
+};
+
+
 export const getTaskLocally = async (taskId: string): Promise<localTask | undefined> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readonly");
@@ -179,6 +269,132 @@ export const getTaskLocally = async (taskId: string): Promise<localTask | undefi
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
+}
+
+export const getAllTasksLocally = async (
+    quickFilter: string | null = null,
+    dueDate: string | null = null,
+    lastQueriedRecord: { id: string; updated_at: string } | null = null,
+    tags: string[] = [],
+    limit = 20
+): Promise<localTask[]> => {
+    const db = await openDB();
+    const tx = db.transaction("tasks", "readonly");
+    const store = tx.objectStore("tasks");
+
+    let indexName;
+
+    if (dueDate) {
+        indexName = "incompleted_due";
+    } else {
+        indexName = "completed_trashed";
+    }
+
+    const index = store.index(indexName);
+
+    let allTasks: localTask[] = [];
+
+    switch (quickFilter) {
+        case null:
+            const defaultReq = index.getAll(IDBKeyRange.only([0, 0]));
+            allTasks = await requestToPromise(defaultReq);
+            break;
+        case "completed":
+            const completedReq = index.getAll(IDBKeyRange.only([1, 0]));
+            allTasks = await requestToPromise(completedReq);
+            break;
+        case "trashed":
+            const trashedReq = index.getAll(IDBKeyRange.only([0, 1]));
+            allTasks = await requestToPromise(trashedReq);
+            break;
+        case "today":
+            const todayReq = index.getAll(IDBKeyRange.upperBound([0, 0, dueDate]));
+            allTasks = await requestToPromise(todayReq);
+            break;
+        case "week":
+            const weekReq = index.getAll(IDBKeyRange.upperBound([0, 0, dueDate]));
+            allTasks = await requestToPromise(weekReq);
+            break;
+        case "scheduled":
+            const scheduledReq = index.getAll(IDBKeyRange.only([0, 0]));
+            const rawScheduledTasks = await requestToPromise<localTask[]>(scheduledReq);
+            allTasks = rawScheduledTasks.filter(task => task.due_date !== null);
+            break;
+        case "later":
+            const laterReq = index.getAll(IDBKeyRange.only([0, 0]));
+            const rawLaterTasks = await requestToPromise<localTask[]>(laterReq);
+            allTasks = rawLaterTasks.filter(task => task.due_date === null);
+            break;
+    }
+
+    let filteredTasks = allTasks.filter(task =>
+        !tags.length || tags.some(t => task.tags.includes(t))
+    );
+
+    filteredTasks.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+
+    if (lastQueriedRecord) {
+        const lastIdx = filteredTasks.findIndex(task => task.id === lastQueriedRecord.id);
+        if (lastIdx !== -1) {
+            filteredTasks = filteredTasks.slice(lastIdx + 1);
+        }
+    }
+
+    return filteredTasks.slice(0, limit);
+}
+
+export const getAllTasksTagsLocally = async (): Promise<string[]> => {
+    const db = await openDB();
+    const tx = db.transaction("tasks", "readonly");
+    const store = tx.objectStore("tasks");
+    const tagsIndex = store.index("tags");
+
+    const request = tagsIndex.getAll();
+
+    const tasks = await requestToPromise<Promise<localTask[]>>(request);
+    const nonCompletedTrashedTasks = tasks.filter(task => task.is_completed !== 1 && task.is_trashed !== 1);
+
+    const allTags = nonCompletedTrashedTasks.flatMap(task => task.tags);
+    return [...new Set(allTags)];
+}
+
+export const getTaskCountsLocally = async (
+    isCompleted: number = 0,
+    isTrashed: number = 0
+): Promise<{
+    today: number,
+    week: number,
+    scheduled: number,
+    later: number
+}> => {
+    const db = await openDB();
+    const tx = db.transaction("tasks", "readonly");
+    const store = tx.objectStore("tasks");
+    const index = store.index("incompleted_due");
+    const laterIndex = store.index("completed_trashed");
+
+    const now = DateTime.now().setZone("UTC");
+    const endOfToday = now.endOf("day").toISO();
+    const endOfWeek = now.endOf("week").toISO();
+    const nextWeekStart = now.plus({ weeks: 1 }).startOf('week').toISO();
+
+    const counts = {
+        today: 0,
+        week: 0,
+        scheduled: 0,
+        later: 0
+    };
+
+    counts.today = await requestToPromise(index.count(IDBKeyRange.upperBound([isCompleted, isTrashed, endOfToday])));
+    counts.week = await requestToPromise(index.count(IDBKeyRange.upperBound([isCompleted, isTrashed, endOfWeek])));
+
+    const future = await requestToPromise<number>(index.count(IDBKeyRange.bound([isCompleted, isTrashed, nextWeekStart], [isCompleted, isTrashed, "9999-12-31T23:59:59.999Z"])));
+    counts.scheduled = future + counts.week;
+
+    const nonCompletedTrashedTasks = await requestToPromise<number>(laterIndex.count(IDBKeyRange.only([isCompleted, isTrashed])));
+    counts.later = nonCompletedTrashedTasks - counts.scheduled;
+
+    return counts;
 }
 
 // Delete locally

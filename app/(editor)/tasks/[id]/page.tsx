@@ -256,7 +256,7 @@ export default function Task(
             </div>
 
             <section className="p-2">
-                <TagsInput tags={tags} onSubmit={handleTagsUpdate} className="slide-in-right" />
+                <TagsInput tags={tags} onBlur={handleTagsUpdate} className="slide-in-right" />
                 <form onChange={handleTaskChange} className="flex flex-col slide-in-bottom">
                     <label htmlFor="title"></label>
                     <input

@@ -7,7 +7,7 @@ export const offlineSaveAndSync = async (
     recordType: "notes" | "tasks",
     dbOperation: "create" | "update" | "delete",
     updates: Partial<localNote | localTask>,
-    setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>,
+    setSaveStatus?: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>,
 ): Promise<void> => {
     const updatedAt = new Date().toISOString();
 
@@ -23,18 +23,18 @@ export const offlineSaveAndSync = async (
             data: { id, updated_at: updatedAt, ...updates }
         });
 
-        setSaveStatus("saved");
+        setSaveStatus?.("saved");
 
         if (navigator.onLine) {
             syncPendingChanges()
                 .then(success => {
-                    if (success) setSaveStatus("synced");
+                    if (success) setSaveStatus?.("synced");
                 })
                 .catch(error => console.error("Sync failed:", error));
         }
     } catch (error) {
         console.error("Failed to save offline and sync:", error);
-        setSaveStatus(null);
+        setSaveStatus?.(null);
         throw error;
     }
 }

@@ -44,7 +44,7 @@ type notesApiParams = {
     columns?: string[]
     isPinned?: string
     isTrashed?: string
-    idBefore?: number
+    lastQueriedRecord?: { id: string, updated_at: string }
     tags?: string[]
     limit?: number
 }
@@ -58,7 +58,7 @@ export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
         columns = [],
         isPinned,
         isTrashed,
-        idBefore,
+        lastQueriedRecord,
         tags = [],
         limit = 20
     } = params;
@@ -72,29 +72,35 @@ export function getAllNotes(params: notesApiParams): NoteWithTags[] | null {
         : "n.*";
 
     const whereClauses: string[] = [];
-    const queryParams: (string | number)[] = [];
+    const queryParams = [];
 
     if (isPinned) {
-        whereClauses.push('n.is_pinned = ?');
+        whereClauses.push("n.is_pinned = ?");
         queryParams.push(isPinned);
     }
 
     if (isTrashed) {
-        whereClauses.push('n.is_trashed = ?');
+        whereClauses.push("n.is_trashed = ?");
         queryParams.push(isTrashed);
     }
 
-    if (idBefore) {
-        whereClauses.push('n.id < ?');
-        queryParams.push(idBefore);
+    if (lastQueriedRecord) {
+        const clause = "n.updated_at < ? OR (n.updated_at = ? AND n.id < ?)";
+        whereClauses.push(`(${clause})`);
+        queryParams.push(
+            lastQueriedRecord.updated_at,
+            lastQueriedRecord.updated_at,
+            lastQueriedRecord.id
+        );
     }
 
     if (tags.length > 0) {
         const placeholders = tags.map(() => '?').join(",");
         whereClauses.push(`n.id IN (
             SELECT DISTINCT nt2.note_id 
-            FROM note_tag nt2 
-            WHERE nt2.tag_id IN (${placeholders})
+            FROM note_tag nt2
+            JOIN tag t ON nt2.tag_id = t.id
+            WHERE t.name IN (${placeholders})
         )`);
         queryParams.push(...tags);
     }

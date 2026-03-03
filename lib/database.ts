@@ -209,7 +209,7 @@ const cleanupTrashedRecords = (daysOld = 30): {
             tasksDeleted: taskResult.changes,
             tagsDeleted: tagResult.changes
         };
-    })
+    });
 
     return transaction();
 }
