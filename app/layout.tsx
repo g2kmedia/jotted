@@ -1,29 +1,63 @@
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "../components/theme-provider";
 import "./globals.css";
 import { Recursive } from "next/font/google";
+import { SerwistProvider } from "./serwist";
 
-const recursiveFont = Recursive();
+const APP_NAME = "Jotted";
+const APP_DEFAULT_TITLE = "Jotted";
+const APP_TITLE_TEMPLATE = "%s - PWA App";
+const APP_DESCRIPTION = "One place for everything on your mind. Think it, jot it, keep it.";
 
-export const metadata = {
-  title: "Jotted",
-  description: "One place for everything on your mind. Think it, jot it, keep it.",
+export const metadata: Metadata = {
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE,
+    // startUpImage: [],
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
   icons: {
     icon: [
       {
-        url: "/favicon-dark.ico"
+        url: "/icons/favicon-light.ico",
       },
       {
-        url: "/favicon-dark.ico",
-        media: "(prefers-color-scheme: light)"
-      },
-      {
-        url: "/favicon-light.ico",
+        url: "/icons/favicon-dark.ico",
         media: "(prefers-color-scheme: dark)"
-      }
+      },
     ]
   }
 };
+
+export const viewport: Viewport = {
+  themeColor: "#FFFFFF",
+};
+
+const recursiveFont = Recursive();
 
 export default function RootLayout({
   children,
@@ -39,7 +73,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SerwistProvider swUrl="/serwist/sw.js">
+            {children}
+          </SerwistProvider>
           <Toaster position="top-center" richColors />
         </ThemeProvider>
       </body>

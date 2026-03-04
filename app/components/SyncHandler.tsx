@@ -14,7 +14,7 @@ export default function SyncHandler() {
         }
 
         const handleOnline = () => {
-            toast.info("Back online.")
+            toast.info("Back online.");
             syncPendingChanges();
         }
 
