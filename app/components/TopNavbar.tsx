@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Search, X } from 'lucide-react';
 import Logo from "./Logo";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function TopNavbar() {
@@ -12,6 +12,22 @@ export default function TopNavbar() {
 
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>("");
+    const [isOnline, setIsOnline] = useState<boolean>(true);
+
+    useEffect(() => {
+        setIsOnline(navigator.onLine);
+
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+
+        return () => {
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
+        }
+    }, []);
 
     const handleSearch = async (searchTerm: string) => {
         if (searchTerm === "") {
@@ -59,11 +75,14 @@ export default function TopNavbar() {
                         }}
                     />
                 </>
-            ) : (
+            ) : (isOnline ? (
                 <Search
                     className="hover:cursor-pointer"
                     onClick={() => setIsSearchOpen(true)}
                 />
+            ) : (
+                <span className="text-muted-foreground">Offline</span>
+            )
             )}
         </nav>
     );

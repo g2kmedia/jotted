@@ -1,5 +1,6 @@
 import TopNavbar from "../components/TopNavbar";
 import BottomNavbar from "../components/BottomNavbar";
+import SyncHandler from "../components/SyncHandler";
 
 export default function OverviewLayout({
     children,
@@ -12,6 +13,7 @@ export default function OverviewLayout({
                 <TopNavbar />
             </header>
             <main id="main-scrollable-target" className="flex-1 overflow-y-auto mx-2">
+                <SyncHandler />
                 {children}
             </main>
             <footer className="fixed bottom-0 left-0 right-0 m-2 mb-4 bg-transparent">
