@@ -15,7 +15,7 @@ export default function SplitLayout({
 
     return (
         <>
-            <main className="h-full flex md:flex-row">
+            <main className="h-full flex mx-2 md:flex-row">
                 <section
                     className={`${isIdPath ? "hidden lg:block" : "block"} w-full lg:w-1/3 lg:max-w-md lg:min-w-sm`}
                 >

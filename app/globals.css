@@ -117,8 +117,8 @@
 
   html,
   body {
-    @apply w-screen h-[100dvh];
     /* 100dvh to fix mobile rendering */
+    @apply w-full h-[100dvh];
   }
 
   body {

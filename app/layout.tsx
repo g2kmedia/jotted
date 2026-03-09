@@ -72,7 +72,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={recursiveFont.className} suppressHydrationWarning>
-      {/* Some body CSS changes are also done inside globals.css */}
+      {/* CSS changes to the body are done inside globals.css */}
       <body>
         <ThemeProvider
           attribute="class"

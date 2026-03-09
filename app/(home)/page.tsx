@@ -162,7 +162,7 @@ export default function Home() {
       <header className="mx-2 mb-2">
         <TopNavbar />
       </header>
-      
+
       <section>
         {tasks.length === 0 ? (
           <h1 className="text-xl slide-in-left">No tasks for today</h1>
@@ -253,10 +253,10 @@ export default function Home() {
         )
         }
       </section>
-      
+
       <div className="h-18"></div>
 
-      <footer className="fixed bottom-0 left-0 right-0 pb-4 px-2 bg-transparent lg:w-1/4 lg:max-w-md lg:min-w-sm">
+      <footer className="fixed bottom-0 left-0 right-0 pb-4 px-2 bg-transparent lg:ml-2 lg:w-1/4 lg:max-w-md lg:min-w-sm"> {/* ml-2 used as offset for main's mx-2 */}
         <BottomNavbar />
       </footer>
     </>
