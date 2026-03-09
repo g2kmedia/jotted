@@ -1,5 +1,7 @@
 "use client"
 
+import BottomNavbar from "@/app/components/BottomNavbar";
+import TopNavbar from "@/app/components/TopNavbar";
 import { Note, Task } from "@/lib/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation"
@@ -62,6 +64,10 @@ export default function SearchResults() {
 
     return (
         <>
+            <header className="mx-2 mb-2">
+                <TopNavbar />
+            </header>
+            
             <section className="mb-6 grid grid-cols-2 gap-2 text-xl slide-in-right">
                 <button
                     className={`${quickFilter === "notes" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
@@ -78,7 +84,8 @@ export default function SearchResults() {
                     <span>{resultsCount.tasks}</span>
                 </button>
             </section>
-            <section className="slide-in-bottom">
+            
+            <section className="h-full slide-in-bottom">
                 {displayResults.length === 0 ? (
                     <p className="text-center">No results found</p>
                 ) : (
@@ -94,14 +101,19 @@ export default function SearchResults() {
                                 </div>
                                 <p
                                     className="text-sm font-light"
-                                    dangerouslySetInnerHTML={{ __html: item.content || "" }}
+                                    dangerouslySetInnerHTML={{ __html: item.content as string || "" }}
                                 />
                             </article>
                         </Link>
                     ))
                 )}
             </section>
-            <div className="h-16"></div>
+
+            <div className="h-18"></div>
+
+            <footer className="fixed bottom-0 left-0 right-0 pb-4 px-2 bg-transparent lg:w-1/4 lg:max-w-md lg:min-w-sm">
+                <BottomNavbar />
+            </footer>
         </>
     );
 }

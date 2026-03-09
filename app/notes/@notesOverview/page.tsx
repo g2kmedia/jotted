@@ -1,6 +1,8 @@
 "use client"
 
+import BottomNavbar from "@/app/components/BottomNavbar";
 import TagsBar from "@/app/components/TagsBar";
+import TopNavbar from "@/app/components/TopNavbar";
 import { useTagsFilter } from "@/lib/hooks";
 import { getAllNotesLocally, getAllNotesTagsLocally } from "@/lib/indexeddb";
 import { localNote } from "@/lib/types";
@@ -168,6 +170,10 @@ export default function NotesOverview() {
 
   return (
     <>
+      <header className="mx-2 mb-2">
+        <TopNavbar />
+      </header>
+
       <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-right" : ""}`}>
         <button
           className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
@@ -199,7 +205,6 @@ export default function NotesOverview() {
             next={loadNotes}
             hasMore={hasMore}
             loader={null}
-            scrollableTarget="main-scrollable-target" // id of main tag for scroll detection (overview/layout.tsx)
           >
             {notes.map((note) => {
               return (
@@ -220,8 +225,13 @@ export default function NotesOverview() {
             })}
           </InfiniteScroll>
         )}
-        <div className="h-16"></div>
       </section>
+
+      <div className="h-18"></div>
+
+      <footer className="fixed bottom-0 left-0 right-0 pb-4 px-2 bg-transparent lg:w-1/4 lg:max-w-md lg:min-w-sm">
+        <BottomNavbar />
+      </footer>
     </>
   );
 }

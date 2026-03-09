@@ -5,7 +5,7 @@ import { Editor } from "@/app/components/DynamicEditor";
 import type { localNote, Note } from "@/lib/types"
 import { ArrowLeft, Trash2, RotateCcw, Pin, Save, CloudCheck } from "lucide-react";
 import { toast } from "sonner";
-import { useScrollVisibility, useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
+import { useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
 import { deleteNoteLocally, getNoteLocally, queueChanges, saveNoteLocally } from "@/lib/indexeddb";
@@ -55,7 +55,6 @@ export default function Note(
   const pendingUpdatesRef = useRef<Partial<localNote>>({});
 
   const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, setTags, setSaveStatus });
-  const isVisible = useScrollVisibility();
   const { handleTrash, handleDelete } = useDeleteRecord();
 
   useEffect(() => {
@@ -173,7 +172,11 @@ export default function Note(
     setSaveStatus(null);
     setNote(prev => prev ? { ...prev, title: newTitle } : null);
 
-    const updates = { ...pendingUpdatesRef.current, title: newTitle };
+    const updates = {
+      ...pendingUpdatesRef.current,
+      title: newTitle,
+      tags: note?.tags // always sending the current tags because API would otherwise delete them
+    };
     pendingUpdatesRef.current = updates;
     debouncedSave(updates);
   }
@@ -185,7 +188,8 @@ export default function Note(
     const updates = {
       ...pendingUpdatesRef.current,
       content: newDocument,
-      content_plaintext: plainText
+      content_plaintext: plainText,
+      tags: note?.tags // always sending the current tags because API would otherwise delete them
     };
     pendingUpdatesRef.current = updates;
     debouncedSave(updates);
@@ -217,9 +221,7 @@ export default function Note(
   return (
     <>
       <nav
-        className={`mx-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground sticky top-0 z-50 bg-background transition-opacity duration-300
-          ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}
-        `}>
+        className="mx-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground bg-background">
         <ul className="h-full flex justify-between items-center w-full">
           <li>
             <Link
@@ -265,9 +267,9 @@ export default function Note(
         {!saveStatus && <span>{'\u00A0'}</span>}
       </div>
 
-      <article>
+      <article className="h-screen overflow-y-auto">
         <TagsInput tags={tags} onBlur={handleTagsUpdate} className="slide-in-right" />
-        <h1 className="my-3 slide-in-left"><input
+        <h1 className="my-3 slide-in-right"><input
           type="text"
           value={note.title}
           onChange={handleTitleChange}
@@ -275,7 +277,7 @@ export default function Note(
           className="w-full text-center text-3xl font-bold focus-visible:outline-none"
         /></h1>
         <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
-      </article >
+      </article>
 
       <ConfirmDeleteDialog
         open={showDeleteDialog}

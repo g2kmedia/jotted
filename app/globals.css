@@ -127,12 +127,6 @@
 }
 
 @layer components {
-
-  /* Wrap text in editor */
-  .bn-editor {
-    @apply w-screen
-  }
-
   /* Improve Slash Menu rendering for mobile */
   div:has(#bn-suggestion-menu) {
     @apply !transform-none !left-6 !top-8 !min-h-[50vh] !max-h-[50vh];

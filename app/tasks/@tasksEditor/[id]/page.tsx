@@ -162,7 +162,8 @@ export default function Task(
         const taskUpdate: Partial<localTask> = {
             ...rest,
             due_date: dueDate,
-            priority: priority ? Number(priority) : null
+            priority: priority ? Number(priority) : null,
+            tags: task?.tags // always sending the current tags because API would otherwise delete them
         }
 
         // Optimistic UI update needed for deleteEmptyTask logic

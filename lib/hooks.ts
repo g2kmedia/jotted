@@ -96,30 +96,6 @@ export function useTagsUpdate(
     return handleTagsUpdate;
 }
 
-export function useScrollVisibility(threshold = 10): boolean {
-    const [isVisible, setIsVisible] = useState(true);
-    const lastScrollY = useRef(0);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-
-            if (currentScrollY < lastScrollY.current) {
-                setIsVisible(true);
-            } else if (currentScrollY > lastScrollY.current && currentScrollY > threshold) {
-                setIsVisible(false);
-            }
-
-            lastScrollY.current = currentScrollY;
-        };
-
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    return isVisible;
-}
-
 export const useDeleteRecord = () => {
     const router = useRouter();
 

@@ -8,6 +8,8 @@ import { DateTime } from "luxon";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import TopNavbar from "../components/TopNavbar";
+import BottomNavbar from "../components/BottomNavbar";
 
 const TASK_PRIORITY_LABELS: Record<number, string> = {
   1: "High",
@@ -156,16 +158,17 @@ export default function Home() {
   if (!tasks || !notes) return null;
 
   return (
-    <div
-      className={`grid h-full`}
-      style={{ gridTemplateRows: `${tasks.length === 0 ? "auto" : "1fr"} auto ${notes.length === 0 ? "auto" : "1fr"}` }}
-    >
-      <section className="overflow-y-auto min-h-0">
+    <>
+      <header className="mx-2 mb-2">
+        <TopNavbar />
+      </header>
+      
+      <section>
         {tasks.length === 0 ? (
           <h1 className="text-xl slide-in-left">No tasks for today</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background px-1.5 pb-1.5 text-xl slide-in-left">
+            <h1 className="bg-background px-1.5 pb-1.5 text-xl slide-in-left">
               Today's tasks <span className="text-muted-foreground italic">({tasks.length})</span>
             </h1>
             <section className="slide-in-right">
@@ -219,12 +222,12 @@ export default function Home() {
 
       <div className="py-2 border-b-1 border-foreground"></div>
 
-      <section className="overflow-y-auto min-h-0">
+      <section>
         {notes.length === 0 ? (
           <h1 className="pt-2 mb-4 boborder-foreground text-xl slide-in-left">No pinned notes</h1>
         ) : (
           <>
-            <h1 className="sticky top-0 z-10 bg-background p-1.5 text-xl slide-in-left">
+            <h1 className="bg-background p-1.5 text-xl slide-in-left">
               Pinned notes <span className="text-muted-foreground italic">({notes.length})</span>
             </h1>
             <section className="slide-in-right">
@@ -249,9 +252,13 @@ export default function Home() {
           </>
         )
         }
-
-        <div className="h-16"></div>
       </section>
-    </div>
+      
+      <div className="h-18"></div>
+
+      <footer className="fixed bottom-0 left-0 right-0 pb-4 px-2 bg-transparent lg:w-1/4 lg:max-w-md lg:min-w-sm">
+        <BottomNavbar />
+      </footer>
+    </>
   );
 }
