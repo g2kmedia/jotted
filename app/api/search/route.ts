@@ -9,7 +9,7 @@ export async function GET(
         const term = searchParams.get("term") || "";
 
         const results = searchAll(term);
-
+        console.log(results)
         return Response.json(results, { status: 200 });
 
     } catch (error) {

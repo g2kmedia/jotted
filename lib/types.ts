@@ -65,3 +65,7 @@ export type NoteWithTags = Partial<Note> & {
 export type TaskWithTags = Partial<Task> & {
     tags?: string[]
 }
+
+export type SearchResult = (Note | Task) & {
+    type: "notes" | "tasks"
+};

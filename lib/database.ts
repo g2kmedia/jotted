@@ -74,6 +74,7 @@ const initDd = (): void => {
     // FTS5 virtual tables
     const createNoteFts = `
         CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5(
+            note_id,
             title,
             content_plaintext
         )
@@ -83,8 +84,8 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS note_fts_insert
         AFTER INSERT ON note
         BEGIN
-            INSERT INTO note_fts(rowid, title, content_plaintext)
-            VALUES (NEW.rowid, NEW.title, NEW.content_plaintext);
+            INSERT INTO note_fts(note_id, title, content_plaintext)
+            VALUES (NEW.id, NEW.title, NEW.content_plaintext);
         END
     `;
 
@@ -92,8 +93,9 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS note_fts_update
         AFTER UPDATE OF title, content_plaintext ON note
         BEGIN
-            UPDATE note_fts SET title = NEW.title, content_plaintext = NEW.content_plaintext
-            WHERE rowid = NEW.rowid;
+            DELETE FROM note_fts WHERE note_id = OLD.id;
+            INSERT INTO note_fts(note_id, title, content_plaintext)
+            VALUES (NEW.id, NEW.title, NEW.content_plaintext);
         END
     `;
 
@@ -101,12 +103,13 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS note_fts_delete
         AFTER DELETE ON note
         BEGIN
-            DELETE FROM note_fts WHERE rowid = OLD.rowid;
+            DELETE FROM note_fts WHERE note_id = OLD.id;
         END
     `;
 
     const createTaskFts = `
         CREATE VIRTUAL TABLE IF NOT EXISTS task_fts USING fts5(
+            task_id,
             title,
             content
         )
@@ -116,8 +119,8 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS task_fts_insert
         AFTER INSERT ON task
         BEGIN
-            INSERT INTO task_fts(rowid, title, content)
-            VALUES (NEW.rowid, NEW.title, NEW.content);
+            INSERT INTO task_fts(task_id, title, content)
+            VALUES (NEW.id, NEW.title, NEW.content);
         END
     `;
 
@@ -125,8 +128,9 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS task_fts_update
         AFTER UPDATE OF title, content ON task
         BEGIN
-            UPDATE task_fts SET title = NEW.title, content = NEW.content
-            WHERE rowid = NEW.rowid;
+            DELETE FROM task_fts WHERE task_id = OLD.id;
+            INSERT INTO task_fts(task_id, title, content)
+            VALUES (NEW.id, NEW.title, NEW.content);
         END
     `;
 
@@ -134,7 +138,7 @@ const initDd = (): void => {
         CREATE TRIGGER IF NOT EXISTS task_fts_delete
         AFTER DELETE ON task
         BEGIN
-            DELETE FROM task_fts WHERE rowid = OLD.rowid;
+            DELETE FROM task_fts WHERE task_id = OLD.id;
         END
     `;
 

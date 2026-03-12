@@ -46,7 +46,6 @@ export default function Home() {
         }
 
         setTasks(tasksToday);
-        console.log(tasksToday)
 
       } catch (error) {
         console.error("Failed to load tasks from server:", error);

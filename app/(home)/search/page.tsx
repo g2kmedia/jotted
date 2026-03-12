@@ -2,20 +2,17 @@
 
 import BottomNavbar from "@/app/components/BottomNavbar";
 import TopNavbar from "@/app/components/TopNavbar";
-import { Note, Task } from "@/lib/types";
+import { SearchResult } from "@/lib/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-type SearchResult = (Partial<Note> | Partial<Task>) & { type: 'notes' | 'tasks' };
-
 export default function SearchResults() {
     const searchParams = useSearchParams();
     const term = searchParams.get("term");
-    const type = searchParams.get("type");
 
-    const [quickFilter, setQuickFilter] = useState<string | null>(null);
+    const [quickFilter, setQuickFilter] = useState<"notes" | "tasks" | null>(null);
     const [resultsCount, setResultsCount] = useState({ notes: 0, tasks: 0 });
     const [results, setResults] = useState<SearchResult[] | null>(null);
 
@@ -24,7 +21,6 @@ export default function SearchResults() {
             try {
                 const url = new URL("/api/search", window.location.origin);
                 url.searchParams.set("term", term!);
-                if (type) url.searchParams.set("type", type);
 
                 const res = await fetch(url, { method: "GET" });
 
@@ -53,7 +49,7 @@ export default function SearchResults() {
             setResultsCount({ notes: 0, tasks: 0 });
             fetchResults();
         }
-    }, [term, type]);
+    }, [term]);
 
     const displayResults = results?.filter(item => {
         if (quickFilter === "notes") return item.type === "notes";
