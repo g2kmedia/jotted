@@ -11,6 +11,7 @@ export default function SplitLayout({
     editor: React.ReactNode;
 }>) {
     const pathname = usePathname();
+    const recordType = pathname.split("/")[1]; // -> DO I NEED THIS?
     const isIdPath = /^\/(notes|tasks)\/.+/.test(pathname);
 
     return (

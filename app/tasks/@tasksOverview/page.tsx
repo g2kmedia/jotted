@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { Circle, Trash2 } from 'lucide-react';
-import { useEffect, useState } from "react";
-import { localTask } from "@/lib/types";
+import { useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 import TagsBar from "@/app/components/TagsBar";
-import { useTagsFilter } from "@/lib/hooks";
 import { getAllTasksLocally, getAllTasksTagsLocally, getTaskCountsLocally } from "@/lib/indexeddb";
 import { offlineSaveAndSync } from "@/lib/sync";
 import TopNavbar from "@/app/components/TopNavbar";
 import BottomNavbar from "@/app/components/BottomNavbar";
+import { useTagsStore, useTaskStore } from "@/lib/stores";
 
 const TASK_PRIORITY_LABELS: Record<number, string> = {
   1: "High",
@@ -23,20 +22,26 @@ const TASK_PRIORITY_LABELS: Record<number, string> = {
 const now = DateTime.now();
 
 export default function TasksOverview() {
-  const [quickFilter, setQuickFilter] = useState<string | null>(null);
-  const [taskCounts, setTaskCounts] = useState({
-    today: 0,
-    week: 0,
-    scheduled: 0,
-    later: 0
-  });
-  const [tags, setTags] = useState<string[]>([]);
-  const [tasks, setTasks] = useState<localTask[] | null>(null);
-  const [lastQueriedRecord, setLastQueriedRecord] = useState<{ id: string, updated_at: string } | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const {
+    tasks,
+    taskCounts,
+    lastQueriedRecord,
+    hasMore,
+    isInitialLoad,
+    quickFilter,
+    tags,
+    setTasks,
+    setTaskCounts,
+    appendNewTasks,
+    updateTask,
+    setLastQueriedRecord,
+    setHasMore,
+    setIsInitialLoad,
+    setQuickFilter,
+    setTags
+  } = useTaskStore();
 
-  const { activeTags, handleTagsSelection } = useTagsFilter();
+  const { activeTags, toggleActiveTag } = useTagsStore();
 
   const loadTasks = async (resetStates = false): Promise<void> => {
     if (resetStates) {
@@ -104,14 +109,7 @@ export default function TasksOverview() {
           return;
         }
 
-        setTasks(prev => {
-          if (resetStates || !prev) return newTasks;
-
-          const existingIds = new Set(prev.map(task => task.id));
-          const uniqueNewTasks = newTasks.filter((task: localTask) => !existingIds.has(task.id));
-
-          return [...prev, ...uniqueNewTasks];
-        });
+        resetStates || !tasks ? setTasks(newTasks) : appendNewTasks(newTasks);
 
         const lastRecord = newTasks[newTasks.length - 1];
         setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
@@ -145,14 +143,7 @@ export default function TasksOverview() {
           return;
         }
 
-        setTasks(prev => {
-          if (resetStates || !prev) return newTasks;
-
-          const existingIds = new Set(prev.map(task => task.id));
-          const uniqueNewTasks = newTasks.filter(task => !existingIds.has(task.id));
-
-          return [...prev, ...uniqueNewTasks];
-        })
+        resetStates || !tasks ? setTasks(newTasks) : appendNewTasks(newTasks);
 
         const lastRecord = newTasks[newTasks.length - 1];
         setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
@@ -242,31 +233,31 @@ export default function TasksOverview() {
     return () => clearTimeout(timer);
   }, []);
 
-  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, isCompleted: number): Promise<void> => {
+  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, newStatus: number): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
 
-    const newCompletedStatus = isCompleted === 0 ? 1 : 0;
+    const currentCompletedStatus = newStatus === 0 ? 0 : 1;
+    const newCompletedStatus = newStatus === 0 ? 1 : 0;
 
     // Optimistically update UI
-    setTasks(prev => prev ? prev.map(task => {
-      return task.id === id ? { ...task, is_completed: newCompletedStatus } : task;
-    }
-    ) : prev);
+    updateTask(id, { is_completed: newCompletedStatus });
+
+    const tags = tasks?.find(t => t.id === id)?.tags;
 
     try {
       await offlineSaveAndSync(
         id,
         "tasks",
         "update",
-        { is_completed: newCompletedStatus }
+        {
+          is_completed: newCompletedStatus,
+          tags: tags
+        }
       );
     } catch (error) {
       // Rollback on error
-      setTasks(prev => prev ? prev.map(task => {
-        return task.id === id ? { ...task, is_completed: isCompleted } : task;
-      }
-      ) : prev);
+      updateTask(id, { is_completed: currentCompletedStatus })
 
       toast.error("Failed to update task");
     }
@@ -280,52 +271,52 @@ export default function TasksOverview() {
         <TopNavbar />
       </header>
 
-      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-right" : ""}`}>
+      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-left" : ""}`}>
         <button
           className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "today" ? null : "today")}
+          onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
         >
           <span>Today</span>
           <span>{taskCounts.today}</span>
         </button>
         <button
           className={`${quickFilter === "week" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "week" ? null : "week")}
+          onClick={() => setQuickFilter(quickFilter === "week" ? null : "week")}
         >
           <span>This week</span>
           <span>{taskCounts.week}</span>
         </button>
         <button
           className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "scheduled" ? null : "scheduled")}
+          onClick={() => setQuickFilter(quickFilter === "scheduled" ? null : "scheduled")}
         >
           <span>Scheduled</span>
           <span>{taskCounts.scheduled}</span>
         </button>
         <button
           className={`${quickFilter === "later" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "later" ? null : "later")}
+          onClick={() => setQuickFilter(quickFilter === "later" ? null : "later")}
         >
           <span>Later</span>
           <span>{taskCounts.later}</span>
         </button>
         <button
           className={`${quickFilter === "completed" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "completed" ? null : "completed")}
+          onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
         >
           <span>Completed</span>
           <span><Circle /></span>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "trashed" ? null : "trashed")}
+          onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
           <span>Trashed</span>
           <span><Trash2 /></span>
         </button>
       </section>
       {quickFilter !== "trashed"
-        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />}
+        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} className={isInitialLoad ? "slide-in-left" : ""} />}
       <section className="slide-in-bottom">
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">

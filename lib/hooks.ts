@@ -1,8 +1,9 @@
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { deleteNoteLocally, deleteTaskLocally, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
 import { offlineSaveAndSync, syncPendingChanges } from "./sync";
+import { useNoteStore, useTaskStore } from "./stores";
 
 export function useDebouncedCallback<T>(
     callback: (data: T) => Promise<void>,
@@ -36,28 +37,17 @@ export function useDebouncedCallback<T>(
     return debounced;
 }
 
-export function useTagsFilter() {
-    const [activeTags, setActiveTags] = useState<string[]>([]);
-
-    const handleTagsSelection = (tagId: string): void => {
-        setActiveTags(prev =>
-            prev.includes(tagId)
-                ? prev.filter(t => t !== tagId)
-                : [...prev, tagId]
-        );
-    }
-
-    return { activeTags, handleTagsSelection };
-}
-
 export function useTagsUpdate(
-    { recordType, route, setTags, setSaveStatus }: {
+    { recordType, recordId, setTags, setSaveStatus }: {
         recordType: "notes" | "tasks",
-        route: string | null,
+        recordId: string,
         setTags: (tags: string[]) => void,
         setSaveStatus: React.Dispatch<React.SetStateAction<"synced" | "saved" | null>>
     }
 ) {
+    const { updateNote } = useNoteStore();
+    const { updateTask } = useTaskStore();
+
     const handleTagsUpdate = async (inputValue: string): Promise<void> => {
         const inputArr = inputValue ? inputValue.trim().split(/\s+/) : [];
         const newTags: string[] = [];
@@ -77,16 +67,22 @@ export function useTagsUpdate(
             }
         }
 
+        const tagsData = newTags.map(tag => tag.slice(1))
+
         try {
             await offlineSaveAndSync(
-                route!,
+                recordId!,
                 recordType,
                 "update",
-                { tags: newTags.map(tag => tag.slice(1)) },
+                { tags: tagsData },
                 setSaveStatus,
             );
 
             setTags(newTags);
+
+            recordType === "notes"
+                ? updateNote(recordId, { tags: tagsData })
+                : updateTask(recordId, { tags: tagsData });
         } catch (error) {
             console.error("Failed to update tags:", error);
             toast.error("Failed to update tags. Please try again.");
@@ -102,13 +98,15 @@ export const useDeleteRecord = () => {
     const handleTrash = async (
         recordType: "notes" | "tasks",
         id: string,
+        tags: string[],
         trashStatus: number,
     ): Promise<void> => {
         const newTrashStatus = trashStatus === 0 ? 1 : 0;
 
+        // always sending the current tags because API would otherwise delete them
         const update = recordType === "notes"
-            ? { id: id, is_trashed: newTrashStatus, is_pinned: 0 }
-            : { id: id, is_trashed: newTrashStatus };
+            ? { id: id, is_trashed: newTrashStatus, tags: tags, is_pinned: 0 }
+            : { id: id, is_trashed: newTrashStatus, tags: tags };
 
         if (recordType === "notes") saveNoteLocally(update);
         if (recordType === "tasks") saveTaskLocally(update);

@@ -12,6 +12,7 @@ import { deleteNoteLocally, getNoteLocally, queueChanges, saveNoteLocally } from
 import Link from "next/link";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { Block } from "@blocknote/core";
+import { useNoteStore } from "@/lib/stores";
 
 
 const extractPlaintextFromBlocks = (blocks: Block[]): string => {
@@ -46,36 +47,43 @@ const extractPlaintextFromBlocks = (blocks: Block[]): string => {
 export default function Note(
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const [route, setRoute] = useState<string | null>(null);
-  const [note, setNote] = useState<localNote | null>(null);
+  const {
+    notes,
+    appendNewNotes,
+    updateNote
+  } = useNoteStore();
+
+  const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const pendingUpdatesRef = useRef<Partial<localNote>>({});
 
-  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", route, setTags, setSaveStatus });
+  const handleTagsUpdate = useTagsUpdate({ recordType: "notes", recordId: currentNoteId!, setTags, setSaveStatus });
   const { handleTrash, handleDelete } = useDeleteRecord();
+
+  const note = notes?.find((n) => n.id === currentNoteId) ?? null;
 
   useEffect(() => {
     const getParams = async (): Promise<void> => {
       const { id } = await params;
-      setRoute(id);
+      setCurrentNoteId(id);
     };
 
     getParams();
   }, [params]);
 
   useEffect(() => {
-    if (!route) return;
+    if (!currentNoteId) return;
 
     const loadNote = async (): Promise<void> => {
       try {
-        const noteData = await getNoteLocally(route);
+        const noteData = await getNoteLocally(currentNoteId);
 
         if (noteData) {
-          setNote(noteData);
-          setTags((noteData.tags ?? []).map((tag: string) => "#" + tag));
+          appendNewNotes([noteData]);
+          setTags(noteData.tags ?? []);
           return;
         }
 
@@ -84,20 +92,21 @@ export default function Note(
       }
 
       try {
-        const res = await fetch(`/api/notes/${route}`, { method: "GET" });
+        const res = await fetch(`/api/notes/${currentNoteId}`, { method: "GET" });
 
         const noteData = await res.json();
-        noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
+        const parsedContent = noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
 
         // Cache note to IndexedDB
         await saveNoteLocally({
           ...noteData.note,
-          id: route,
+          id: currentNoteId,
+          content: parsedContent,
           tags: noteData.tags ?? []
         });
 
-        setNote(noteData.note);
-        setTags((noteData.tags ?? []).map((tag: string) => "#" + tag));
+        appendNewNotes([{ ...noteData.note, content: parsedContent }]);
+        setTags(noteData.tags ?? []);
 
       } catch (error) {
         console.error("Failed to fetch note:", error);
@@ -106,7 +115,7 @@ export default function Note(
     }
 
     loadNote();
-  }, [route]);
+  }, [currentNoteId]);
 
   useEffect(() => {
     const handleSyncCompleted = () => {
@@ -121,25 +130,28 @@ export default function Note(
   }, [saveStatus]);
 
   const pinNote = async (): Promise<void> => {
-    if (!route) return;
+    if (!currentNoteId) return;
 
     const currentPinStatus = note!.is_pinned;
     const newPinStatus = note!.is_pinned === 0 ? 1 : 0;
 
     // Optimistic update
-    setNote(prev => prev ? { ...prev, is_pinned: newPinStatus } : prev);
+    updateNote(currentNoteId, { is_pinned: newPinStatus });
 
     try {
       await offlineSaveAndSync(
-        route,
+        currentNoteId,
         "notes",
         "update",
-        { is_pinned: newPinStatus },
+        {
+          is_pinned: newPinStatus,
+          tags: note?.tags // always sending the current tags because API would otherwise delete them
+        },
         setSaveStatus
       );
     } catch (error) {
       // Rollback on error
-      setNote(prev => prev ? { ...prev, is_pinned: currentPinStatus } : prev);
+      updateNote(currentNoteId, { is_pinned: currentPinStatus });
 
       console.error("Failed to pin note:", error);
       toast.error("Failed to pin note");
@@ -148,14 +160,17 @@ export default function Note(
 
   const debouncedSave = useDebouncedCallback<Partial<localNote>>(
     async (updates) => {
-      if (!route) return;
+      if (!currentNoteId) return;
 
       try {
         await offlineSaveAndSync(
-          route,
+          currentNoteId,
           "notes",
           "update",
-          updates,
+          {
+            ...updates,
+            tags: note?.tags // always sending the current tags because API would otherwise delete them
+          },
           setSaveStatus
         );
 
@@ -167,45 +182,47 @@ export default function Note(
   );
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    if (!currentNoteId) return;
     const newTitle = e.target.value;
 
     setSaveStatus(null);
-    setNote(prev => prev ? { ...prev, title: newTitle } : null);
+    updateNote(currentNoteId, { title: newTitle })
 
     const updates = {
       ...pendingUpdatesRef.current,
-      title: newTitle,
-      tags: note?.tags // always sending the current tags because API would otherwise delete them
+      title: newTitle
     };
     pendingUpdatesRef.current = updates;
     debouncedSave(updates);
   }
 
   const handleContentChange = (newDocument: Block[]): void => {
+    if (!currentNoteId) return;
+
     setSaveStatus(null);
+    updateNote(currentNoteId, { content: newDocument });
     const plainText = extractPlaintextFromBlocks(newDocument);
 
     const updates = {
       ...pendingUpdatesRef.current,
       content: newDocument,
       content_plaintext: plainText,
-      tags: note?.tags // always sending the current tags because API would otherwise delete them
     };
     pendingUpdatesRef.current = updates;
     debouncedSave(updates);
   }
 
   const deleteEmptyNote = async (): Promise<void> => {
-    if (!route) return;
+    if (!currentNoteId) return;
 
     try {
-      await deleteNoteLocally(route);
+      await deleteNoteLocally(currentNoteId);
 
       await queueChanges({
-        recordId: `notes-${route}`,
+        recordId: `notes-${currentNoteId}`,
         recordType: "notes",
         operation: "delete",
-        data: { id: route }
+        data: { id: currentNoteId }
       });
 
       if (navigator.onLine) syncPendingChanges();
@@ -215,8 +232,7 @@ export default function Note(
     }
   }
 
-  if (!note) return null;
-  if (!route) return null;
+  if (!note || !currentNoteId) return null;
 
   return (
     <>
@@ -244,7 +260,7 @@ export default function Note(
               />
             ) : (
               <RotateCcw
-                onClick={() => handleTrash("notes", route, note.is_trashed!)}
+                onClick={() => handleTrash("notes", currentNoteId, tags, note.is_trashed!)}
                 className="text-accent hover:cursor-pointer"
               />
             )}
@@ -252,7 +268,7 @@ export default function Note(
           <li>
             <Trash2
               onClick={() => note.is_trashed === 0
-                ? handleTrash("notes", route, note.is_trashed)
+                ? handleTrash("notes", currentNoteId, tags, note.is_trashed)
                 : setShowDeleteDialog(true)
               }
               className="text-destructive hover:cursor-pointer"
@@ -283,7 +299,7 @@ export default function Note(
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         onConfirm={() => {
-          handleDelete("notes", route!);
+          handleDelete("notes", currentNoteId!);
           setShowDeleteDialog(false)
         }}
         recordType="note"

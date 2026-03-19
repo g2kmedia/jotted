@@ -19,7 +19,7 @@ export default function TagsInput(
         <input
             ref={inputRef}
             type="text"
-            defaultValue={tags?.join(" ")}
+            defaultValue={tags?.map(tag => "#" + tag).join(" ")}
             placeholder="add tags..."
             onBlur={handleSubmit}
             className={`w-full p-2 pr-2 text-right font-light text-muted-foreground outline-hidden peer ${className}`}

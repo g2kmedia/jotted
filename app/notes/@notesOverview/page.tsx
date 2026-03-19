@@ -3,23 +3,32 @@
 import BottomNavbar from "@/app/components/BottomNavbar";
 import TagsBar from "@/app/components/TagsBar";
 import TopNavbar from "@/app/components/TopNavbar";
-import { useTagsFilter } from "@/lib/hooks";
 import { getAllNotesLocally, getAllNotesTagsLocally } from "@/lib/indexeddb";
+import { useNoteStore, useTagsStore } from "@/lib/stores";
 import { localNote } from "@/lib/types";
 import { Pin, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
-  const [quickFilter, setQuickFilter] = useState<"pinned" | "trashed" | null>(null);
-  const [tags, setTags] = useState<string[]>([]);
-  const [notes, setNotes] = useState<localNote[] | null>(null);
-  const [lastQueriedRecord, setLastQueriedRecord] = useState<{ id: string, updated_at: string } | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const {
+    notes,
+    lastQueriedRecord,
+    hasMore,
+    isInitialLoad,
+    quickFilter,
+    tags,
+    setNotes,
+    appendNewNotes,
+    setLastQueriedRecord,
+    setHasMore,
+    setIsInitialLoad,
+    setQuickFilter,
+    setTags
+  } = useNoteStore();
 
-  const { activeTags, handleTagsSelection } = useTagsFilter();
+  const { activeTags, toggleActiveTag } = useTagsStore();
 
   const loadNotes = async (resetStates = false): Promise<void> => {
     if (resetStates) {
@@ -69,14 +78,14 @@ export default function NotesOverview() {
           return;
         }
 
-        setNotes(prev => {
-          if (resetStates || !prev) return newNotes;
+        const parsedNotes = newNotes.map((note: localNote) => ({
+          ...note,
+          content: typeof note.content === "string" && note.content !== ""
+            ? JSON.parse(note.content)
+            : note.content
+        }));
 
-          const existingIds = new Set(prev.map(note => note.id));
-          const uniqueNewNotes = newNotes.filter((note: localNote) => !existingIds.has(note.id));
-
-          return [...prev, ...uniqueNewNotes];
-        });
+        resetStates || !notes ? setNotes(parsedNotes) : appendNewNotes(parsedNotes);
 
         const lastRecord = newNotes[newNotes.length - 1];
         setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
@@ -105,14 +114,7 @@ export default function NotesOverview() {
           return;
         }
 
-        setNotes(prev => {
-          if (resetStates || !prev) return newNotes;
-
-          const existingIds = new Set(prev.map(note => note.id));
-          const uniqueNewNotes = newNotes.filter(note => !existingIds.has(note.id));
-
-          return [...prev, ...uniqueNewNotes];
-        });
+        resetStates || !notes ? setNotes(newNotes) : appendNewNotes(newNotes);
 
         const lastRecord = newNotes[newNotes.length - 1];
         setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
@@ -174,24 +176,24 @@ export default function NotesOverview() {
         <TopNavbar />
       </header>
 
-      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-right" : ""}`}>
+      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-left" : ""}`}>
         <button
           className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "pinned" ? null : "pinned")}
+          onClick={() => setQuickFilter(quickFilter === "pinned" ? null : "pinned")}
         >
           <span>Pinned</span>
           <span><Pin /></span>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
-          onClick={() => setQuickFilter(prev => prev === "trashed" ? null : "trashed")}
+          onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
           <span>Trashed</span>
           <span><Trash2 /></span>
         </button>
       </section>
       {quickFilter !== "trashed"
-        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={handleTagsSelection} className={isInitialLoad ? "slide-in-left" : ""} />}
+        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} className={isInitialLoad ? "slide-in-left" : ""} />}
       <section className="slide-in-bottom">
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">

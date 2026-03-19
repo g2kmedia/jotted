@@ -4,6 +4,7 @@ import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
 import { useDebouncedCallback, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
 import { deleteTaskLocally, getTaskLocally, queueChanges, saveTaskLocally } from "@/lib/indexeddb";
+import { useTaskStore } from "@/lib/stores";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import type { localTask, Task } from "@/lib/types";
 import { ArrowLeft, CalendarOff, CircleCheck, CloudCheck, RotateCcw, Save, Trash2 } from "lucide-react";
@@ -15,38 +16,45 @@ import { toast } from "sonner";
 export default function Task(
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const [route, setRoute] = useState<string | null>(null);
-    const [task, setTask] = useState<localTask | null>(null);
+    const {
+        tasks,
+        appendNewTasks,
+        updateTask
+    } = useTaskStore();
+
+    const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
     const [tags, setTags] = useState<string[]>([]);
     const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const pendingUpdatesRef = useRef<Partial<localTask>>({});
 
-    const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", route, setTags, setSaveStatus });
+    const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", recordId: currentTaskId!, setTags, setSaveStatus });
     const { handleTrash, handleDelete } = useDeleteRecord();
+
+    const task = tasks?.find((t) => t.id === currentTaskId) ?? null;
 
     const router = useRouter();
 
     useEffect(() => {
         const getParams = async () => {
             const { id } = await params;
-            setRoute(id);
+            setCurrentTaskId(id);
         }
 
         getParams();
     }, [params]);
 
     useEffect(() => {
-        if (!route) return;
+        if (!currentTaskId) return;
 
         const loadTask = async (): Promise<void> => {
             try {
-                const taskData = await getTaskLocally(route);
+                const taskData = await getTaskLocally(currentTaskId);
 
                 if (taskData) {
-                    setTask(taskData);
-                    setTags((taskData.tags ?? []).map((tag: string) => "#" + tag));
+                    appendNewTasks([taskData]);
+                    setTags(taskData.tags ?? []);
                     return;
                 }
 
@@ -54,19 +62,19 @@ export default function Task(
                 console.error("Local DB fail:", error);
             }
             try {
-                const res = await fetch(`/api/tasks/${route}`, { method: "GET" });
+                const res = await fetch(`/api/tasks/${currentTaskId}`, { method: "GET" });
 
                 const taskData = await res.json();
 
                 // Cache task to IndexedDB
                 await saveTaskLocally({
                     ...taskData.task,
-                    id: route,
+                    id: currentTaskId,
                     tags: taskData.tags ?? []
                 });
 
-                setTask(taskData.task);
-                setTags((taskData.tags ?? []).map((tag: string) => "#" + tag));
+                appendNewTasks(taskData.task);
+                setTags(taskData.tags ?? []);
 
             } catch (error) {
                 console.error("Failed to fetch task:", error);
@@ -75,7 +83,7 @@ export default function Task(
         }
 
         loadTask();
-    }, [route]);
+    }, [currentTaskId]);
 
     useEffect(() => {
         const handleSyncCompleted = () => {
@@ -90,25 +98,28 @@ export default function Task(
     }, [saveStatus]);
 
     const completeTask = async (): Promise<void> => {
-        if (!route) return;
+        if (!currentTaskId) return;
 
         const currentCompletionStatus = task!.is_completed;
         const newCompletionStatus = task!.is_completed === 0 ? 1 : 0;
 
         // Optimistically update
-        setTask(prev => prev ? { ...prev, is_completed: newCompletionStatus } : prev);
+        updateTask(currentTaskId, { is_completed: newCompletionStatus });
 
         try {
             await offlineSaveAndSync(
-                route,
+                currentTaskId,
                 "tasks",
                 "update",
-                { is_completed: newCompletionStatus },
+                {
+                    is_completed: newCompletionStatus,
+                    tags: task?.tags // always sending the current tags because API would otherwise delete them
+                },
                 setSaveStatus
             );
         } catch (error) {
             // Rollback on error
-            setTask(prev => prev ? { ...prev, is_completed: currentCompletionStatus } : prev);
+            updateTask(currentTaskId, { is_completed: currentCompletionStatus });
 
             console.error("Failed to mark as completed:", error);
             toast.error("Failed to mark as completed");
@@ -120,14 +131,17 @@ export default function Task(
 
     const debouncedSave = useDebouncedCallback<Partial<localTask>>(
         async (updates) => {
-            if (!route) return;
+            if (!currentTaskId) return;
 
             try {
                 await offlineSaveAndSync(
-                    route,
+                    currentTaskId,
                     "tasks",
                     "update",
-                    updates,
+                    {
+                        ...updates,
+                        tags: task?.tags // always sending the current tags because API would otherwise delete them
+                    },
                     setSaveStatus
                 );
 
@@ -162,16 +176,12 @@ export default function Task(
         const taskUpdate: Partial<localTask> = {
             ...rest,
             due_date: dueDate,
-            priority: priority ? Number(priority) : null,
-            tags: task?.tags // always sending the current tags because API would otherwise delete them
+            priority: priority ? Number(priority) : null
         }
 
         // Optimistic UI update needed for deleteEmptyTask logic
-        setTask(prev => {
-            if (!prev) return prev;
+        updateTask(currentTaskId!, { ...taskUpdate })
 
-            return { ...prev, ...taskUpdate };
-        });
         debouncedSave(taskUpdate);
     }
 
@@ -187,16 +197,16 @@ export default function Task(
     }
 
     const deleteEmptyTask = async (): Promise<void> => {
-        if (!route) return;
+        if (!currentTaskId) return;
 
         try {
-            await deleteTaskLocally(route);
+            await deleteTaskLocally(currentTaskId);
 
             await queueChanges({
-                recordId: `task-${route}`,
+                recordId: `task-${currentTaskId}`,
                 recordType: "tasks",
                 operation: "delete",
-                data: { id: route }
+                data: { id: currentTaskId }
             });
 
             if (navigator.onLine) syncPendingChanges();
@@ -206,8 +216,7 @@ export default function Task(
         }
     }
 
-    if (!task) return null;
-    if (!route) return null;
+    if (!task || !currentTaskId) return null;
 
     return (
         <>
@@ -233,7 +242,7 @@ export default function Task(
                             />
                         ) : (
                             <RotateCcw
-                                onClick={() => handleTrash("tasks", route, task.is_trashed!)}
+                                onClick={() => handleTrash("tasks", currentTaskId, tags, task.is_trashed!)}
                                 className="text-accent hover:cursor-pointer"
                             />
                         )}
@@ -241,7 +250,7 @@ export default function Task(
                     <li>
                         <Trash2
                             onClick={() => task.is_trashed === 0
-                                ? handleTrash("tasks", route, task.is_trashed)
+                                ? handleTrash("tasks", currentTaskId, tags, task.is_trashed)
                                 : setShowDeleteDialog(true)
                             }
                             className="text-destructive hover:cursor-pointer"
@@ -328,7 +337,7 @@ export default function Task(
                 open={showDeleteDialog}
                 onOpenChange={setShowDeleteDialog}
                 onConfirm={() => {
-                    handleDelete("tasks", route!);
+                    handleDelete("tasks", currentTaskId);
                     setShowDeleteDialog(false)
                 }}
                 recordType="task"
