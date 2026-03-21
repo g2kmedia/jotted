@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import DefaultPage from "./DefaultPage";
+import OverviewLayout from "./OverviewLayout";
 
 export default function SplitLayout({
     overview,
@@ -11,7 +12,6 @@ export default function SplitLayout({
     editor: React.ReactNode;
 }>) {
     const pathname = usePathname();
-    const recordType = pathname.split("/")[1]; // -> DO I NEED THIS?
     const isIdPath = /^\/(notes|tasks)\/.+/.test(pathname);
 
     return (
@@ -20,7 +20,7 @@ export default function SplitLayout({
                 <section
                     className={`${isIdPath ? "hidden lg:block" : "block"} w-full lg:w-1/3 lg:max-w-md lg:min-w-sm`}
                 >
-                    {overview}
+                    <OverviewLayout page={overview} />
                 </section>
                 <section className={`${isIdPath ? "block" : "hidden lg:block"} w-full`}>
                     {editor ? editor : <DefaultPage />}

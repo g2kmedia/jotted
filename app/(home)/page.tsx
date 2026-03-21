@@ -8,8 +8,6 @@ import { DateTime } from "luxon";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import TopNavbar from "../components/TopNavbar";
-import BottomNavbar from "../components/BottomNavbar";
 
 const TASK_PRIORITY_LABELS: Record<number, string> = {
   1: "High",
@@ -158,10 +156,6 @@ export default function Home() {
 
   return (
     <>
-      <header className="mx-2 mb-2">
-        <TopNavbar />
-      </header>
-
       <section>
         {tasks.length === 0 ? (
           <h1 className="text-xl slide-in-left">No tasks for today</h1>
@@ -252,12 +246,6 @@ export default function Home() {
         )
         }
       </section>
-
-      <div className="h-18"></div>
-
-      <footer className="fixed bottom-0 left-0 right-0 pb-4 px-2 bg-transparent lg:ml-2 lg:w-1/4 lg:max-w-md lg:min-w-sm"> {/* ml-2 used as offset for main's mx-2 */}
-        <BottomNavbar />
-      </footer>
     </>
   );
 }
