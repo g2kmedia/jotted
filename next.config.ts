@@ -3,6 +3,7 @@ import { withSerwist } from "@serwist/turbopack";
 
 const nextConfig: NextConfig = {
     reactStrictMode: false,
+    output: "standalone"
     // eslint: { ignoreDuringBuilds: true } // just for testing, delete later
 };
 

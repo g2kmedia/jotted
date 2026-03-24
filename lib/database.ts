@@ -1,7 +1,9 @@
 import Database from "better-sqlite3";
 import cron from "node-cron";
+import path from "path";
 
-const db = new Database("./database.sqlite");
+const DB_PATH = path.join(process.cwd(), "data", "database.sqlite");
+const db = new Database(DB_PATH);
 
 db.pragma("foreign_keys = ON");
 
