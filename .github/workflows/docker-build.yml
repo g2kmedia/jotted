@@ -53,4 +53,4 @@ jobs:
         package-type: container
         min-versions-to-keep: 1
         ignore-versions: "^latest$"
-        delete-untagged-versions: true
+        delete-only-untagged-versions: true
