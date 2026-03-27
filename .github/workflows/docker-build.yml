@@ -45,3 +45,12 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.package_version.outputs.version }}
+
+    - name: Delete old images
+      uses: actions/delete-package-versions@v5
+      with:
+        package-name: jotted
+        package-type: container
+        min-versions-to-keep: 1
+        ignore-versions: "^latest$"
+        delete-untagged-versions: true
