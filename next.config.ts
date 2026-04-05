@@ -1,10 +1,9 @@
 import type { NextConfig } from "next";
-import { withSerwist } from "@serwist/turbopack";
 
 const nextConfig: NextConfig = {
     reactStrictMode: false,
-    output: "standalone"
-    // eslint: { ignoreDuringBuilds: true } // just for testing, delete later
+    output: "standalone",
+    allowedDevOrigins: ["192.168.169.22"] // only for testing 
 };
 
-export default withSerwist(nextConfig);
+export default nextConfig;

@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     template: APP_TITLE_TEMPLATE,
   },
   description: APP_DESCRIPTION,
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -80,7 +81,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SerwistProvider swUrl="/serwist/sw.js">
+          <SerwistProvider swUrl="/sw.js">
             <SyncHandler />
             {children}
           </SerwistProvider>

@@ -98,6 +98,7 @@ export const syncPendingChanges = async (): Promise<boolean> => {
             console.error("Failed to sync DBs", error);
             toast.error("Failed to sync");
             allSucceeded = false;
+            break;
         }
     }
 
