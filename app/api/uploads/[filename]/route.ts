@@ -12,7 +12,7 @@ export async function GET(
         }, { status: 404 });
     }
 
-    const filePath = "uploads/" + filename;
+    const filePath = "data/uploads/" + filename;
 
     try {
         const file = await readFile(filePath);

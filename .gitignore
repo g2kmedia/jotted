@@ -43,5 +43,8 @@ next-env.d.ts
 # db
 /data/*.sqlite
 
+# editor file uploads
+/data/uploads/*
+
 # Serwist
 public/sw*

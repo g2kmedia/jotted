@@ -14,7 +14,7 @@ export async function POST(
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const filename = `${Date.now()}_${file.name.replaceAll(" ", "_")}`;
-        const uploadDir = "uploads/";
+        const uploadDir = "data/uploads/";
         const filePath = uploadDir + filename;
     try {
         await writeFile(filePath, buffer);

@@ -20,6 +20,9 @@ export default function Editor({
     const editor = useCreateBlockNote({
         initialContent,
         uploadFile,
+        resolveFileUrl: async (url) =>
+            url.replace("/data", "") // Change default URL to match API structure
+        ,
         dictionary: {
             ...locale,
             placeholders: {
