@@ -23,9 +23,9 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
+    // Prevent default behaviour from caching GET request
     {
-      matcher: ({ url, request }) =>
-        url.pathname.startsWith("/api/") && request.method === "GET", // Prevent default behaviour from caching GET request
+      matcher: ({ url, request }) => url.pathname.startsWith("/api/") && request.method === "GET",
       handler: new NetworkOnly()
     },
     ...defaultCache

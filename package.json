@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_ENV=development serwist build && next dev",
     "dev-serwist": "concurrently -p none 'serwist build --watch' 'next dev'",
     "build": "next build && serwist build",
     "start": "node .next/standalone/server.js",
