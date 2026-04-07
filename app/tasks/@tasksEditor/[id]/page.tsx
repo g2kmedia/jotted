@@ -49,36 +49,39 @@ export default function Task(
         if (!currentTaskId) return;
 
         const loadTask = async (): Promise<void> => {
-            try {
-                const taskData = await getTaskLocally(currentTaskId);
+            if (navigator.onLine) {
+                try {
+                    const res = await fetch(`/api/tasks/${currentTaskId}`, { method: "GET" });
 
-                if (taskData) {
-                    appendNewTasks([taskData]);
+                    const taskData = await res.json();
+
+                    // Cache task to IndexedDB
+                    await saveTaskLocally({
+                        ...taskData.task,
+                        id: currentTaskId,
+                        tags: taskData.tags ?? []
+                    });
+
+                    appendNewTasks(taskData.task);
                     setTags(taskData.tags ?? []);
-                    return;
+
+                } catch (error) {
+                    console.error("Failed to fetch task:", error);
+                    throw error;
                 }
+            } else {
+                try {
+                    const taskData = await getTaskLocally(currentTaskId);
 
-            } catch (error) {
-                console.error("Local DB fail:", error);
-            }
-            try {
-                const res = await fetch(`/api/tasks/${currentTaskId}`, { method: "GET" });
+                    if (taskData) {
+                        appendNewTasks([taskData]);
+                        setTags(taskData.tags ?? []);
+                        return;
+                    }
 
-                const taskData = await res.json();
-
-                // Cache task to IndexedDB
-                await saveTaskLocally({
-                    ...taskData.task,
-                    id: currentTaskId,
-                    tags: taskData.tags ?? []
-                });
-
-                appendNewTasks(taskData.task);
-                setTags(taskData.tags ?? []);
-
-            } catch (error) {
-                console.error("Failed to fetch task:", error);
-                throw error;
+                } catch (error) {
+                    console.error("Local DB fail:", error);
+                }
             }
         }
 

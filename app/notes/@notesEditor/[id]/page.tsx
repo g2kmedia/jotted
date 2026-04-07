@@ -78,39 +78,41 @@ export default function Note(
     if (!currentNoteId) return;
 
     const loadNote = async (): Promise<void> => {
-      try {
-        const noteData = await getNoteLocally(currentNoteId);
+      if (navigator.onLine) {
+        try {
+          const res = await fetch(`/api/notes/${currentNoteId}`, { method: "GET" });
 
-        if (noteData) {
-          appendNewNotes([noteData]);
+          const noteData = await res.json();
+          const parsedContent = noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
+
+          // Cache note to IndexedDB
+          await saveNoteLocally({
+            ...noteData.note,
+            id: currentNoteId,
+            content: parsedContent,
+            tags: noteData.tags ?? []
+          });
+
+          appendNewNotes([{ ...noteData.note, content: parsedContent }]);
           setTags(noteData.tags ?? []);
-          return;
+
+        } catch (error) {
+          console.error("Failed to fetch note:", error);
+          throw error;
         }
+      } else {
+        try {
+          const noteData = await getNoteLocally(currentNoteId);
 
-      } catch (error) {
-        console.error("Local DB fail:", error);
-      }
+          if (noteData) {
+            appendNewNotes([noteData]);
+            setTags(noteData.tags ?? []);
+            return;
+          }
 
-      try {
-        const res = await fetch(`/api/notes/${currentNoteId}`, { method: "GET" });
-
-        const noteData = await res.json();
-        const parsedContent = noteData.note.content = noteData.note.content ? JSON.parse(noteData.note.content) : "";
-
-        // Cache note to IndexedDB
-        await saveNoteLocally({
-          ...noteData.note,
-          id: currentNoteId,
-          content: parsedContent,
-          tags: noteData.tags ?? []
-        });
-
-        appendNewNotes([{ ...noteData.note, content: parsedContent }]);
-        setTags(noteData.tags ?? []);
-
-      } catch (error) {
-        console.error("Failed to fetch note:", error);
-        throw error;
+        } catch (error) {
+          console.error("Local DB fail:", error);
+        }
       }
     }
 

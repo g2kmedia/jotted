@@ -81,7 +81,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV === "development"}>
+          <SerwistProvider swUrl="/sw.js" /* disable={process.env.NODE_ENV === "development"} */>
             <SyncHandler />
             {children}
           </SerwistProvider>
