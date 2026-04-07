@@ -62,7 +62,7 @@ export default function Task(
                         tags: taskData.tags ?? []
                     });
 
-                    appendNewTasks(taskData.task);
+                    appendNewTasks([taskData.task]);
                     setTags(taskData.tags ?? []);
 
                 } catch (error) {
