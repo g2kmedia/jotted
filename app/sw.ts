@@ -33,6 +33,12 @@ const serwist = new Serwist({
   fallbacks: {
     entries: [
       {
+        url: "/notes/offline",
+        matcher({ request }) {
+          return request.destination === "document" && request.url.includes("/notes/");
+        }
+      },
+      {
         url: "/~offline",
         matcher({ request }) {
           return request.destination === "document";
