@@ -39,6 +39,12 @@ const serwist = new Serwist({
         }
       },
       {
+        url: "/tasks/offline",
+        matcher({ request }) {
+          return request.destination === "document" && request.url.includes("/tasks/");
+        }
+      },
+      {
         url: "/~offline",
         matcher({ request }) {
           return request.destination === "document";
