@@ -18,7 +18,7 @@ export default function SplitLayout({
         <>
             <main className="h-full flex mx-2 md:flex-row">
                 <section
-                    className={`${isIdPath ? "hidden lg:block" : "block"} w-full lg:w-1/3 lg:max-w-md lg:min-w-sm`}
+                    className={`${isIdPath ? "hidden lg:block" : "block"} w-full py-1 lg:w-1/3 lg:max-w-md lg:min-w-sm`}
                 >
                     <OverviewLayout page={overview} />
                 </section>
