@@ -216,7 +216,7 @@ export default function TaskEditorPage(
                                 }
                             }}
                         >
-                            <ArrowLeft className="hover:cursor-pointer" />
+                            <ArrowLeft className="hover:cursor-pointer lg:hidden" />
                         </Link>
                     </li>
                     <li>

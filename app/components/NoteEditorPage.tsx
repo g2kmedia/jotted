@@ -228,7 +228,7 @@ export default function NoteEditorPage(
                                 }
                             }}
                         >
-                            <ArrowLeft className="hover:cursor-pointer" />
+                            <ArrowLeft className="hover:cursor-pointer lg:hidden" />
                         </Link>
                     </li>
                     <li>
@@ -263,7 +263,7 @@ export default function NoteEditorPage(
                 {!saveStatus && <span>{'\u00A0'}</span>}
             </div>
 
-            <article className="h-screen overflow-y-auto">
+            <article className="p-2 h-screen overflow-y-auto">
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
                 <h1 className="my-3"><input
                     type="text"

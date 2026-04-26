@@ -127,11 +127,6 @@
 }
 
 @layer components {
-  /* Improve Slash Menu rendering for mobile */
-  div:has(#bn-suggestion-menu) {
-    @apply !transform-none !left-6 !top-8 !min-h-[50vh] !max-h-[50vh];
-  }
-
   /* Improve File Panel width for mobile */
   [data-floating-ui-focusable] {
     @apply max-w-screen fixed transform-none;
