@@ -97,9 +97,9 @@ export default function CreateBtn({ className }: { className?: string }) {
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="rounded-2xl">
-                <DropdownMenuItem onSelect={handleCreateNote} className="justify-center rounded-2xl">Create Note</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateNote} className="p-3 justify-center rounded-2xl">Create Note</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleCreateTask} className="justify-center rounded-2xl">Create Task</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateTask} className="p-3 justify-center rounded-2xl">Create Task</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );
