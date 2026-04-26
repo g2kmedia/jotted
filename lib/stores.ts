@@ -7,7 +7,6 @@ type TaskState = {
     taskCounts: { today: number, week: number, scheduled: number, later: number },
     lastQueriedRecord: { id: string, updated_at: string } | null
     hasMore: boolean
-    isInitialLoad: boolean
     quickFilter: "today" | "week" | "scheduled" | "later" | "completed" | "trashed" | null
     tags: string[],
 }
@@ -19,7 +18,6 @@ type TaskActions = {
     updateTask: (id: string, updates: Partial<localTask>) => void
     setLastQueriedRecord: (record: { id: string, updated_at: string } | null) => void
     setHasMore: (value: boolean) => void
-    setIsInitialLoad: (value: boolean) => void
     setQuickFilter: (filter: TaskState["quickFilter"]) => void
     setTags: (tags: string[]) => void
 }
@@ -30,7 +28,6 @@ export const useTaskStore = create<TaskState & TaskActions>()((set) => ({
     taskCounts: { today: 0, week: 0, scheduled: 0, later: 0 },
     lastQueriedRecord: null,
     hasMore: true,
-    isInitialLoad: true,
     quickFilter: null,
     tags: [],
 
@@ -66,7 +63,6 @@ export const useTaskStore = create<TaskState & TaskActions>()((set) => ({
 
     setLastQueriedRecord: (record) => set({ lastQueriedRecord: record }),
     setHasMore: (value) => set({ hasMore: value }),
-    setIsInitialLoad: (value) => set({ isInitialLoad: value }),
     setQuickFilter: (filter) => set({ quickFilter: filter }),
     setTags: (tags) => set({ tags: tags })
 }));
@@ -77,7 +73,6 @@ type NoteState = {
     notes: localNote[] | null
     lastQueriedRecord: { id: string, updated_at: string } | null
     hasMore: boolean
-    isInitialLoad: boolean
     quickFilter: "pinned" | "trashed" | null
     tags: string[]
 }
@@ -88,7 +83,6 @@ type NoteActions = {
     updateNote: (id: string, updates: Partial<localNote>) => void
     setLastQueriedRecord: (record: { id: string, updated_at: string } | null) => void
     setHasMore: (value: boolean) => void
-    setIsInitialLoad: (value: boolean) => void
     setQuickFilter: (filter: NoteState["quickFilter"]) => void
     setTags: (tags: string[]) => void
 }
@@ -98,7 +92,6 @@ export const useNoteStore = create<NoteState & NoteActions>()((set) => ({
     notes: null,
     lastQueriedRecord: null,
     hasMore: true,
-    isInitialLoad: true,
     quickFilter: null,
     tags: [],
     activeTags: [],
@@ -132,7 +125,6 @@ export const useNoteStore = create<NoteState & NoteActions>()((set) => ({
 
     setLastQueriedRecord: (record) => set({ lastQueriedRecord: record }),
     setHasMore: (value) => set({ hasMore: value }),
-    setIsInitialLoad: (value) => set({ isInitialLoad: value }),
     setQuickFilter: (filter) => set({ quickFilter: filter }),
     setTags: (tags) => set({ tags: tags })
 }));

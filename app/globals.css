@@ -142,17 +142,4 @@
   [data-content-type="codeBlock"] pre {
     @apply bg-[var(--foreground)] text-[var(--background)] rounded-md;
   }
-
-  /* Animations */
-  .slide-in-left {
-    @apply animate-in slide-in-from-left duration-200;
-  }
-
-  .slide-in-right {
-    @apply animate-in slide-in-from-right duration-200;
-  }
-
-  .slide-in-bottom {
-    @apply animate-in slide-in-from-bottom duration-200;
-  }  
 }

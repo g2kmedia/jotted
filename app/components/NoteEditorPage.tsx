@@ -264,8 +264,8 @@ export default function NoteEditorPage(
             </div>
 
             <article className="h-screen overflow-y-auto">
-                <TagsInput tags={tags} onBlur={handleTagsUpdate} className="slide-in-right" />
-                <h1 className="my-3 slide-in-right"><input
+                <TagsInput tags={tags} onBlur={handleTagsUpdate} />
+                <h1 className="my-3"><input
                     type="text"
                     value={note.title}
                     onChange={handleTitleChange}

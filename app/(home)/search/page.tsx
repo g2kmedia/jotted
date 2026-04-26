@@ -58,7 +58,7 @@ export default function SearchResults() {
 
     return (
         <>
-            <section className="mb-6 grid grid-cols-2 gap-2 text-xl slide-in-right">
+            <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
                 <button
                     className={`${quickFilter === "notes" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
                     onClick={() => setQuickFilter(prev => prev === "notes" ? null : "notes")}
@@ -75,7 +75,7 @@ export default function SearchResults() {
                 </button>
             </section>
 
-            <section className="h-full slide-in-bottom">
+            <section className="h-full">
                 {displayResults.length === 0 ? (
                     <p className="text-center">No results found</p>
                 ) : (

@@ -25,7 +25,6 @@ export default function TasksOverview() {
     taskCounts,
     lastQueriedRecord,
     hasMore,
-    isInitialLoad,
     quickFilter,
     tags,
     setTasks,
@@ -34,7 +33,6 @@ export default function TasksOverview() {
     updateTask,
     setLastQueriedRecord,
     setHasMore,
-    setIsInitialLoad,
     setQuickFilter,
     setTags
   } = useTaskStore();
@@ -223,14 +221,6 @@ export default function TasksOverview() {
     loadTags();
   }, [quickFilter, activeTags]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoad(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, newStatus: number): Promise<void> => {
     e.preventDefault();
     e.stopPropagation();
@@ -265,7 +255,7 @@ export default function TasksOverview() {
 
   return (
     <>
-      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-left" : ""}`}>
+      <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
         <button
           className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
@@ -311,9 +301,9 @@ export default function TasksOverview() {
       </section>
 
       {quickFilter !== "trashed"
-        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} className={isInitialLoad ? "slide-in-left" : ""} />}
+        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} />}
 
-      <section className="slide-in-bottom">
+      <section>
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0

@@ -61,7 +61,7 @@ export default function TopNavbar() {
                             }
                         }}
                         placeholder="Search..."
-                        className="w-[70%] px-1 border-b-1 border-foreground outline-hidden slide-in-left"
+                        className="w-[70%] px-1 border-b-1 border-foreground outline-hidden"
                     />
                     <Search
                         className="hover:cursor-pointer"

@@ -14,14 +14,12 @@ export default function NotesOverview() {
     notes,
     lastQueriedRecord,
     hasMore,
-    isInitialLoad,
     quickFilter,
     tags,
     setNotes,
     appendNewNotes,
     setLastQueriedRecord,
     setHasMore,
-    setIsInitialLoad,
     setQuickFilter,
     setTags
   } = useNoteStore();
@@ -158,19 +156,11 @@ export default function NotesOverview() {
     loadTags();
   }, [quickFilter, activeTags]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoad(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   if (!notes) return null;
 
   return (
     <>
-      <section className={`mb-6 grid grid-cols-2 gap-2 text-xl ${isInitialLoad ? "slide-in-left" : ""}`}>
+      <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
         <button
           className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
           onClick={() => setQuickFilter(quickFilter === "pinned" ? null : "pinned")}
@@ -188,9 +178,9 @@ export default function NotesOverview() {
       </section>
 
       {quickFilter !== "trashed"
-        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} className={isInitialLoad ? "slide-in-left" : ""} />}
+        && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} />}
 
-      <section className="slide-in-bottom">
+      <section>
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0
