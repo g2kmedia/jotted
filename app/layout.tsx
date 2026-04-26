@@ -44,15 +44,8 @@ export const metadata: Metadata = {
     description: APP_DESCRIPTION,
   },
   icons: {
-    icon: [
-      {
-        url: "/icons/favicon-light.ico",
-      },
-      {
-        url: "/icons/favicon-dark.ico",
-        media: "(prefers-color-scheme: dark)"
-      },
-    ]
+    icon: "/icons/favicon.svg",
+    apple: "/icons/apple-touch-icon.png"
   }
 };
 
