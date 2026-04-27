@@ -263,7 +263,7 @@ export default function NoteEditorPage(
                 {!saveStatus && <span>{'\u00A0'}</span>}
             </div>
 
-            <article className="p-2 h-screen overflow-y-auto">
+            <article className="p-2 lg:h-[90vh] overflow-y-auto">
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
                 <h1 className="my-3"><input
                     type="text"

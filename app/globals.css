@@ -118,11 +118,11 @@
   html,
   body {
     /* 100dvh to fix mobile rendering */
-    @apply w-full h-[100dvh];
+    @apply w-[100dvw] h-[100dvh];
   }
 
   body {
-    @apply flex flex-col bg-background text-foreground;
+    @apply bg-background text-foreground;
   }
 }
 

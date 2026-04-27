@@ -188,30 +188,34 @@ export default function NotesOverview() {
               : "You seem to not have any notes.\nStart by creating one."}
           </p>
         ) : (
-          <InfiniteScroll
-            dataLength={notes.length}
-            next={loadNotes}
-            hasMore={hasMore}
-            loader={null}
-          >
-            {notes.map((note) => {
-              return (
-                <Link href={`/notes/${note.id}`} key={note.id}>
-                  <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
-                    <div className="flex justify-between">
-                      <h3 className="text-lg mb-1 truncate">{note.title}</h3>
-                      {note.is_pinned === 1 ? <Pin size={18} /> : ""}
-                    </div>
-                    <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {note.tags?.map((tag, index) => (
-                        <li key={index}>#{tag}</li>
-                      ))}
-                    </ul>
-                  </article>
-                </Link>
-              );
-            })}
-          </InfiniteScroll>
+          <div id="scrollableDiv" style={{ height: "75vh", overflow: "auto" }}>
+            <InfiniteScroll
+              dataLength={notes.length}
+              next={loadNotes}
+              hasMore={hasMore}
+              loader={null}
+              scrollableTarget="scrollableDiv"
+            >
+              {notes.map((note) => {
+                return (
+                  <Link href={`/notes/${note.id}`} key={note.id}>
+                    <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
+                      <div className="flex justify-between">
+                        <h3 className="text-lg mb-1 truncate">{note.title}</h3>
+                        {note.is_pinned === 1 ? <Pin size={18} /> : ""}
+                      </div>
+                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {note.tags?.map((tag, index) => (
+                          <li key={index}>#{tag}</li>
+                        ))}
+                      </ul>
+                    </article>
+                  </Link>
+                );
+              })}
+            </InfiniteScroll>
+          </div>
+
         )}
       </section>
     </>
