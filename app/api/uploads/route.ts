@@ -1,21 +1,24 @@
-import { writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 
 export async function POST(
     request: Request
 ) {
     const formData = await request.formData();
-        const file = formData.get("file") as File | null;
+    const file = formData.get("file") as File | null;
 
-        if (!file) {
-            return Response.json({
-                error: "No file received"
-            }, { status: 400 });
-        }
+    if (!file) {
+        return Response.json({
+            error: "No file received"
+        }, { status: 400 });
+    }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const filename = `${Date.now()}_${file.name.replaceAll(" ", "_")}`;
-        const uploadDir = "data/uploads/";
-        const filePath = uploadDir + filename;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = `${Date.now()}_${file.name.replaceAll(" ", "_")}`;
+    const uploadDir = "data/uploads/";
+    const filePath = uploadDir + filename;
+
+    await mkdir(uploadDir, { recursive: true }); // create folder if it does not exist yet
+
     try {
         await writeFile(filePath, buffer);
 

@@ -14,7 +14,8 @@ export async function POST(
                 break;
             }
 
-            await rm(filePath);
+            // { force: true } used to prevent 500 errors when the file gets deleted right after getting uploaded
+            await rm(filePath, { force: true }); 
         }
 
         return Response.json({ success: true });

@@ -45,7 +45,6 @@ next-env.d.ts
 
 # editor file uploads
 /data/uploads/*
-!data/uploads/.gitkeep
 
 # Serwist
 public/sw*
