@@ -214,6 +214,7 @@ export default function NotesOverview() {
                 );
               })}
             </InfiniteScroll>
+            <div className="h-22"></div> {/* placeholder to prevent records from appearing behind the bottom navbar */}
           </div>
 
         )}
