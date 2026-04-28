@@ -17,7 +17,7 @@ export default function BottomNavbar() {
     }
 
     return (
-        <nav className="flex justify-between items-center h-16 w-full p-2 border-1 rounded-2xl backdrop-blur-lg" aria-label="Bottom navigation">
+        <nav className="flex justify-between items-center h-16 w-full p-2 border-1 rounded-2xl backdrop-blur-lg lg:border-0 lg:border-t-1 lg:border-foreground lg:rounded-none lg:mt-2" aria-label="Bottom navigation">
             <Link href={"/"}>
                 <button className={`${highlightNavbarItem("/")} p-3 hover:cursor-pointers`}>
                     <House className="m-1" />

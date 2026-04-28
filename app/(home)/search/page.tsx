@@ -57,7 +57,7 @@ export default function SearchResults() {
     }) || [];
 
     return (
-        <>
+        <div className="h-full mb-28 flex flex-col overflow-y-auto">
             <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
                 <button
                     className={`${quickFilter === "notes" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
@@ -98,6 +98,6 @@ export default function SearchResults() {
                     ))
                 )}
             </section>
-        </>
+        </div>
     );
 }

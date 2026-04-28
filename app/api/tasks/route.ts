@@ -29,12 +29,15 @@ export async function GET(
         const isTrashed = searchParams.get("is_trashed") || undefined;
         const dueDateStart = searchParams.get("due_date_start") || undefined;
         const dueDateEnd = searchParams.get("due_date_end") || undefined;
-        const hasDueDate = searchParams.get("has_due_date") || undefined;
-        const idBefore = Number(searchParams.get("id_before")) || undefined;
+        const hasDueDate = searchParams.get("has_due_date") || undefined;
+
+        const lastQueriedRecordStr = searchParams.get("last_queried_record");
+        const lastQueriedRecord = lastQueriedRecordStr ? JSON.parse(lastQueriedRecordStr) : undefined;
+
         const tags = searchParams.get("tags")?.split(",") || undefined;
         const limit = Number(searchParams.get("limit")) || undefined;
 
-        const queryParams = { columns, isCompleted, isTrashed, dueDateStart, dueDateEnd, hasDueDate, idBefore, tags, limit };
+        const queryParams = { columns, isCompleted, isTrashed, dueDateStart, dueDateEnd, hasDueDate, lastQueriedRecord, tags, limit };
 
         const tasks = getAllTasks(queryParams);
 

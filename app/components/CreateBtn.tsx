@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { localNote, localTask, Task } from "@/lib/types";
+import { localNote, localTask } from "@/lib/types";
 import { queueChanges, saveNoteLocally, saveTaskLocally } from "@/lib/indexeddb";
 import { syncPendingChanges } from "@/lib/sync";
 
@@ -97,9 +97,9 @@ export default function CreateBtn({ className }: { className?: string }) {
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="rounded-2xl">
-                <DropdownMenuItem onSelect={handleCreateNote} className="p-3 justify-center rounded-2xl">Create Note</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateNote} className="p-3 justify-center">Create Note</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleCreateTask} className="p-3 justify-center rounded-2xl">Create Task</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateTask} className="p-3 justify-center">Create Task</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

@@ -215,10 +215,10 @@ export default function NoteEditorPage(
     if (!note) return null;
 
     return (
-        <>
+        <div className="h-full w-full flex flex-col">
             <nav
-                className="mx-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground bg-background">
-                <ul className="h-full flex justify-between items-center w-full">
+                className="mx-2 px-2 h-16 shrink-0 flex flex-col items-center border-b-1 border-foreground bg-background">
+                <ul className="h-full w-full flex justify-between items-center">
                     <li>
                         <Link
                             href={"/notes"}
@@ -263,7 +263,7 @@ export default function NoteEditorPage(
                 {!saveStatus && <span>{'\u00A0'}</span>}
             </div>
 
-            <article className="p-2 lg:h-[90vh] overflow-y-auto">
+            <article className="overflow-y-auto">
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
                 <h1 className="my-3"><input
                     type="text"
@@ -284,6 +284,6 @@ export default function NoteEditorPage(
                 }}
                 recordType="note"
             />
-        </>
+        </div>
     )
 }

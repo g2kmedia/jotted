@@ -155,7 +155,7 @@ export default function Home() {
   if (!tasks || !notes) return null;
 
   return (
-    <>
+    <div className="h-full mb-28 flex flex-col overflow-y-auto">
       <section>
         {tasks.length === 0 ? (
           <h1 className="text-xl">No tasks for today</h1>
@@ -246,6 +246,6 @@ export default function Home() {
         )
         }
       </section>
-    </>
+    </div>
   );
 }

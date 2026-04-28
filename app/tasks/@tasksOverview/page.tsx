@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Circle, Trash2 } from 'lucide-react';
 import { useEffect } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 import TagsBar from "@/app/components/TagsBar";
@@ -95,7 +94,7 @@ export default function TasksOverview() {
 
         const { tasks: newTasks } = await res.json();
 
-        if (newTasks.length === 0) {
+        if (!newTasks || newTasks.length === 0) {
           setHasMore(false);
 
           if (resetStates || !tasks) {
@@ -254,7 +253,7 @@ export default function TasksOverview() {
   if (!tasks) return null;
 
   return (
-    <>
+    <div className="h-full flex flex-col">
       <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
         <button
           className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
@@ -303,7 +302,7 @@ export default function TasksOverview() {
       {quickFilter !== "trashed"
         && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} />}
 
-      <section>
+      <section className="overflow-y-auto">
         {tasks.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0
@@ -311,62 +310,57 @@ export default function TasksOverview() {
               : "You seem to not have any tasks.\nStart by creating one."}
           </p>
         ) : (
-          <div id="scrollableDiv" style={{ height: "75vh", overflow: "auto" }}>
-            <InfiniteScroll
-              dataLength={tasks.length}
-              next={loadTasks}
-              hasMore={hasMore}
-              loader={null}
-              scrollableTarget="scrollableDiv"
-            >
-              {tasks.map((task) => {
-                return (
-                  <Link href={`/tasks/${task.id}`} key={task.id}>
-                    <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-2 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
-                      <button
-                        onClick={(e) => completeTask(e, task.id, task.is_completed)}
-                        className="self-center"
-                      >
-                        <Circle className={`${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
-                      </button>
-                      <div>
-                        <h3 className="text-lg mb-1 truncate">{task.title}</h3>
-                        <ul className="flex text-sm mb-2">
-                          {task.due_date && (() => {
-                            const dueDate = new Date(task.due_date);
-                            const dueDateLuxon = DateTime.fromJSDate(dueDate);
+          <div className="flex flex-col justify-center">
+            {tasks.map((task) => {
+              return (
+                <Link href={`/tasks/${task.id}`} key={task.id}>
+                  <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-2 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                    <button
+                      onClick={(e) => completeTask(e, task.id, task.is_completed)}
+                      className="self-center"
+                    >
+                      <Circle className={`${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
+                    </button>
+                    <div>
+                      <h3 className="text-lg mb-1 truncate">{task.title}</h3>
+                      <ul className="flex text-sm mb-2">
+                        {task.due_date && (() => {
+                          const dueDate = new Date(task.due_date);
+                          const dueDateLuxon = DateTime.fromJSDate(dueDate);
 
-                            if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
-                              return <li className={`pr-2 ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>;
-                            }
-
-                            return (
-                              <>
-                                <li className={`pr-2 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>
-                                <li className={`pr-5 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
-                              </>
-                            );
+                          if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
+                            return <li className={`pr-2 ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>;
                           }
-                          )()}
-                          {task.priority && (
-                            <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
-                          )}
-                        </ul>
-                        <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {task.tags?.map((tag, index) => (
-                            <li key={index}>#{tag}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </article>
-                  </Link>
-                );
-              })}
-            </InfiniteScroll>
-            <div className="h-22"></div> {/* placeholder to prevent records from appearing behind the bottom navbar */}
+
+                          return (
+                            <>
+                              <li className={`pr-2 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>
+                              <li className={`pr-5 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
+                            </>
+                          );
+                        }
+                        )()}
+                        {task.priority && (
+                          <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
+                        )}
+                      </ul>
+                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {task.tags?.map((tag, index) => (
+                          <li key={index}>#{tag}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </article>
+                </Link>
+              );
+            })}
+            {hasMore
+              ? <button onClick={() => loadTasks()} className="p-3 mb-30 lg:mb-3 text-center border border-foreground rounded-2xl hover:cursor-pointer">Load More</button>
+              : <p className="p-4 mb-28 lg:mb-3 text-center">That's all!</p>
+            }
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }

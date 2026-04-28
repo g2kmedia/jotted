@@ -15,16 +15,16 @@ export default function SplitLayout({
     const isIdPath = /^\/(notes|tasks)\/.+/.test(pathname);
 
     return (
-        <main className="h-full flex mx-2 md:flex-row">
+        <main className="h-full flex flex-col mx-2 lg:flex-row">
             <section
-                className={`${isIdPath ? "hidden lg:block" : "block"} w-full lg:w-1/3 lg:max-w-md lg:min-w-sm`}
+                className={`${isIdPath ? "hidden lg:block" : "block"} w-full flex flex-col lg:w-1/4`}
             >
                 <OverviewLayout page={overview} />
             </section>
 
             <div className="lg:w-0.5 lg:border-r-1 lg:border-foreground lg:m-2"></div>
 
-            <section className={`${isIdPath ? "block" : "hidden lg:block"} w-full lg:w-2lg lg:min-w-sm`}>
+            <section className={`${isIdPath ? "block" : "hidden lg:block"} h-full lg:w-3/4 flex flex-col`}>
                 {editor ? editor : <DefaultPage />}
             </section>
         </main>

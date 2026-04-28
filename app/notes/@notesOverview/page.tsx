@@ -7,7 +7,6 @@ import { localNote } from "@/lib/types";
 import { Pin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function NotesOverview() {
   const {
@@ -64,7 +63,7 @@ export default function NotesOverview() {
 
         const { notes: newNotes } = await res.json();
 
-        if (newNotes.length === 0) {
+        if (!newNotes || newNotes.length === 0) {
           setHasMore(false);
 
           if (resetStates || !notes) {
@@ -159,7 +158,7 @@ export default function NotesOverview() {
   if (!notes) return null;
 
   return (
-    <>
+    <div className="h-full flex flex-col">
       <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
         <button
           className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
@@ -180,7 +179,7 @@ export default function NotesOverview() {
       {quickFilter !== "trashed"
         && <TagsBar tags={tags} activeTags={activeTags} onTagSelect={toggleActiveTag} />}
 
-      <section>
+      <section className="flex-1 overflow-y-auto">
         {notes.length === 0 ? (
           <p className="h-full flex justify-center items-center text-center mt-20">
             {quickFilter || activeTags.length > 0
@@ -188,37 +187,31 @@ export default function NotesOverview() {
               : "You seem to not have any notes.\nStart by creating one."}
           </p>
         ) : (
-          <div id="scrollableDiv" style={{ height: "75vh", overflow: "auto" }}>
-            <InfiniteScroll
-              dataLength={notes.length}
-              next={loadNotes}
-              hasMore={hasMore}
-              loader={null}
-              scrollableTarget="scrollableDiv"
-            >
-              {notes.map((note) => {
-                return (
-                  <Link href={`/notes/${note.id}`} key={note.id}>
-                    <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
-                      <div className="flex justify-between">
-                        <h3 className="text-lg mb-1 truncate">{note.title}</h3>
-                        {note.is_pinned === 1 ? <Pin size={18} /> : ""}
-                      </div>
-                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {note.tags?.map((tag, index) => (
-                          <li key={index}>#{tag}</li>
-                        ))}
-                      </ul>
-                    </article>
-                  </Link>
-                );
-              })}
-            </InfiniteScroll>
-            <div className="h-22"></div> {/* placeholder to prevent records from appearing behind the bottom navbar */}
+          <div className="flex flex-col justify-center">
+            {notes.map((note) => {
+              return (
+                <Link href={`/notes/${note.id}`} key={note.id}>
+                  <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
+                    <div className="flex justify-between">
+                      <h3 className="text-lg mb-1 truncate">{note.title}</h3>
+                      {note.is_pinned === 1 ? <Pin size={18} /> : ""}
+                    </div>
+                    <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {note.tags?.map((tag, index) => (
+                        <li key={index}>#{tag}</li>
+                      ))}
+                    </ul>
+                  </article>
+                </Link>
+              );
+            })}
+            {hasMore
+              ? <button onClick={() => loadNotes()} className="p-3 mb-30 lg:mb-3 text-center border border-foreground rounded-2xl hover:cursor-pointer">Load More</button>
+              : <p className="p-4 mb-28 lg:mb-3 text-center">That's all!</p>
+            }
           </div>
-
         )}
       </section>
-    </>
+    </div>
   );
 }

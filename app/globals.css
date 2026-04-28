@@ -117,7 +117,7 @@
 
   html,
   body {
-    /* 100dvh to fix mobile rendering */
+    /* fix mobile rendering */
     @apply w-[100dvw] h-[100dvh];
   }
 
