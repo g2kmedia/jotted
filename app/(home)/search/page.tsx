@@ -77,7 +77,7 @@ export default function SearchResults() {
 
             <section className="h-full">
                 {displayResults.length === 0 ? (
-                    <p className="text-center">No results found</p>
+                    <p className="text-center mt-20">No results found</p>
                 ) : (
                     displayResults.map(item => (
                         <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>

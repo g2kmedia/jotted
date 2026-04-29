@@ -181,10 +181,16 @@ export default function NotesOverview() {
 
       <section className="flex-1 overflow-y-auto">
         {notes.length === 0 ? (
-          <p className="h-full flex justify-center items-center text-center mt-20">
-            {quickFilter || activeTags.length > 0
-              ? "No notes here."
-              : "You seem to not have any notes.\nStart by creating one."}
+          <p className="text-center mt-20">
+            {quickFilter || activeTags.length > 0 ? (
+              "No notes here."
+            ) : (
+              <>
+                You seem to not have any notes.
+                <br />
+                Start by creating one.
+              </>
+            )}
           </p>
         ) : (
           <div className="flex flex-col justify-center">

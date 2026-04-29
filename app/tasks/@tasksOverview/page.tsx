@@ -304,10 +304,15 @@ export default function TasksOverview() {
 
       <section className="overflow-y-auto">
         {tasks.length === 0 ? (
-          <p className="h-full flex justify-center items-center text-center mt-20">
-            {quickFilter || activeTags.length > 0
-              ? "No tasks here."
-              : "You seem to not have any tasks.\nStart by creating one."}
+          <p className="text-center mt-20">
+            {quickFilter || activeTags.length > 0 ? (
+              "No tasks here."
+            ) : (
+              <>
+                You seem to not have any tasks.
+                <br />
+                Start by creating one.
+              </>)}
           </p>
         ) : (
           <div className="flex flex-col justify-center">
