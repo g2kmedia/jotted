@@ -5,6 +5,9 @@ import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { NetworkOnly, Serwist } from "serwist";
 
+//
+// Serwist
+//
 // This declares the value of `injectionPoint` to TypeScript.
 // `injectionPoint` is the string that will be replaced by the
 // actual precache manifest. By default, this string is set to
@@ -55,3 +58,26 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+//
+// Push listener (Notifications)
+//
+self.addEventListener("push", (event) => {
+  const data = event.data?.json();
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icons/web-app-manifest-192x192.png",
+      badge: "/icons/web-app-manifest-192x192.png",
+      data: { taskName: data.name, taskUrl: data.url }
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.openWindow(event.notification.data.url)
+  );
+});

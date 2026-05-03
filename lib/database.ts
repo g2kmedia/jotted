@@ -144,6 +144,24 @@ const initDd = (): void => {
         END
     `;
 
+    // Settings
+    const createSettingsTable = `
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+    `;
+
+    // Push Notifications
+    const createPushSubscriptions = `
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            endpoint TEXT UNIQUE NOT NULL,
+            p256dh TEXT NOT NULL,
+            auth TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
 
     const transaction = db.transaction(() => {
         db.exec(createNoteTable);
@@ -167,6 +185,8 @@ const initDd = (): void => {
         db.exec(createTaskFtsInsertTrigger);
         db.exec(createTaskFtsUpdateTrigger);
         db.exec(createTaskFtsDeleteTrigger);
+        db.exec(createSettingsTable);
+        db.exec(createPushSubscriptions);
     });
 
     transaction();
