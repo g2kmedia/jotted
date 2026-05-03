@@ -5,7 +5,6 @@ import "./globals.css";
 import { Recursive } from "next/font/google";
 import { SerwistProvider } from "./serwist";
 import SyncHandler from "./components/SyncHandler";
-import { initializeCleanup } from "@/lib/database";
 
 const APP_NAME = "Jotted";
 const APP_DEFAULT_TITLE = "Jotted";
@@ -54,10 +53,6 @@ export const viewport: Viewport = {
 };
 
 const recursiveFont = Recursive();
-
-if (typeof window === "undefined") {
-    initializeCleanup();
-}
 
 export default function RootLayout({
   children,
