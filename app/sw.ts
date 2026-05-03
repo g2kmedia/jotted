@@ -63,21 +63,42 @@ serwist.addEventListeners();
 // Push listener (Notifications)
 //
 self.addEventListener("push", (event) => {
-  const data = event.data?.json();
+  let data;
 
+  try {
+    data = event.data?.json();
+  } catch {
+    data = { title: "New Notification", body: event.data?.text() || "" };
+  }
+
+  const options = {
+    body: data.body || "",
+    icon: "/icons/web-app-manifest-192x192.png",
+    badge: "/icons/web-app-manifest-192x192.png",
+    data: { taskUrl: data.url || "/" }
+  };
+
+  // MUST show notification to prevent iOS from revoking the permissions
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: "/icons/web-app-manifest-192x192.png",
-      badge: "/icons/web-app-manifest-192x192.png",
-      data: { taskUrl: data.url }
-    })
+    self.registration.showNotification(data.title || "Reminder", options)
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+
+  const url = event.notification.data?.taskUrl || "/";
+
   event.waitUntil(
-    self.clients.openWindow(event.notification.data.taskUrl)
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      // Focus existing window if available
+      for (const client of clients) {
+        if (client.url === url && "focus" in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      return self.clients.openWindow(url);
+    })
   );
 });

@@ -15,6 +15,13 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const isStandalone = (): boolean => {
+    return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true
+    );
+}
+
 // Handle online status and syncing between IndexedDB and SQLite
 export default function SyncHandler() {
     const [showPrompt, setShowPrompt] = useState(false);
@@ -23,7 +30,18 @@ export default function SyncHandler() {
         if (navigator.onLine) syncPendingChanges();
 
         // Request permission and subscribe to push notifications
-        if ("Notification" in window && Notification.permission === "default") {
+        const canPrompt =
+            "Notification" in window &&
+            Notification.permission === "default" &&
+            ("serviceWorker" in navigator);
+
+
+        if (canPrompt) {
+            const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+
+            // Don't promt in Safari browser on iOS (not working)
+            if (isIOS && !isStandalone()) return;
+
             setShowPrompt(true);
         }
 
@@ -46,15 +64,30 @@ export default function SyncHandler() {
         };
     }, []);
 
-    // Prevent stale permissions
+    // Re-subscribe on load if already granted (prevent stale subscription)
     useEffect(() => {
-        if ("Notification" in window && Notification.permission === "granted") subscribeToPush();
+        if (
+            "Notification" in window &&
+            "serviceWorker" in navigator &&
+            Notification.permission === "granted"
+        ) {
+            subscribeToPush();
+        }
     }, []);
 
     async function enableNotifications() {
-        const permission = await Notification.requestPermission();
+        try {
+            const permission = await Notification.requestPermission();
 
-        if (permission === "granted") await subscribeToPush();
+            if (permission === "granted") {
+                await subscribeToPush();
+                toast.success("Notifications enabled");
+            }
+        } catch (error) {
+            console.error("Failed to enable notifications:", error);
+            toast.error("Failed to enable notifications");
+        }
+
         setShowPrompt(false);
     }
 
