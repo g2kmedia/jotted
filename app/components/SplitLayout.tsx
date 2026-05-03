@@ -15,7 +15,7 @@ export default function SplitLayout({
     const isIdPath = /^\/(notes|tasks)\/.+/.test(pathname);
 
     return (
-        <main className="h-full flex flex-col mx-2 lg:flex-row">
+        <main className="h-full flex flex-col mx-2 lg:flex-row" suppressHydrationWarning>
             <section
                 className={`${isIdPath ? "hidden lg:block" : "block"} w-full flex flex-col lg:w-1/4`}
             >

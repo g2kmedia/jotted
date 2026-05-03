@@ -70,7 +70,7 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: "/icons/web-app-manifest-192x192.png",
       badge: "/icons/web-app-manifest-192x192.png",
-      data: { taskName: data.name, taskUrl: data.url }
+      data: { taskUrl: data.url }
     })
   );
 });
@@ -78,6 +78,6 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
-    self.clients.openWindow(event.notification.data.url)
+    self.clients.openWindow(event.notification.data.taskUrl)
   );
 });

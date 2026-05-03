@@ -1,4 +1,4 @@
-const  urlBase64ToUint8Array = (base64: string): Uint8Array<ArrayBuffer> => {
+const urlBase64ToUint8Array = (base64: string): Uint8Array<ArrayBuffer> => {
     const padding = "=".repeat((4 - base64.length % 4) % 4);
     const base64url = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
 
@@ -18,6 +18,7 @@ export async function subscribeToPush() {
 
     await fetch("/api/push/subscribe", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(subscription)
     });
 }

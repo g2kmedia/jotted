@@ -46,6 +46,11 @@ export default function SyncHandler() {
         };
     }, []);
 
+    // Prevent stale permissions
+    useEffect(() => {
+        if ("Notification" in window && Notification.permission === "granted") subscribeToPush();
+    }, []);
+
     async function enableNotifications() {
         const permission = await Notification.requestPermission();
 

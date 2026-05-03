@@ -1,7 +1,9 @@
 import { db } from "./database";
 import cron from "node-cron";
+import { getAllTasks } from "./tasks";
+import { sendPushToAll } from "./push-server";
 
-// Cleanup function for old trashed records
+// Cleanup function for old trashed SQL records
 const cleanupTrashedRecords = (daysOld = 30): {
     notesDeleted: number
     tasksDeleted: number
@@ -47,22 +49,46 @@ const cleanupTrashedRecords = (daysOld = 30): {
     return transaction();
 }
 
-export function startScheduler() {
-    // Initialize cleanup once at start
-    let startCleanupInitialized = false;
+const notifyUpcomingTasks = async (dueDateStart: string, dueDateEnd: string) => {
+    const tasks = getAllTasks({
+        dueDateStart: dueDateStart,
+        dueDateEnd: dueDateEnd,
+        isCompleted: "0",
+        isTrashed: "0"
+    });
 
-    const initializeStartCleanup = (): void => {
-        if (startCleanupInitialized) return;
+    if (!tasks || tasks.length === 0) return;
 
-        const startupCleanupResult = cleanupTrashedRecords(30);
-        console.log("Startup cleanup:", startupCleanupResult);
-
-        startCleanupInitialized = true;
+    for (const task of tasks) {
+        await sendPushToAll({
+            title: task.title ?? "Task Reminder",
+            body: task.content ?? "",
+            url: `/tasks/${task.id}`
+        });
     }
+}
 
-    // Schedule daily cleanup at 3 AM
+export function startScheduler() {
+    // Run SQL cleanup on startup
+    const startupCleanupResult = cleanupTrashedRecords(30);
+    console.log("Startup cleanup:", startupCleanupResult);
+
+    // Schedule daily SQLite cleanup at 3 AM
     cron.schedule("0 3 * * *", () => {
         const result = cleanupTrashedRecords(30);
         console.log(`[${new Date().toISOString()}] Cleanup:`, result);
+    });
+
+    // Check for upcoming Tasks with due date (next 1 min)
+    cron.schedule("* * * * *", async () => {
+        const nextMinute = new Date(Date.now() + 60_000)
+        // Round to the minute to match due_date
+        nextMinute.setSeconds(0, 0);
+
+        const windowStart = nextMinute.toISOString();
+        const windowEnd = new Date(nextMinute.getTime() + 59_999).toISOString();
+
+        await notifyUpcomingTasks(windowStart, windowEnd);
+
     });
 }

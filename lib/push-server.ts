@@ -21,6 +21,8 @@ export async function sendPushToAll(
                 JSON.stringify(payload)
             );
         } catch (error: any) {
+            console.error("Push error:", error.message);
+
             // Clean up expired or invalid subscriptions
             if (error.statusCode === 410) {
                 db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?")
