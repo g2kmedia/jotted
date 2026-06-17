@@ -4,7 +4,7 @@ import TagsBar from "@/app/components/TagsBar";
 import { getAllNotesLocally, getAllNotesTagsLocally } from "@/lib/indexeddb";
 import { useNoteStore, useTagsStore } from "@/lib/stores";
 import { localNote } from "@/lib/types";
-import { Pin, Trash2 } from "lucide-react";
+import { Pin } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -159,20 +159,18 @@ export default function NotesOverview() {
 
   return (
     <div className="h-full flex flex-col">
-      <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
+      <section className="my-4 px-1 grid grid-cols-4 gap-4 text-xl">
         <button
-          className={`${quickFilter === "pinned" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "pinned" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "pinned" ? null : "pinned")}
         >
-          <span>Pinned</span>
-          <span><Pin /></span>
+          Pinned
         </button>
         <button
-          className={`${quickFilter === "trashed" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-xl flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          <span>Trashed</span>
-          <span><Trash2 /></span>
+          Trashed
         </button>
       </section>
 
@@ -193,27 +191,29 @@ export default function NotesOverview() {
             )}
           </p>
         ) : (
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col">
             {notes.map((note) => {
               return (
                 <Link href={`/notes/${note.id}`} key={note.id}>
-                  <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
+                  <article className="max-h-22 p-2 mb-2 flex flex-col border-b-1 border-muted-foreground/30">
                     <div className="flex justify-between">
-                      <h3 className="text-lg mb-1 truncate">{note.title}</h3>
-                      {note.is_pinned === 1 ? <Pin size={18} /> : ""}
+                      <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{note.title}</h3>
+                      {note.is_pinned === 1 ? <Pin size={18} className="ml-2" /> : ""}
                     </div>
-                    <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {note.tags?.map((tag, index) => (
-                        <li key={index}>#{tag}</li>
-                      ))}
-                    </ul>
+                    {note.tags &&
+                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {note.tags.map((tag, index) => (
+                          <li key={index}>#{tag}</li>
+                        ))}
+                      </ul>
+                    }
                   </article>
                 </Link>
               );
             })}
             {hasMore
-              ? <button onClick={() => loadNotes()} className="p-3 mb-30 lg:mb-3 text-center border border-foreground rounded-2xl hover:cursor-pointer">Load More</button>
-              : <p className="p-4 mb-28 lg:mb-3 text-center">That's all!</p>
+              ? <button onClick={() => loadNotes()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center underline border-foreground hover:cursor-pointer">Load More</button>
+              : <p className="p-4 mb-30 lg:mb-3 text-center">That's all!</p>
             }
           </div>
         )}

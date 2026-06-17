@@ -20,11 +20,11 @@ export default function TagsBar(
     }, [tags, activeTags]);
 
     return (
-        <section className={`flex mb-6 overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}>
+        <section className={`flex mb-6 overflow-y-auto ${className}`}>
             {sortedTags.map((tag) => (
                 <button
                     key={tag}
-                    className={`${activeTags.includes(tag) ? "bg-accent" : ""} p-2.5 ml-2 border rounded-full whitespace-nowrap cursor-pointer`}
+                    className={`${activeTags.includes(tag) ? "text-accent" : "text-muted-foreground hover:text-accent"} p-2.5 whitespace-nowrap cursor-pointer`}
                     onClick={() => onTagSelect(tag)}
                 >
                     #{tag}

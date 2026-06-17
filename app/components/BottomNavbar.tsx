@@ -12,8 +12,8 @@ export default function BottomNavbar() {
 
     const highlightNavbarItem = (path: string): string => {
         return path === pathname
-            ? "text-foreground bg-accent rounded-2xl"
-            : "text-muted-foreground hover:bg-accent hover:text-foreground hover:rounded-2xl"
+            ? "text-foreground border-b-5 border-accent"
+            : "text-muted-foreground border-b-5 border-transparent hover:border-accent"
     }
 
     return (
@@ -33,7 +33,7 @@ export default function BottomNavbar() {
                     <File className="m-1" />
                 </button>
             </Link>
-            <CreateBtn className="p-4 text-muted-foreground outline-hidden hover:bg-accent hover:text-foreground hover:rounded-2xl" />
+            <CreateBtn className="p-4 text-muted-foreground border-b-5 border-transparent outline-hidden hover:border-accent" />
         </nav>
     );
 }

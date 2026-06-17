@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link";
-import { Circle, Trash2 } from 'lucide-react';
+import { Circle } from 'lucide-react';
 import { useEffect } from "react";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
@@ -254,48 +254,48 @@ export default function TasksOverview() {
 
   return (
     <div className="h-full flex flex-col">
-      <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
+      <section className="my-4 px-1 grid grid-cols-2 gap-x-4 gap-y-2 justify-items-start text-xl">
         <button
-          className={`${quickFilter === "today" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "today" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
         >
-          <span>Today</span>
+          <span className="pr-2">Today:</span>
           <span>{taskCounts.today}</span>
         </button>
         <button
-          className={`${quickFilter === "week" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "week" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "week" ? null : "week")}
         >
-          <span>This week</span>
+          <span className="pr-2">This week:</span>
           <span>{taskCounts.week}</span>
         </button>
         <button
-          className={`${quickFilter === "scheduled" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "scheduled" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "scheduled" ? null : "scheduled")}
         >
-          <span>Scheduled</span>
+          <span className="pr-2">Scheduled:</span>
           <span>{taskCounts.scheduled}</span>
         </button>
         <button
-          className={`${quickFilter === "later" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "later" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "later" ? null : "later")}
         >
-          <span>Later</span>
+          <span className="pr-2">Later: </span>
           <span>{taskCounts.later}</span>
         </button>
         <button
-          className={`${quickFilter === "completed" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "completed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
         >
-          <span>Completed</span>
-          <span><Circle /></span>
+          <span className="pr-2">Completed:</span>
+          <span></span>
         </button>
         <button
-          className={`${quickFilter === "trashed" ? "bg-accent" : ""} mt-2 min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+          className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          <span>Trashed</span>
-          <span><Trash2 /></span>
+          <span className="pr-2">Trashed:</span>
+          <span></span>
         </button>
       </section>
 
@@ -315,20 +315,17 @@ export default function TasksOverview() {
               </>)}
           </p>
         ) : (
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col">
             {tasks.map((task) => {
               return (
                 <Link href={`/tasks/${task.id}`} key={task.id}>
-                  <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-2 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
-                    <button
-                      onClick={(e) => completeTask(e, task.id, task.is_completed)}
-                      className="self-center"
-                    >
-                      <Circle className={`${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
+                  <article className={`max-h-22 p-2 mb-2 flex flex-row border-b-1 border-muted-foreground/30 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                    <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
+                      <Circle className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                     </button>
-                    <div>
-                      <h3 className="text-lg mb-1 truncate">{task.title}</h3>
-                      <ul className="flex text-sm mb-2">
+                    <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h3>
+                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);
                           const dueDateLuxon = DateTime.fromJSDate(dueDate);
@@ -349,19 +346,21 @@ export default function TasksOverview() {
                           <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
                         )}
                       </ul>
-                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {task.tags?.map((tag, index) => (
+                      {task.tags &&
+                        <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {task.tags.map((tag, index) => (
                           <li key={index}>#{tag}</li>
                         ))}
                       </ul>
+                      }
                     </div>
                   </article>
                 </Link>
               );
             })}
             {hasMore
-              ? <button onClick={() => loadTasks()} className="p-3 mb-30 lg:mb-3 text-center border border-foreground rounded-2xl hover:cursor-pointer">Load More</button>
-              : <p className="p-4 mb-28 lg:mb-3 text-center">That's all!</p>
+              ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center underline border-foreground hover:cursor-pointer">Load More</button>
+              : <p className="p-4 mb-30 lg:mb-3 text-center">That's all!</p>
             }
           </div>
         )}
