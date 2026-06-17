@@ -4,7 +4,7 @@ import { localNote, localTask } from "./types";
 // Tasks
 type TaskState = {
     tasks: localTask[] | null,
-    taskCounts: { today: number, week: number, scheduled: number, later: number },
+    taskCounts: { today: number, week: number, scheduled: number, later: number, completed: number, trashed: number },
     lastQueriedRecord: { id: string, updated_at: string } | null
     hasMore: boolean
     quickFilter: "today" | "week" | "scheduled" | "later" | "completed" | "trashed" | null
@@ -13,7 +13,7 @@ type TaskState = {
 
 type TaskActions = {
     setTasks: (tasks: localTask[] | null) => void
-    setTaskCounts: (counts: { today: number, week: number, scheduled: number, later: number }) => void
+    setTaskCounts: (counts: { today: number, week: number, scheduled: number, later: number, completed: number, trashed: number }) => void
     appendNewTasks: (newTasks: localTask[]) => void
     updateTask: (id: string, updates: Partial<localTask>) => void
     setLastQueriedRecord: (record: { id: string, updated_at: string } | null) => void
@@ -25,7 +25,7 @@ type TaskActions = {
 export const useTaskStore = create<TaskState & TaskActions>()((set) => ({
     // State
     tasks: null,
-    taskCounts: { today: 0, week: 0, scheduled: 0, later: 0 },
+    taskCounts: { today: 0, week: 0, scheduled: 0, later: 0, completed: 0, trashed: 0 },
     lastQueriedRecord: null,
     hasMore: true,
     quickFilter: null,

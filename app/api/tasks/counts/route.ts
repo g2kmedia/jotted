@@ -6,10 +6,7 @@ export async function GET(
 ) {
     try {
         const timezone = request.nextUrl.searchParams.get("timezone") || "UTC";
-        const isCompleted = request.nextUrl.searchParams.get("is_completed") || undefined;
-        const isTrashed = request.nextUrl.searchParams.get("is_trashed") || undefined;
-
-        const params = { timezone, isCompleted, isTrashed };
+        const params = { timezone };
 
         const counts = getTaskCounts(params);
 

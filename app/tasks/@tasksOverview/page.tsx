@@ -148,16 +148,14 @@ export default function TasksOverview() {
     }
   }
 
+  // adjust according to new API and function
   const loadTaskCounts = async (): Promise<void> => {
     if (navigator.onLine) {
       try {
         const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
         const url = new URL("/api/tasks/counts", window.location.origin);
-
         url.searchParams.set("timezone", userTimezone);
-        url.searchParams.set("is_completed", "0");
-        url.searchParams.set("is_trashed", "0");
 
         const res = await fetch(url, { method: "GET" });
 
@@ -288,14 +286,14 @@ export default function TasksOverview() {
           onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
         >
           <span className="pr-2">Completed:</span>
-          <span></span>
+          <span>{taskCounts.completed}</span>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
           <span className="pr-2">Trashed:</span>
-          <span></span>
+          <span>{taskCounts.trashed}</span>
         </button>
       </section>
 

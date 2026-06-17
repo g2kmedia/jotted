@@ -219,32 +219,16 @@ export function deleteTask(id: string): number {
 }
 
 export function getTaskCounts(
-    params: { timezone: string, isCompleted: string | undefined, isTrashed: string | undefined }
+    params: { timezone: string }
 ): {
     today: number;
     week: number;
     scheduled: number;
     later: number;
+    completed: number;
+    trashed: number;
 } {
-    const {
-        timezone,
-        isCompleted,
-        isTrashed
-    } = params;
-
-    let whereClause = 'WHERE 1=1';
-    const queryParams: string[] = [];
-
-    if (isCompleted) {
-        whereClause += ' AND is_completed = ?';
-        queryParams.push(isCompleted);
-    }
-
-    if (isTrashed) {
-        whereClause += ' AND is_trashed = ?';
-        queryParams.push(isTrashed);
-    }
-
+    const { timezone } = params;
     const today = DateTime.now().setZone(timezone);
 
     // Convert to UTC for SQLite comparison
@@ -254,22 +238,32 @@ export function getTaskCounts(
     return {
         today: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            ${whereClause} AND due_date <= ?
-        `).get(...queryParams, todayEndUTC) as { count: number }).count,
+            WHERE 1=1 AND due_date <= ? AND is_completed = 0 AND is_trashed = 0
+        `).get(todayEndUTC) as { count: number }).count,
 
         week: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            ${whereClause} AND due_date <= ?
-        `).get(...queryParams, weekEndUTC) as { count: number }).count,
+            WHERE 1=1 AND due_date <= ? AND is_completed = 0 AND is_trashed = 0
+        `).get(weekEndUTC) as { count: number }).count,
 
         scheduled: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            ${whereClause} AND due_date IS NOT NULL
-        `).get(...queryParams) as { count: number }).count,
+            WHERE 1=1 AND due_date IS NOT NULL AND is_completed = 0 AND is_trashed = 0
+        `).get() as { count: number }).count,
 
         later: (db.prepare(`
             SELECT COUNT(*) as count FROM task 
-            ${whereClause} AND due_date IS NULL
-        `).get(...queryParams) as { count: number }).count
+            WHERE 1=1 AND due_date IS NULL AND is_completed = 0 AND is_trashed = 0
+        `).get() as { count: number }).count,
+
+        completed: (db.prepare(`
+            SELECT COUNT(*) as count FROM task
+            WHERE 1=1 AND is_completed = 1 AND is_trashed = 0
+        `).get() as { count: number }).count,
+
+        trashed: (db.prepare(`
+            SELECT COUNT(*) as count FROM task
+            WHERE 1=1 AND is_trashed = 1
+        `).get() as { count: number }).count
     };
 }

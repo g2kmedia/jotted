@@ -358,14 +358,13 @@ export const getAllTasksTagsLocally = async (): Promise<string[]> => {
     return [...new Set(allTags)];
 }
 
-export const getTaskCountsLocally = async (
-    isCompleted: number = 0,
-    isTrashed: number = 0
-): Promise<{
+export const getTaskCountsLocally = async (): Promise<{
     today: number,
     week: number,
     scheduled: number,
-    later: number
+    later: number,
+    completed: number,
+    trashed: number
 }> => {
     const db = await openDB();
     const tx = db.transaction("tasks", "readonly");
@@ -382,17 +381,22 @@ export const getTaskCountsLocally = async (
         today: 0,
         week: 0,
         scheduled: 0,
-        later: 0
+        later: 0,
+        completed: 0,
+        trashed: 0
     };
 
-    counts.today = await requestToPromise(index.count(IDBKeyRange.upperBound([isCompleted, isTrashed, endOfToday])));
-    counts.week = await requestToPromise(index.count(IDBKeyRange.upperBound([isCompleted, isTrashed, endOfWeek])));
+    counts.today = await requestToPromise(index.count(IDBKeyRange.upperBound([0, 0, endOfToday])));
+    counts.week = await requestToPromise(index.count(IDBKeyRange.upperBound([0, 0, endOfWeek])));
 
-    const future = await requestToPromise<number>(index.count(IDBKeyRange.bound([isCompleted, isTrashed, nextWeekStart], [isCompleted, isTrashed, "9999-12-31T23:59:59.999Z"])));
+    const future = await requestToPromise<number>(index.count(IDBKeyRange.bound([0, 0, nextWeekStart], [0, 0, "9999-12-31T23:59:59.999Z"])));
     counts.scheduled = future + counts.week;
 
-    const nonCompletedTrashedTasks = await requestToPromise<number>(laterIndex.count(IDBKeyRange.only([isCompleted, isTrashed])));
+    const nonCompletedTrashedTasks = await requestToPromise<number>(laterIndex.count(IDBKeyRange.only([0, 0])));
     counts.later = nonCompletedTrashedTasks - counts.scheduled;
+
+    counts.completed = await requestToPromise(laterIndex.count(IDBKeyRange.only([1, 0])));
+    counts.trashed = await requestToPromise(laterIndex.count(IDBKeyRange.bound([0, 1], [1, 1])));
 
     return counts;
 }
