@@ -370,7 +370,7 @@ export const getTaskCountsLocally = async (): Promise<{
     const tx = db.transaction("tasks", "readonly");
     const store = tx.objectStore("tasks");
     const index = store.index("incompleted_due");
-    const laterIndex = store.index("completed_trashed");
+    const completedTrashed = store.index("completed_trashed");
 
     const now = DateTime.now().setZone("UTC");
     const endOfToday = now.endOf("day").toISO();
@@ -392,11 +392,11 @@ export const getTaskCountsLocally = async (): Promise<{
     const future = await requestToPromise<number>(index.count(IDBKeyRange.bound([0, 0, nextWeekStart], [0, 0, "9999-12-31T23:59:59.999Z"])));
     counts.scheduled = future + counts.week;
 
-    const nonCompletedTrashedTasks = await requestToPromise<number>(laterIndex.count(IDBKeyRange.only([0, 0])));
+    const nonCompletedTrashedTasks = await requestToPromise<number>(completedTrashed.count(IDBKeyRange.only([0, 0])));
     counts.later = nonCompletedTrashedTasks - counts.scheduled;
 
-    counts.completed = await requestToPromise(laterIndex.count(IDBKeyRange.only([1, 0])));
-    counts.trashed = await requestToPromise(laterIndex.count(IDBKeyRange.bound([0, 1], [1, 1])));
+    counts.completed = await requestToPromise(completedTrashed.count(IDBKeyRange.only([1, 0])));
+    counts.trashed = await requestToPromise(completedTrashed.count(IDBKeyRange.bound([0, 1], [1, 1])));
 
     return counts;
 }

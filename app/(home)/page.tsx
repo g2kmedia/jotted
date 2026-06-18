@@ -161,23 +161,20 @@ export default function Home() {
           <h1 className="text-xl">No tasks for today</h1>
         ) : (
           <>
-            <h1 className="bg-background px-1.5 pb-1.5 text-xl">
-              Today's tasks <span className="text-muted-foreground italic">({tasks.length})</span>
+            <h1 className="bg-background px-1.5 pb-1.5 text-xl underline">
+              Today's tasks: <span>{tasks.length}</span>
             </h1>
             <section>
               {tasks.map((task) => {
                 return (
                   <Link href={`/tasks/${task.id}`} key={task.id}>
-                    <article className={`grid grid-cols-[auto_1fr] gap-4 min-h-22 mb-2 p-2 border-1 border-foreground rounded-lg ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
-                      <button
-                        onClick={(e) => completeTask(e, task.id, task.is_completed)}
-                        className="self-center"
-                      >
-                        <Circle className={`${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
+                    <article className={`max-h-22 p-2 mb-2 flex flex-row border-b-1 border-muted-foreground/30 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                      <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
+                        <Circle className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                       </button>
-                      <div>
-                        <h3 className="text-lg mb-1 truncate">{task.title}</h3>
-                        <ul className="flex text-sm mb-2">
+                      <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h3>
+                        <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {task.due_date && (() => {
                             const dueDate = new Date(task.due_date);
                             const dueDateLuxon = DateTime.fromJSDate(dueDate);
@@ -213,24 +210,22 @@ export default function Home() {
         )}
       </section>
 
-      <div className="py-2 border-b-1 border-foreground"></div>
-
-      <section>
+      <section className="mt-4">
         {notes.length === 0 ? (
           <h1 className="pt-2 mb-4 boborder-foreground text-xl">No pinned notes</h1>
         ) : (
           <>
-            <h1 className="bg-background p-1.5 text-xl">
-              Pinned notes <span className="text-muted-foreground italic">({notes.length})</span>
+            <h1 className="bg-background p-1.5 text-xl underline">
+              Pinned notes: <span>{notes.length}</span>
             </h1>
             <section>
               {notes.map((note) => {
                 return (
                   <Link href={`/notes/${note.id}`} key={note.id}>
-                    <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
+                    <article className="max-h-22 p-2 mb-2 flex flex-col border-b-1 border-muted-foreground/30">
                       <div className="flex justify-between">
-                        <h3 className="text-lg mb-1 truncate">{note.title}</h3>
-                        {note.is_pinned === 1 ? <Pin size={18} /> : ""}
+                        <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{note.title}</h3>
+                        {note.is_pinned === 1 ? <Pin size={18} className="ml-2"/> : ""}
                       </div>
                       <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {note.tags?.map((tag, index) => (

@@ -198,7 +198,7 @@ export default function NotesOverview() {
                   <article className="max-h-22 p-2 mb-2 flex flex-col border-b-1 border-muted-foreground/30">
                     <div className="flex justify-between">
                       <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{note.title}</h3>
-                      {note.is_pinned === 1 ? <Pin size={18} className="ml-2" /> : ""}
+                      {note.is_pinned === 1 ? <Pin size={18} className="ml-2"/> : ""}
                     </div>
                     {note.tags &&
                       <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
