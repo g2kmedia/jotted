@@ -58,19 +58,19 @@ export default function SearchResults() {
 
     return (
         <div className="h-full mb-28 flex flex-col overflow-y-auto">
-            <section className="mb-6 grid grid-cols-2 gap-2 text-xl">
+            <section className="my-4 px-1 grid grid-cols-4 gap-4 text-xl">
                 <button
-                    className={`${quickFilter === "notes" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+                    className={`${quickFilter === "notes" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
                     onClick={() => setQuickFilter(prev => prev === "notes" ? null : "notes")}
                 >
-                    <span>Notes</span>
+                    <span className="pr-2">Notes:</span>
                     <span>{resultsCount.notes}</span>
                 </button>
                 <button
-                    className={`${quickFilter === "tasks" ? "bg-accent" : ""} min-h-14 p-3 border-1 border-foreground rounded-lg flex justify-between items-center cursor-pointer`}
+                    className={`${quickFilter === "tasks" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
                     onClick={() => setQuickFilter(prev => prev === "tasks" ? null : "tasks")}
                 >
-                    <span>Tasks</span>
+                    <span className="pr-2">Tasks:</span>
                     <span>{resultsCount.tasks}</span>
                 </button>
             </section>
@@ -81,18 +81,18 @@ export default function SearchResults() {
                 ) : (
                     displayResults.map(item => (
                         <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>
-                            <article className="h-22 mb-2 p-2 border-1 border-foreground rounded-lg">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-accent capitalize">{item.type}</span>
+                            <article className="max-h-22 p-2 mb-2 flex flex-row items-center border-b-1 border-muted-foreground/30">
+                                <div className="mr-2 text-muted-foreground text-xs capitalize">{item.type}</div>
+                                <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                     <h3
                                         className="text-lg mb-1 truncate"
                                         dangerouslySetInnerHTML={{ __html: item.title || "" }}
                                     />
+                                    <p
+                                        className="text-sm font-light"
+                                        dangerouslySetInnerHTML={{ __html: item.content as string || "" }}
+                                    />
                                 </div>
-                                <p
-                                    className="text-sm font-light"
-                                    dangerouslySetInnerHTML={{ __html: item.content as string || "" }}
-                                />
                             </article>
                         </Link>
                     ))
