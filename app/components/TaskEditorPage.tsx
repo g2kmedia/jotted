@@ -260,7 +260,7 @@ export default function TaskEditorPage(
                         type="text"
                         defaultValue={task.title}
                         placeholder="Title"
-                        className="w-full my-2 p-2 border rounded-2xl outline-none"
+                        className="w-full my-2 py-2 border-b-1 outline-none"
                     />
 
                     <label htmlFor="content"></label>
@@ -269,20 +269,20 @@ export default function TaskEditorPage(
                         name="content"
                         defaultValue={task.content}
                         placeholder="Description"
-                        className="h-20 w-full my-2 p-2 border rounded-2xl resize-none outline-none"
+                        className="h-30 w-full py-2 resize-none border-b-1 outline-none"
                     />
 
-                    <fieldset className="my-2 grid grid-cols-[auto_auto_auto] justify-items-center">
-                        <label htmlFor="date">Date</label>
-                        <label htmlFor="time">Time</label>
-                        <label htmlFor="clear-date-time">Clear</label>
+                    <fieldset className="mt-10 mb-4 grid grid-cols-[auto_auto_1fr]">
+                        <label htmlFor="date" className="text-muted-foreground">Date</label>
+                        <label htmlFor="time" className="text-muted-foreground">Time</label>
+                        <label htmlFor="clear-date-time" className="ml-10 text-muted-foreground">Clear</label>
 
                         <input
                             id="date"
                             name="date"
                             type="date"
                             defaultValue={task.due_date ? new Date(task.due_date).toLocaleDateString("en-CA") : ""} // en-CA for formatting purposes
-                            className="w-40 my-2 p-2 text-center border rounded-2xl outline-none hover:cursor-pointer"
+                            className="w-40 my-2 outline-none hover:cursor-pointer"
                         />
 
                         <input
@@ -290,27 +290,27 @@ export default function TaskEditorPage(
                             name="time"
                             type="time"
                             defaultValue={task.due_date ? new Date(task.due_date).toTimeString().slice(0, 5) : ""}
-                            className="w-20 my-2 p-2 text-center border rounded-2xl outline-none hover:cursor-pointer"
+                            className="w-20 my-2 outline-none hover:cursor-pointer"
                         />
 
                         <button
                             id="clear-date-time"
                             type="button"
                             onClick={handleClearDateTime}
-                            className="my-2 p-2 border rounded-2xl hover:bg-foreground hover:text-background hover:cursor-pointer"
+                            className="ml-10 my-2 hover:cursor-pointer"
                         >
                             <CalendarOff />
                         </button>
                     </fieldset>
 
-                    <label htmlFor="priority" className="w-full my-2 text-center">Priority</label>
+                    <label htmlFor="priority" className="text-muted-foreground">Priority</label>
                     <select
                         id="priority"
                         name="priority"
                         defaultValue={task.priority ?? undefined}
-                        className="w-40 self-center text-center p-2 border rounded-2xl hover:cursor-pointer"
+                        className="w-25 py-2 hover:cursor-pointer"
                     >
-                        <option value="">-</option>
+                        <option value="">—</option>
                         <option value="1">High</option>
                         <option value="2">Medium</option>
                         <option value="3">Low</option>
