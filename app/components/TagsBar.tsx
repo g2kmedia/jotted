@@ -20,7 +20,7 @@ export default function TagsBar(
     }, [tags, activeTags]);
 
     return (
-        <section className={`flex min-h-10 mb-6 ${className}`}>
+        <section className={`flex min-h-10 mb-6 overflow-x-auto ${className}`}>
             {sortedTags.map((tag) => (
                 <button
                     key={tag}
