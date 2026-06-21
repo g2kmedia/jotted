@@ -477,3 +477,10 @@ export const markSynced = async (recordId: string): Promise<void> => {
         request.onerror = () => reject(request.error);
     });
 }
+
+// Get the last update in a DB store
+export const getLastUpdatedAt = async (store: "notes" | "tasks"): Promise<string | null> => {
+    const db = await openDB();
+
+    return requestToPromise(db.transaction(store, "readonly").objectStore(store).index("updated_at").openCursor(null, "prev"));
+}

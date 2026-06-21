@@ -1,7 +1,7 @@
 "use client"
 
 import { subscribeToPush } from "@/lib/push-client";
-import { syncPendingChanges } from "@/lib/sync";
+import { getServerChanges, syncPendingChanges } from "@/lib/sync";
 import { useEffect, useState } from "react"
 import { toast } from "sonner";
 import {
@@ -49,9 +49,11 @@ export default function SyncHandler() {
             toast.info("Offline: Only cached data is available. Changes will be saved locally.");
         }
 
-        const handleOnline = () => {
+        const handleOnline = async () => {
             toast.info("Back online.");
-            syncPendingChanges();
+            await syncPendingChanges();
+            await getServerChanges("tasks");
+            await getServerChanges("notes");
         }
 
         window.addEventListener("offline", handleOffline);

@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { deleteNoteLocally, deleteTaskLocally, getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
+import { deleteNoteLocally, deleteTaskLocally, getLastUpdatedAt, getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
 import { localNote, localTask } from "./types";
 
 export const offlineSaveAndSync = async (
@@ -115,3 +115,51 @@ export const syncPendingChanges = async (): Promise<boolean> => {
 
     return allSucceeded;
 }
+
+export const getServerChanges = async (recordType: "notes" | "tasks"): Promise<void> => {
+    const since = await getLastUpdatedAt(recordType);
+
+    const pending = await getPendingChanges();
+    const pendingIds = new Set(pending.map(change => change.recordId));
+
+    let lastQueriedRecord: { id: string; updated_at: string } | undefined = undefined;
+    let keepGoing = true;
+
+    while (keepGoing) {
+        const url = new URL(`/api/${recordType}`, window.location.origin);
+        url.searchParams.set("limit", "50");
+
+        if (lastQueriedRecord) {
+            url.searchParams.set("last_queried_record", JSON.stringify(lastQueriedRecord));
+        }
+
+        try {
+            const res = await fetch(url);
+
+            if (!res.ok) break;
+
+            const { [recordType]: serverRecords } = await res.json();
+
+            if (!serverRecords.length) break;
+
+            for (const r of serverRecords) {
+                if (since && r.updated_at <= since) {
+                    keepGoing = false;
+                    break;
+                }
+
+                if (!pendingIds.has(`${recordType}-${r.id}`)) {
+                    recordType === "tasks" ? await saveTaskLocally(r) : await saveNoteLocally(r);
+                }
+            }
+
+            const lastServerRecord = serverRecords[serverRecords.length - 1];
+            lastQueriedRecord = { id: lastServerRecord.id, updated_at: lastServerRecord.updated_at };
+
+            if (serverRecords < 50) keepGoing = false;
+        } catch (error) {
+            console.error(`Failed to get latest ${recordType} server changes:`, error);
+            break;
+        }
+    }
+};
