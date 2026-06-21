@@ -27,7 +27,15 @@ export default function SyncHandler() {
     const [showPrompt, setShowPrompt] = useState(false);
 
     useEffect(() => {
-        if (navigator.onLine) syncPendingChanges();
+        const initSync = async () => {
+            if (navigator.onLine) {
+                await syncPendingChanges();
+                await getServerChanges("tasks");
+                await getServerChanges("notes");
+            }
+        }
+
+        initSync();
 
         // Request permission and subscribe to push notifications
         const canPrompt =
