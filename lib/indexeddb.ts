@@ -2,7 +2,7 @@ import { localNote, localTask } from "./types";
 import { DateTime } from "luxon";
 
 const DB_NAME = "jotted";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 interface PendingChanges {
     recordId: string;
@@ -48,6 +48,10 @@ export const openDB = (): Promise<IDBDatabase> => {
             if (!db.objectStoreNames.contains("pendingChanges")) {
                 const pendingStore = db.createObjectStore("pendingChanges", { keyPath: "recordId" });
                 pendingStore.createIndex("synced", "synced", { unique: false });
+            }
+
+            if (!db.objectStoreNames.contains("meta")) {
+                db.createObjectStore("meta", { keyPath: "key" });
             }
         };
     });
@@ -478,9 +482,15 @@ export const markSynced = async (recordId: string): Promise<void> => {
     });
 }
 
-// Get the last update in a DB store
-export const getLastUpdatedAt = async (store: "notes" | "tasks"): Promise<string | null> => {
+// Cursor used for pulling data from server's SQLite and syncing
+export const getSyncCursor = async (recordType: "notes" | "tasks"): Promise<string | null> => {
     const db = await openDB();
+    const result = await requestToPromise<{ key: string; value: string } | undefined>(db.transaction("meta", "readonly").objectStore("meta").get(`sync-cursor-${recordType}`));
 
-    return requestToPromise(db.transaction(store, "readonly").objectStore(store).index("updated_at").openCursor(null, "prev"));
+    return result?.value ?? null;
+}
+
+export const setSyncCursor = async (recordType: "notes" | "tasks", timestamp: string): Promise<void> => {
+        const db = await openDB();
+        await requestToPromise<IDBValidKey>(db.transaction("meta", "readwrite").objectStore("meta").put({ key: `sync-cursor-${recordType}`, value: timestamp }));
 }

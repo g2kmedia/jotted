@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { deleteNoteLocally, deleteTaskLocally, getLastUpdatedAt, getPendingChanges, markSynced, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb"
+import { deleteNoteLocally, deleteTaskLocally, getPendingChanges, getSyncCursor, markSynced, queueChanges, saveNoteLocally, saveTaskLocally, setSyncCursor } from "./indexeddb"
 import { localNote, localTask } from "./types";
 
 export const offlineSaveAndSync = async (
@@ -117,12 +117,12 @@ export const syncPendingChanges = async (): Promise<boolean> => {
 }
 
 export const getServerChanges = async (recordType: "notes" | "tasks"): Promise<void> => {
-    const since = await getLastUpdatedAt(recordType);
-
+    const since = await getSyncCursor(recordType);
     const pending = await getPendingChanges();
     const pendingIds = new Set(pending.map(change => change.recordId));
 
     let lastQueriedRecord: { id: string; updated_at: string } | undefined = undefined;
+    let newCursor: string | null = null;
     let keepGoing = true;
 
     while (keepGoing) {
@@ -142,6 +142,8 @@ export const getServerChanges = async (recordType: "notes" | "tasks"): Promise<v
 
             if (!serverRecords.length) break;
 
+            if (!newCursor) newCursor = serverRecords[0].updated_at; // newest seen during the sweep
+
             for (const r of serverRecords) {
                 if (since && r.updated_at <= since) {
                     keepGoing = false;
@@ -157,9 +159,10 @@ export const getServerChanges = async (recordType: "notes" | "tasks"): Promise<v
             lastQueriedRecord = { id: lastServerRecord.id, updated_at: lastServerRecord.updated_at };
 
             if (serverRecords < 50) keepGoing = false;
+
+            if (newCursor) await setSyncCursor(recordType, newCursor);
         } catch (error) {
             console.error(`Failed to get latest ${recordType} server changes:`, error);
-            break;
         }
     }
 };
