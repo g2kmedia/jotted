@@ -308,8 +308,9 @@ export const getAllTasksLocally = async (
             allTasks = await requestToPromise(completedReq);
             break;
         case "trashed":
-            const trashedReq = index.getAll(IDBKeyRange.only([0, 1]));
-            allTasks = await requestToPromise(trashedReq);
+            const trashedReq1 = await requestToPromise<localTask[]>(index.getAll(IDBKeyRange.only([0, 1])));
+            const trashedReq2 = await requestToPromise<localTask[]>(index.getAll(IDBKeyRange.only([1, 1])));
+            allTasks = [...trashedReq1, ...trashedReq2];
             break;
         case "today":
             const todayReq = index.getAll(IDBKeyRange.upperBound([0, 0, dueDate]));
@@ -400,7 +401,10 @@ export const getTaskCountsLocally = async (): Promise<{
     counts.later = nonCompletedTrashedTasks - counts.scheduled;
 
     counts.completed = await requestToPromise(completedTrashed.count(IDBKeyRange.only([1, 0])));
-    counts.trashed = await requestToPromise(completedTrashed.count(IDBKeyRange.bound([0, 1], [1, 1])));
+
+    const trashed1 = await requestToPromise<number>(completedTrashed.count(IDBKeyRange.only([0, 1])));
+    const trashed2 = await requestToPromise<number>(completedTrashed.count(IDBKeyRange.only([1, 1])));
+    counts.trashed = trashed1 + trashed2;
 
     return counts;
 }
