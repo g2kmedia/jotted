@@ -62,6 +62,17 @@ export default function NoteEditorPage(
     const { handleTrash, handleDelete } = useDeleteRecord();
 
     const note = notes?.find((n) => n.id === noteId) ?? null;
+    const noteRef = useRef(note);
+    noteRef.current = note;
+
+    useEffect(() => {
+        return () => {
+            const n = noteRef.current;
+            if (n && !n.title?.trim() && !n.content_plaintext?.trim()) {
+                deleteEmptyNote();
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const loadNote = async (): Promise<void> => {
@@ -220,14 +231,7 @@ export default function NoteEditorPage(
                 className="mx-2 px-2 h-16 shrink-0 flex flex-col items-center border-b-1 border-foreground bg-background">
                 <ul className="h-full w-full flex justify-between items-center">
                     <li>
-                        <Link
-                            href={"/notes"}
-                            onClick={() => {
-                                if (!note.title?.trim() && !note.content_plaintext?.trim()) {
-                                    deleteEmptyNote();
-                                }
-                            }}
-                        >
+                        <Link href={"/notes"}>
                             <ArrowLeft className="hover:cursor-pointer lg:hidden" />
                         </Link>
                     </li>

@@ -32,8 +32,19 @@ export default function TaskEditorPage(
     const { handleTrash, handleDelete } = useDeleteRecord();
 
     const task = tasks?.find((t) => t.id === taskId) ?? null;
+    const taskRef = useRef(task);
+    taskRef.current = task;
 
     const router = useRouter();
+
+    useEffect(() => {
+        return () => {
+            const t = taskRef.current;
+            if (t && !t.title?.trim() && !t.content?.trim()) {
+                deleteEmptyTask();
+            }
+        };
+    }, []);
 
     useEffect(() => {
         const loadTask = async (): Promise<void> => {
@@ -208,14 +219,7 @@ export default function TaskEditorPage(
             <nav className="mx-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground bg-background">
                 <ul className="h-full flex justify-between items-center w-full">
                     <li>
-                        <Link
-                            href={"/tasks"}
-                            onClick={() => {
-                                if (!task.title?.trim() && !task.content?.trim()) {
-                                    deleteEmptyTask();
-                                }
-                            }}
-                        >
+                        <Link href={"/tasks"}>
                             <ArrowLeft className="hover:cursor-pointer lg:hidden" />
                         </Link>
                     </li>
