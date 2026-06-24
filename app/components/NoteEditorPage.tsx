@@ -56,7 +56,7 @@ export default function NoteEditorPage(
     const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-    const titleRef = useRef<HTMLInputElement>(null);
+    const titleRef = useRef<HTMLTextAreaElement>(null);
     const pendingUpdatesRef = useRef<Partial<localNote>>({});
 
     const handleTagsUpdate = useTagsUpdate({ recordType: "notes", recordId: noteId, setTags, setSaveStatus });
@@ -78,6 +78,13 @@ export default function NoteEditorPage(
             }
         }
     }, []);
+
+    useEffect(() => {
+        if (titleRef.current) {
+            titleRef.current.style.height = "auto";
+            titleRef.current.style.height = titleRef.current.scrollHeight + "px";
+        }
+    }, [note?.title]);
 
     useEffect(() => {
         const loadNote = async (): Promise<void> => {
@@ -182,7 +189,7 @@ export default function NoteEditorPage(
         }, 500
     );
 
-    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
         const newTitle = e.target.value;
 
         setSaveStatus(null);
@@ -274,13 +281,13 @@ export default function NoteEditorPage(
 
             <article className="overflow-y-auto">
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
-                <h1 className="my-3"><input
+                <h1 className="my-3"><textarea
                     ref={titleRef}
-                    type="text"
                     value={note.title}
                     onChange={handleTitleChange}
                     placeholder="Enter a title"
-                    className="w-full text-center text-3xl font-bold focus-visible:outline-none"
+                    rows={1}
+                    className="w-full text-center text-3xl font-bold resize-none focus-visible:outline-none"
                 /></h1>
                 <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
             </article>

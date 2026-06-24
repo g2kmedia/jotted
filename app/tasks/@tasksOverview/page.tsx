@@ -252,48 +252,48 @@ export default function TasksOverview() {
 
   return (
     <div className="h-full flex flex-col">
-      <section className="my-4 px-1 grid grid-cols-2 gap-x-4 gap-y-2 justify-items-start text-xl">
+      <section className="px-2 grid grid-cols-2 gap-y-2 border-b-1 pb-2">
         <button
           className={`${quickFilter === "today" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
         >
-          <span className="pr-2">Today:</span>
-          <span>{taskCounts.today}</span>
+          <div className="text-xl text-left font-bold text-accent">{taskCounts.today}</div>
+          <div className="text-xs text-left">TODAY</div>
         </button>
         <button
           className={`${quickFilter === "week" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "week" ? null : "week")}
         >
-          <span className="pr-2">This week:</span>
-          <span>{taskCounts.week}</span>
+          <div className="text-xl text-left font-bold text-accent">{taskCounts.week}</div>
+          <div className="text-xs text-left">THIS WEEK</div>
         </button>
         <button
-          className={`${quickFilter === "scheduled" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
+          className={`${quickFilter === "scheduled" ? "border-accent" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "scheduled" ? null : "scheduled")}
         >
-          <span className="pr-2">Scheduled:</span>
-          <span>{taskCounts.scheduled}</span>
+          <div className="text-xl text-left font-bold text-accent">{taskCounts.scheduled}</div>
+          <div className="text-xs text-left">SCHEDULED</div>
         </button>
         <button
           className={`${quickFilter === "later" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "later" ? null : "later")}
         >
-          <span className="pr-2">Later: </span>
-          <span>{taskCounts.later}</span>
+          <div className="text-xl text-left font-bold text-accent">{taskCounts.later}</div>
+          <div className="text-xs text-left">LATER</div>
         </button>
         <button
           className={`${quickFilter === "completed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
         >
-          <span className="pr-2">Completed:</span>
-          <span>{taskCounts.completed}</span>
+          <div className="text-xl text-left font-bold text-accent">{taskCounts.completed}</div>
+          <div className="text-xs text-left">COMPLETED</div>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          <span className="pr-2">Trashed:</span>
-          <span>{taskCounts.trashed}</span>
+          <div className="text-xl text-left font-bold text-accent">{taskCounts.trashed}</div>
+          <div className="text-xs text-left">TRASHED</div>
         </button>
       </section>
 
@@ -317,25 +317,25 @@ export default function TasksOverview() {
             {tasks.map((task) => {
               return (
                 <Link href={`/tasks/${task.id}`} key={task.id}>
-                  <article className={`max-h-22 p-2 mb-2 flex flex-row border-b-1 border-muted-foreground/30 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                  <article className={`max-h-22 p-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
                     <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
-                      <Circle className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
+                      <Circle size={16} className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                     </button>
                     <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h3>
-                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <ul className="flex gap-2 text-xs font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);
                           const dueDateLuxon = DateTime.fromJSDate(dueDate);
 
                           if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
-                            return <li className={`pr-2 ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>;
+                            return <li className={`uppercase ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", {month: "short", day: "numeric", year: "numeric"})}</li>;
                           }
 
                           return (
                             <>
-                              <li className={`pr-2 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA")}</li>
-                              <li className={`pr-5 ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
+                              <li className={`uppercase ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", {month: "short", day: "numeric", year: "numeric"})}</li>
+                              <li className={`${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
                             </>
                           );
                         }
@@ -345,7 +345,7 @@ export default function TasksOverview() {
                         )}
                       </ul>
                       {task.tags &&
-                        <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <ul className="flex gap-2 text-xs font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.tags.map((tag, index) => (
                           <li key={index}>#{tag}</li>
                         ))}
@@ -357,7 +357,7 @@ export default function TasksOverview() {
               );
             })}
             {hasMore
-              ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center underline border-foreground hover:cursor-pointer">Load More</button>
+              ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
               : <p className="p-4 mb-30 lg:mb-3 text-center">That's all!</p>
             }
           </div>

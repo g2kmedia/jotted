@@ -159,18 +159,18 @@ export default function NotesOverview() {
 
   return (
     <div className="h-full flex flex-col">
-      <section className="my-4 px-1 grid grid-cols-4 gap-4 text-xl">
+      <section className="px-2 grid grid-cols-2 border-b-1 pb-2">
         <button
-          className={`${quickFilter === "pinned" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
+          className={`${quickFilter === "pinned" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "pinned" ? null : "pinned")}
         >
-          Pinned
+          PINNED
         </button>
         <button
-          className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
+          className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          Trashed
+          TRASHED
         </button>
       </section>
 
@@ -195,18 +195,20 @@ export default function NotesOverview() {
             {notes.map((note) => {
               return (
                 <Link href={`/notes/${note.id}`} key={note.id}>
-                  <article className="max-h-22 p-2 mb-2 flex flex-col border-b-1 border-muted-foreground/30">
-                    <div className="flex justify-between">
-                      <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{note.title}</h3>
-                      {note.is_pinned === 1 ? <Pin size={18} className="ml-2"/> : ""}
+                  <article className="max-h-22 p-2 mb-2 flex flex-row border-b-1">
+                    <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <h3 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {note.title}
+                        <span>{note.is_pinned === 1 ? <Pin size={14} className="ml-2 text-muted-foreground" /> : ""}</span>
+                      </h3>
+                      {note.tags &&
+                        <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                          {note.tags.map((tag, index) => (
+                            <li key={index}>#{tag}</li>
+                          ))}
+                        </ul>
+                      }
                     </div>
-                    {note.tags &&
-                      <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {note.tags.map((tag, index) => (
-                          <li key={index}>#{tag}</li>
-                        ))}
-                      </ul>
-                    }
                   </article>
                 </Link>
               );

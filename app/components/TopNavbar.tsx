@@ -47,7 +47,7 @@ export default function TopNavbar() {
     }
 
     return (
-        <nav className="h-16 px-2 flex justify-between items-center text-foreground border-b-1 border-foreground">
+        <nav className="h-16 px-2 flex justify-between items-center text-foreground">
             {!isSearchOpen &&
                 <Link href={"/"} className="hover:cursor-pointer">
                     <Logo />
@@ -65,7 +65,7 @@ export default function TopNavbar() {
                             }
                         }}
                         placeholder="Search..."
-                        className="w-[70%] px-1 border-b-1 border-foreground outline-hidden"
+                        className="w-[70%] px-1 outline-hidden"
                     />
                     <Search
                         className="hover:cursor-pointer"
