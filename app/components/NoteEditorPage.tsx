@@ -68,7 +68,7 @@ export default function NoteEditorPage(
 
     useEffect(() => {
         titleRef.current?.focus();
-    }, [note]);
+    }, [noteId]);
 
     useEffect(() => {
         return () => {

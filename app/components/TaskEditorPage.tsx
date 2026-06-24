@@ -40,7 +40,7 @@ export default function TaskEditorPage(
 
     useEffect(() => {
         titleRef.current?.focus();
-    }, [task]);
+    }, [taskId]);
 
     useEffect(() => {
         return () => {
