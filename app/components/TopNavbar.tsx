@@ -4,14 +4,14 @@ import Link from "next/link";
 import { Search, X } from 'lucide-react';
 import Logo from "./Logo";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function TopNavbar() {
     const router = useRouter();
 
     const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-    const [searchTerm, setSearchTerm] = useState<string>("");
+    const searchTermRef = useRef<HTMLInputElement>(null);
     const [isOnline, setIsOnline] = useState<boolean>(true);
 
     useEffect(() => {
@@ -29,8 +29,12 @@ export default function TopNavbar() {
         }
     }, []);
 
-    const handleSearch = async (searchTerm: string) => {
-        if (searchTerm === "") {
+    useEffect(() => {
+        if (isSearchOpen) searchTermRef.current?.focus();
+    }, [isSearchOpen]);
+
+    const handleSearch = async (searchTerm: string | undefined) => {
+        if (!searchTerm || searchTerm === "") {
             toast.error("Please enter a search term");
             return;
         }
@@ -52,12 +56,12 @@ export default function TopNavbar() {
             {isSearchOpen ? (
                 <>
                     <input
+                        ref={searchTermRef}
                         type="search"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        defaultValue=""
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                                handleSearch(searchTerm);
+                                handleSearch(searchTermRef.current?.value);
                             }
                         }}
                         placeholder="Search..."
@@ -65,14 +69,14 @@ export default function TopNavbar() {
                     />
                     <Search
                         className="hover:cursor-pointer"
-                        onClick={() => handleSearch(searchTerm)}
+                        onClick={() => handleSearch(searchTermRef.current?.value)}
                     />
                     <X
-                        className="hover:cursor-pointer"
                         onClick={() => {
                             setIsSearchOpen(false);
-                            setSearchTerm("");
+                            if (searchTermRef.current) searchTermRef.current.value = "";
                         }}
+                        className="hover:cursor-pointer"
                     />
                 </>
             ) : (isOnline ? (

@@ -26,6 +26,7 @@ export default function TaskEditorPage(
     const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+    const titleRef = useRef<HTMLInputElement>(null);
     const pendingUpdatesRef = useRef<Partial<localTask>>({});
 
     const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", recordId: taskId, setTags, setSaveStatus });
@@ -36,6 +37,10 @@ export default function TaskEditorPage(
     taskRef.current = task;
 
     const router = useRouter();
+
+    useEffect(() => {
+        titleRef.current?.focus();
+    }, [task]);
 
     useEffect(() => {
         return () => {
@@ -259,6 +264,7 @@ export default function TaskEditorPage(
                 <form onChange={handleTaskChange} className="flex flex-col">
                     <label htmlFor="title"></label>
                     <input
+                        ref={titleRef}
                         id="title"
                         name="title"
                         type="text"

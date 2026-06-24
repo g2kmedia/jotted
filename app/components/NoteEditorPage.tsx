@@ -56,6 +56,7 @@ export default function NoteEditorPage(
     const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+    const titleRef = useRef<HTMLInputElement>(null);
     const pendingUpdatesRef = useRef<Partial<localNote>>({});
 
     const handleTagsUpdate = useTagsUpdate({ recordType: "notes", recordId: noteId, setTags, setSaveStatus });
@@ -64,6 +65,10 @@ export default function NoteEditorPage(
     const note = notes?.find((n) => n.id === noteId) ?? null;
     const noteRef = useRef(note);
     noteRef.current = note;
+
+    useEffect(() => {
+        titleRef.current?.focus();
+    }, [note]);
 
     useEffect(() => {
         return () => {
@@ -270,6 +275,7 @@ export default function NoteEditorPage(
             <article className="overflow-y-auto">
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
                 <h1 className="my-3"><input
+                    ref={titleRef}
                     type="text"
                     value={note.title}
                     onChange={handleTitleChange}
