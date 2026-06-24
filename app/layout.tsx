@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "../components/theme-provider";
 import "./globals.css";
-import { Recursive } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import { SerwistProvider } from "./serwist";
 import SyncHandler from "./components/SyncHandler";
 
@@ -52,7 +52,7 @@ export const viewport: Viewport = {
   themeColor: "#FFFFFF",
 };
 
-const recursiveFont = Recursive();
+const font = Space_Mono({ weight: ["400", "700"] });
 
 export default function RootLayout({
   children,
@@ -60,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={recursiveFont.className} suppressHydrationWarning>
+    <html lang="en" className={font.className} suppressHydrationWarning>
       {/* CSS changes to the body are done inside globals.css */}
       <body>
         <ThemeProvider
