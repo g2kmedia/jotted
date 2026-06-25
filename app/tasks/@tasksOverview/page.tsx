@@ -257,42 +257,42 @@ export default function TasksOverview() {
           className={`${quickFilter === "today" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
         >
-          <div className="text-xl text-left font-bold text-accent">{taskCounts.today}</div>
+          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.today}</div>
           <div className="text-xs text-left">TODAY</div>
         </button>
         <button
           className={`${quickFilter === "week" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "week" ? null : "week")}
         >
-          <div className="text-xl text-left font-bold text-accent">{taskCounts.week}</div>
+          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.week}</div>
           <div className="text-xs text-left">THIS WEEK</div>
         </button>
         <button
           className={`${quickFilter === "scheduled" ? "border-accent" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "scheduled" ? null : "scheduled")}
         >
-          <div className="text-xl text-left font-bold text-accent">{taskCounts.scheduled}</div>
+          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.scheduled}</div>
           <div className="text-xs text-left">SCHEDULED</div>
         </button>
         <button
           className={`${quickFilter === "later" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "later" ? null : "later")}
         >
-          <div className="text-xl text-left font-bold text-accent">{taskCounts.later}</div>
+          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.later}</div>
           <div className="text-xs text-left">LATER</div>
         </button>
         <button
           className={`${quickFilter === "completed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
         >
-          <div className="text-xl text-left font-bold text-accent">{taskCounts.completed}</div>
+          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.completed}</div>
           <div className="text-xs text-left">COMPLETED</div>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          <div className="text-xl text-left font-bold text-accent">{taskCounts.trashed}</div>
+          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.trashed}</div>
           <div className="text-xs text-left">TRASHED</div>
         </button>
       </section>
@@ -323,7 +323,7 @@ export default function TasksOverview() {
                     </button>
                     <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h3>
-                      <ul className="flex gap-2 text-xs font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);
                           const dueDateLuxon = DateTime.fromJSDate(dueDate);
@@ -345,7 +345,7 @@ export default function TasksOverview() {
                         )}
                       </ul>
                       {task.tags &&
-                        <ul className="flex gap-2 text-xs font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.tags.map((tag, index) => (
                           <li key={index}>#{tag}</li>
                         ))}

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "../components/theme-provider";
 import "./globals.css";
-import { Space_Mono } from "next/font/google";
+import { Space_Mono, Bodoni_Moda } from "next/font/google";
 import { SerwistProvider } from "./serwist";
 import SyncHandler from "./components/SyncHandler";
 
@@ -52,7 +52,8 @@ export const viewport: Viewport = {
   themeColor: "#FFFFFF",
 };
 
-const font = Space_Mono({ weight: ["400", "700"] });
+const spaceMono = Space_Mono({ weight: ["400", "700"], variable: "--font-heading" });
+const BodoniModa = Bodoni_Moda({ variable: "--font-main" });
 
 export default function RootLayout({
   children,
@@ -60,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={font.className} suppressHydrationWarning>
+    <html lang="en" className={`${spaceMono.variable} ${BodoniModa.variable}`} suppressHydrationWarning>
       {/* CSS changes to the body are done inside globals.css */}
       <body>
         <ThemeProvider

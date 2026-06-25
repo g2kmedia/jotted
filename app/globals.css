@@ -5,19 +5,19 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.9598 0.0029 128.49);
-  --foreground: oklch(0.1867 0 0);
-  --card: oklch(0.9945 0.0057 84.57);
+  --background: oklch(0.9508 0.0119 79.78); /* theme color */
+  --foreground: oklch(0.1969 0.0067 78.16); /* theme color */
+  --card: oklch(0.9683 0.0102 81.8); /* theme color */
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(0.9702 0 0);
   --popover-foreground: oklch(0.1867 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.5538 0.0188 70.35); /* theme color */
+  --muted: oklch(0.8738 0.0191 75.31); /* theme color */
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.5649 0.1122 119.73);
+  --accent: oklch(0.5742 0.1204 40.19); /* theme color */
   --accent-foreground: oklch(0.9909 0.0082 91.48);
   --destructive: oklch(0.641 0.2203 32.02);
   --border: oklch(0.922 0 0);
@@ -77,19 +77,19 @@
 }
 
 .dark {
-  --background: oklch(0.1867 0 0);
-  --foreground: oklch(0.9598 0.0029 128.49);
-  --card: oklch(0.205 0 0);
+  --background: oklch(0.2158 0.0075 67.42); /* theme color */
+  --foreground: oklch(0.9453 0.0136 78.26); /* theme color */
+  --card: oklch(0.2553 0.0082 59.29); /* theme color */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.1867 0 0);
   --popover-foreground: oklch(0.9702 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.734 0.0224 72.07); /* theme color */
+  --muted: oklch(0.3687 0.0152 67.33); /* theme color */
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.5649 0.1122 119.73);
+  --accent: oklch(0.6261 0.1289 40.28); /* theme color */
   --accent-foreground: oklch(0.1822 0 0);
   --destructive: oklch(0.641 0.2203 32.02);
   --border: oklch(1 0 0 / 10%);
@@ -123,6 +123,12 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-main);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+    font-family: var(--font-heading)
   }
 }
 

@@ -292,7 +292,7 @@ export default function TaskEditorPage(
                             name="date"
                             type="date"
                             defaultValue={task.due_date ? new Date(task.due_date).toLocaleDateString("en-CA") : ""} // en-CA for formatting purposes
-                            className="w-40 my-2 outline-none hover:cursor-pointer"
+                            className="w-34 my-2 mr-8 outline-none hover:cursor-pointer"
                         />
 
                         <input

@@ -24,7 +24,7 @@ export default function TagsBar(
             {sortedTags.map((tag) => (
                 <button
                     key={tag}
-                    className={`${activeTags.includes(tag) ? "text-accent" : "text-muted-foreground hover:text-accent"} p-2.5 whitespace-nowrap cursor-pointer`}
+                    className={`${activeTags.includes(tag) ? "text-accent" : "text-secondary-foreground hover:text-accent"} p-2.5 whitespace-nowrap cursor-pointer`}
                     onClick={() => onTagSelect(tag)}
                 >
                     #{tag}
