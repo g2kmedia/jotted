@@ -96,10 +96,10 @@ export default function CreateBtn({ className }: { className?: string }) {
                     <Plus className="scale-125" /> {/* scale to compensate empty space around & match other icons on navbar */}
                 </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="rounded-2xl">
-                <DropdownMenuItem onSelect={handleCreateNote} className="p-3 justify-center hover:cursor-pointer focus:bg-transparent focus:text-foreground">Create Note</DropdownMenuItem>
+            <DropdownMenuContent align="center" className="bg-card">
+                <DropdownMenuItem onSelect={handleCreateNote} className="p-3 justify-center hover:cursor-pointer focus:bg-transparent focus:text-accent">Create Note</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleCreateTask} className="p-3 justify-center hover:cursor-pointer focus:bg-transparent focus:text-foreground">Create Task</DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCreateTask} className="p-3 justify-center hover:cursor-pointer focus:bg-transparent focus:text-accent">Create Task</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

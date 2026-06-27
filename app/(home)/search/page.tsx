@@ -57,21 +57,21 @@ export default function SearchResults() {
     }) || [];
 
     return (
-        <div className="h-full mb-28 flex flex-col overflow-y-auto">
-            <section className="my-4 px-1 grid grid-cols-4 gap-4 text-xl">
+        <div className="h-full flex flex-col">
+            <section className="px-2 grid grid-cols-2 gap-y-2 border-b-1 pb-2">
                 <button
                     className={`${quickFilter === "notes" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
                     onClick={() => setQuickFilter(prev => prev === "notes" ? null : "notes")}
                 >
-                    <span className="pr-2">Notes:</span>
-                    <span>{resultsCount.notes}</span>
+                    <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{resultsCount.notes}</h1>
+                    <h2 className="text-left text-muted-foreground">NOTES</h2>
                 </button>
                 <button
                     className={`${quickFilter === "tasks" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
                     onClick={() => setQuickFilter(prev => prev === "tasks" ? null : "tasks")}
                 >
-                    <span className="pr-2">Tasks:</span>
-                    <span>{resultsCount.tasks}</span>
+                    <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{resultsCount.tasks}</h1>
+                    <h2 className="text-left text-muted-foreground">TASKS</h2>
                 </button>
             </section>
 
@@ -81,15 +81,15 @@ export default function SearchResults() {
                 ) : (
                     displayResults.map(item => (
                         <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>
-                            <article className="max-h-22 p-2 mb-2 flex flex-row items-center border-b-1 border-muted-foreground/30">
-                                <div className="mr-2 text-muted-foreground text-xs capitalize">{item.type}</div>
+                            <article className="max-h-22 p-2 mb-2 flex flex-row items-center border-b-1">
+                                <p className="mr-2 text-xs text-secondary-foreground capitalize">{item.type}</p>
                                 <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                    <h3
-                                        className="text-lg mb-1 truncate"
+                                    <h4
+                                        className="text-lg mb-1"
                                         dangerouslySetInnerHTML={{ __html: item.title || "" }}
                                     />
                                     <p
-                                        className="text-sm font-light"
+                                        className="text-sm font-light text-muted-foreground"
                                         dangerouslySetInnerHTML={{ __html: item.content as string || "" }}
                                     />
                                 </div>

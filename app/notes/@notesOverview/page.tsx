@@ -1,21 +1,23 @@
 "use client"
 
 import TagsBar from "@/app/components/TagsBar";
-import { getAllNotesLocally, getAllNotesTagsLocally } from "@/lib/indexeddb";
+import { getAllNotesLocally, getAllNotesTagsLocally, getNoteCountsLocally } from "@/lib/indexeddb";
 import { useNoteStore, useTagsStore } from "@/lib/stores";
 import { localNote } from "@/lib/types";
-import { Pin } from "lucide-react";
+import { PencilLine, Pin, SearchCode } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
 export default function NotesOverview() {
   const {
     notes,
+    noteCounts,
     lastQueriedRecord,
     hasMore,
     quickFilter,
     tags,
     setNotes,
+    setNoteCounts,
     appendNewNotes,
     setLastQueriedRecord,
     setHasMore,
@@ -119,6 +121,31 @@ export default function NotesOverview() {
     }
   }
 
+  const loadNoteCounts = async (): Promise<void> => {
+    if (navigator.onLine) {
+      try {
+        const url = new URL("/api/notes/counts", window.location.origin);
+        const res = await fetch(url, { method: "GET" });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch note counts: ${res.status}`);
+        }
+
+        const counts = await res.json();
+        setNoteCounts(counts);
+      } catch (error) {
+        console.error("Failed to load note counts from server:", error);
+      }
+    } else {
+      try {
+        const counts = await getNoteCountsLocally();
+        setNoteCounts(counts);
+      } catch (error) {
+        console.error("Failed to load note counts locally:", error);
+      }
+    }
+  }
+
   const loadTags = async (): Promise<void> => {
     if (navigator.onLine) {
       try {
@@ -151,6 +178,10 @@ export default function NotesOverview() {
   }
 
   useEffect(() => {
+    loadNoteCounts();
+  }, []);
+
+  useEffect(() => {
     loadNotes(true); // Reset states/query params
     loadTags();
   }, [quickFilter, activeTags]);
@@ -158,19 +189,21 @@ export default function NotesOverview() {
   if (!notes) return null;
 
   return (
-    <div className="h-full flex flex-col">
-      <section className="px-2 grid grid-cols-2 border-b-1 pb-2">
+    <div className="h-full px-4 flex flex-col">
+      <section className="grid grid-cols-2 border-b-1 pb-2">
         <button
           className={`${quickFilter === "pinned" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "pinned" ? null : "pinned")}
         >
-          PINNED
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{noteCounts.pinned}</h1>
+          <h2 className="text-left text-muted-foreground">PINNED</h2>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          TRASHED
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{noteCounts.trashed}</h1>
+          <h2 className="text-left text-muted-foreground">TRASHED</h2>
         </button>
       </section>
 
@@ -179,17 +212,23 @@ export default function NotesOverview() {
 
       <section className="flex-1 overflow-y-auto">
         {notes.length === 0 ? (
-          <p className="text-center mt-20">
+          <div className="flex flex-col mt-10">
             {quickFilter || activeTags.length > 0 ? (
-              "No notes here."
+              <>
+                <SearchCode strokeWidth={"1"} size={48} className="w-full text-accent" />
+                <h3 className="text-center text-secondary-foreground">No notes match this view.</h3>
+              </>
             ) : (
               <>
-                You seem to not have any notes.
-                <br />
-                Start by creating one.
+                <PencilLine strokeWidth={"1"} size={48} className="w-full text-accent" />
+                <h3 className="text-center text-secondary-foreground">
+                  You seem to not have any notes.
+                  <br />
+                  Start by creating some.
+                </h3>
               </>
             )}
-          </p>
+          </div>
         ) : (
           <div className="flex flex-col">
             {notes.map((note) => {
@@ -197,12 +236,12 @@ export default function NotesOverview() {
                 <Link href={`/notes/${note.id}`} key={note.id}>
                   <article className="max-h-22 p-2 mb-2 flex flex-row border-b-1">
                     <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      <h3 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <h4 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {note.title}
-                        <span>{note.is_pinned === 1 ? <Pin size={14} className="ml-2 text-muted-foreground" /> : ""}</span>
-                      </h3>
+                        {note.is_pinned === 1 && <span><Pin size={14} className="ml-2 text-secondary-foreground" /></span>}
+                      </h4>
                       {note.tags &&
-                        <ul className="flex gap-2 text-sm font-light text-muted-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {note.tags.map((tag, index) => (
                             <li key={index}>#{tag}</li>
                           ))}
@@ -214,8 +253,8 @@ export default function NotesOverview() {
               );
             })}
             {hasMore
-              ? <button onClick={() => loadNotes()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center underline border-foreground hover:cursor-pointer">Load More</button>
-              : <p className="p-4 mb-30 lg:mb-3 text-center">That's all!</p>
+              ? <button onClick={() => loadNotes()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
+              : <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>
             }
           </div>
         )}

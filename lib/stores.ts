@@ -71,6 +71,7 @@ export const useTaskStore = create<TaskState & TaskActions>()((set) => ({
 // Notes
 type NoteState = {
     notes: localNote[] | null
+    noteCounts: { pinned: number, trashed: number },
     lastQueriedRecord: { id: string, updated_at: string } | null
     hasMore: boolean
     quickFilter: "pinned" | "trashed" | null
@@ -79,6 +80,7 @@ type NoteState = {
 
 type NoteActions = {
     setNotes: (notes: localNote[] | null) => void
+    setNoteCounts: (counts: { pinned: number, trashed: number }) => void
     appendNewNotes: (newNotes: localNote[]) => void
     updateNote: (id: string, updates: Partial<localNote>) => void
     setLastQueriedRecord: (record: { id: string, updated_at: string } | null) => void
@@ -90,6 +92,7 @@ type NoteActions = {
 export const useNoteStore = create<NoteState & NoteActions>()((set) => ({
     // State
     notes: null,
+    noteCounts: { pinned: 0, trashed: 0 },
     lastQueriedRecord: null,
     hasMore: true,
     quickFilter: null,
@@ -98,6 +101,7 @@ export const useNoteStore = create<NoteState & NoteActions>()((set) => ({
 
     // Actions
     setNotes: (notes) => set({ notes }),
+    setNoteCounts: (counts) => set({ noteCounts: counts }),
 
     appendNewNotes: (newNotes) =>
         set((state) => {

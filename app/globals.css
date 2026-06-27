@@ -126,9 +126,22 @@
     font-family: var(--font-main);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
-    font-family: var(--font-heading)
+  h1, h2, h3 {
+    font-family: var(--font-titles);
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-main);
+  }
+}
+
+@layer utilities {
+  .font-hero {
+    font-family: var(--font-hero);
+  }
+
+  .font-titles {
+    font-family: var(--font-titles);
   }
 }
 

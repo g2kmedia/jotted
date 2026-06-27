@@ -22,7 +22,7 @@ export default function ConfirmDeleteDialog({
 }) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent>
+            <AlertDialogContent className="bg-card">
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -30,7 +30,7 @@ export default function ConfirmDeleteDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel className="dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="bg-card dark:hover:bg-accent hover:cursor-pointer">Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={onConfirm} className="bg-destructive hover:bg-destructive hover:cursor-pointer">Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

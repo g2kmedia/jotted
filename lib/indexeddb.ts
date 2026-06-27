@@ -363,6 +363,29 @@ export const getAllTasksTagsLocally = async (): Promise<string[]> => {
     return [...new Set(allTags)];
 }
 
+export const getNoteCountsLocally = async (): Promise<{
+    pinned: number,
+    trashed: number
+}> => {
+    const db = await openDB();
+    const tx = db.transaction("notes", "readonly");
+    const store = tx.objectStore("notes");
+    const pinnedTrashed = store.index("pinned_trashed");
+
+    const counts = {
+        pinned: 0,
+        trashed: 0
+    };
+
+    counts.pinned = await requestToPromise(pinnedTrashed.count(IDBKeyRange.only([1, 0])));
+
+    const trashed1 = await requestToPromise<number>(pinnedTrashed.count(IDBKeyRange.only([0, 1])));
+    const trashed2 = await requestToPromise<number>(pinnedTrashed.count(IDBKeyRange.only([1, 1])));
+    counts.trashed = trashed1 + trashed2;
+
+    return counts;
+}
+
 export const getTaskCountsLocally = async (): Promise<{
     today: number,
     week: number,

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link";
-import { Circle } from 'lucide-react';
+import { Circle, SearchCode, PencilLine } from 'lucide-react';
 import { useEffect } from "react";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
@@ -148,7 +148,6 @@ export default function TasksOverview() {
     }
   }
 
-  // adjust according to new API and function
   const loadTaskCounts = async (): Promise<void> => {
     if (navigator.onLine) {
       try {
@@ -251,49 +250,49 @@ export default function TasksOverview() {
   if (!tasks) return null;
 
   return (
-    <div className="h-full flex flex-col">
-      <section className="px-2 grid grid-cols-2 gap-y-2 border-b-1 pb-2">
+    <div className="h-full px-4 flex flex-col">
+      <section className="grid grid-cols-2 gap-y-2 border-b-1 pb-2">
         <button
           className={`${quickFilter === "today" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
         >
-          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.today}</div>
-          <div className="text-xs text-left">TODAY</div>
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.today}</h1>
+          <h2 className="text-left text-muted-foreground">TODAY</h2>
         </button>
         <button
           className={`${quickFilter === "week" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "week" ? null : "week")}
         >
-          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.week}</div>
-          <div className="text-xs text-left">THIS WEEK</div>
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.week}</h1>
+          <h2 className="text-left text-muted-foreground">THIS WEEK</h2>
         </button>
         <button
           className={`${quickFilter === "scheduled" ? "border-accent" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "scheduled" ? null : "scheduled")}
         >
-          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.scheduled}</div>
-          <div className="text-xs text-left">SCHEDULED</div>
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.scheduled}</h1>
+          <h2 className="text-left text-muted-foreground">SCHEDULED</h2>
         </button>
         <button
           className={`${quickFilter === "later" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "later" ? null : "later")}
         >
-          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.later}</div>
-          <div className="text-xs text-left">LATER</div>
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.later}</h1>
+          <h2 className="text-left text-muted-foreground">LATER</h2>
         </button>
         <button
           className={`${quickFilter === "completed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
         >
-          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.completed}</div>
-          <div className="text-xs text-left">COMPLETED</div>
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.completed}</h1>
+          <h2 className="text-left text-muted-foreground">COMPLETED</h2>
         </button>
         <button
           className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
           onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
         >
-          <div className="text-4xl text-left font-extrabold text-accent">{taskCounts.trashed}</div>
-          <div className="text-xs text-left">TRASHED</div>
+          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.trashed}</h1>
+          <h2 className="text-left text-muted-foreground">TRASHED</h2>
         </button>
       </section>
 
@@ -302,16 +301,23 @@ export default function TasksOverview() {
 
       <section className="overflow-y-auto">
         {tasks.length === 0 ? (
-          <p className="text-center mt-20">
+          <div className="flex flex-col mt-10">
             {quickFilter || activeTags.length > 0 ? (
-              "No tasks here."
+              <>
+                <SearchCode strokeWidth={"1"} size={48} className="w-full text-accent" />
+                <h3 className="text-center text-secondary-foreground">No tasks match this view.</h3>
+              </>
             ) : (
               <>
-                You seem to not have any tasks.
-                <br />
-                Start by creating one.
-              </>)}
-          </p>
+                <PencilLine strokeWidth={"1"} size={48} className="w-full text-accent" />
+                <h3 className="text-center text-secondary-foreground">
+                  You seem to not have any tasks.
+                  <br />
+                  Start by creating some.
+                </h3>
+              </>
+            )}
+          </div>
         ) : (
           <div className="flex flex-col">
             {tasks.map((task) => {
@@ -322,19 +328,19 @@ export default function TasksOverview() {
                       <Circle size={16} className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                     </button>
                     <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      <h3 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h3>
+                      <h4 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h4>
                       <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {task.due_date && (() => {
                           const dueDate = new Date(task.due_date);
                           const dueDateLuxon = DateTime.fromJSDate(dueDate);
 
                           if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
-                            return <li className={`uppercase ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", {month: "short", day: "numeric", year: "numeric"})}</li>;
+                            return <li className={`uppercase ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</li>;
                           }
 
                           return (
                             <>
-                              <li className={`uppercase ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", {month: "short", day: "numeric", year: "numeric"})}</li>
+                              <li className={`uppercase ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</li>
                               <li className={`${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
                             </>
                           );
@@ -346,10 +352,10 @@ export default function TasksOverview() {
                       </ul>
                       {task.tags &&
                         <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {task.tags.map((tag, index) => (
-                          <li key={index}>#{tag}</li>
-                        ))}
-                      </ul>
+                          {task.tags.map((tag, index) => (
+                            <li key={index}>#{tag}</li>
+                          ))}
+                        </ul>
                       }
                     </div>
                   </article>
@@ -357,8 +363,8 @@ export default function TasksOverview() {
               );
             })}
             {hasMore
-              ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
-              : <p className="p-4 mb-30 lg:mb-3 text-center">That's all!</p>
+              ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
+              : <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>
             }
           </div>
         )}

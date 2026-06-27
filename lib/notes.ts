@@ -165,3 +165,20 @@ export function deleteNote(id: string): number {
     const info = remove();
     return info.changes;
 }
+
+export function getNoteCounts(): {
+    pinned: number;
+    trashed: number;
+} {
+    return {
+        pinned: (db.prepare(`
+            SELECT COUNT(*) as count FROM note
+            WHERE 1=1 AND is_pinned = 1 AND is_trashed = 0
+        `).get() as { count: number }).count,
+
+        trashed: (db.prepare(`
+            SELECT COUNT(*) as count FROM note
+            WHERE 1=1 AND is_trashed = 1
+        `).get() as { count: number }).count
+    };
+}

@@ -22,7 +22,7 @@ export default function SplitLayout({
                 <OverviewLayout page={overview} />
             </section>
 
-            <div className="lg:w-0.5 lg:border-r-1 lg:border-foreground lg:m-2"></div>
+            <div className="lg:w-0.5 lg:border-r-1 lg:m-2"></div>
 
             <section className={`${isIdPath ? "block" : "hidden lg:block"} h-full lg:w-3/4 flex flex-col`}>
                 {editor ? editor : <DefaultPage />}
