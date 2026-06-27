@@ -170,7 +170,7 @@ export default function Home() {
         <div>
           <h1 className="text-4xl font-hero font-extrabold text-accent">{tasks.length}</h1>
           <h2 className="text-muted-foreground">TASKS FOR TODAY</h2>
-          <div className="w-1/10 h-1 my-2 bg-accent"></div>
+          <div className="w-10 h-1 my-2 bg-accent"></div>
           {tasks.length <= 0 &&
             <div className="flex flex-col my-12">
               <>
@@ -233,7 +233,7 @@ export default function Home() {
             <div>
               <h1 className="text-4xl font-hero font-extrabold text-accent">{notes.length}</h1>
               <h2 className="text-muted-foreground">PINNED NOTES</h2>
-              <div className="w-1/10 h-1 my-2 bg-accent"></div>
+              <div className="w-10 h-1 my-2 bg-accent"></div>
             </div>
             <section>
               {notes.map((note) => {
