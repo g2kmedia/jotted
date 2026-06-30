@@ -20,9 +20,9 @@ export default function TagsInput(
             ref={inputRef}
             type="text"
             defaultValue={tags?.map(tag => "#" + tag).join(" ")}
-            placeholder="add tags..."
+            placeholder="add #tags..."
             onBlur={handleSubmit}
-            className={`w-full p-2 pr-2 text-right font-light text-muted-foreground outline-hidden peer ${className}`}
+            className={`w-full p-2 pr-2 text-right font-light text-secondary-foreground outline-hidden peer ${className}`}
         />
     );
 };

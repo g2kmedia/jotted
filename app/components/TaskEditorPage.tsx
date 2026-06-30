@@ -270,22 +270,22 @@ export default function TaskEditorPage(
                         type="text"
                         defaultValue={task.title}
                         placeholder="Title"
-                        className="w-full my-2 py-2 border-b-1 outline-none"
+                        className="w-full mt-2 mb-10 py-2 font-titles font-bold text-3xl outline-none"
                     />
 
-                    <label htmlFor="content"></label>
+                    <label htmlFor="content" className="text-muted-foreground">DESCRIPTION</label>
                     <textarea
                         id="content"
                         name="content"
                         defaultValue={task.content}
-                        placeholder="Description"
-                        className="h-30 w-full py-2 resize-none border-b-1 outline-none"
+                        placeholder="Add a description..."
+                        className="h-30 w-full my-2 py-2 resize-none border-b-1 outline-none"
                     />
 
                     <fieldset className="mt-10 mb-4 grid grid-cols-[auto_auto_1fr]">
-                        <label htmlFor="date" className="text-muted-foreground">Date</label>
-                        <label htmlFor="time" className="text-muted-foreground">Time</label>
-                        <label htmlFor="clear-date-time" className="ml-10 text-muted-foreground">Clear</label>
+                        <label htmlFor="date" className="text-muted-foreground">DATE</label>
+                        <label htmlFor="time" className="text-muted-foreground">TIME</label>
+                        <label htmlFor="clear-date-time" className="ml-10 text-muted-foreground">CLEAR</label>
 
                         <input
                             id="date"
@@ -320,7 +320,7 @@ export default function TaskEditorPage(
                         defaultValue={task.priority ?? undefined}
                         className="w-25 py-2 hover:cursor-pointer"
                     >
-                        <option value="">—</option>
+                        <option value="">None</option>
                         <option value="1">High</option>
                         <option value="2">Medium</option>
                         <option value="3">Low</option>

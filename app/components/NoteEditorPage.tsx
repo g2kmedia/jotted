@@ -281,14 +281,14 @@ export default function NoteEditorPage(
 
             <article className="overflow-y-auto">
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
-                <h1 className="my-3"><textarea
+                <textarea
                     ref={titleRef}
                     value={note.title}
                     onChange={handleTitleChange}
                     placeholder="Enter a title"
                     rows={1}
-                    className="w-full text-center text-3xl font-bold resize-none focus-visible:outline-none"
-                /></h1>
+                    className="w-full my-3 pl-13 text-3xl font-titles font-bold resize-none focus-visible:outline-none"
+                />
                 <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
             </article>
 
