@@ -58,7 +58,7 @@ export default function SearchResults() {
 
     return (
         <div className="h-full flex flex-col">
-            <section className="px-2 grid grid-cols-2 gap-y-2 border-b-1 pb-2">
+            <section className="grid grid-cols-2 gap-y-2 border-b-1 pb-2">
                 <button
                     className={`${quickFilter === "notes" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
                     onClick={() => setQuickFilter(prev => prev === "notes" ? null : "notes")}
@@ -81,7 +81,7 @@ export default function SearchResults() {
                 ) : (
                     displayResults.map(item => (
                         <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>
-                            <article className="max-h-22 p-2 mb-2 flex flex-row items-center border-b-1">
+                            <article className="max-h-22 py-2 mb-2 flex flex-row items-center border-b-1">
                                 <p className="mr-2 text-xs text-secondary-foreground capitalize">{item.type}</p>
                                 <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                     <h4

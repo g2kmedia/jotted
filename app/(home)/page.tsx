@@ -160,7 +160,7 @@ export default function Home() {
   if (!tasks || !notes) return null;
 
   return (
-    <div className="h-full px-4 flex flex-col overflow-y-auto">
+    <div className="h-full mb-30 flex flex-col overflow-y-auto">
       <section className="mt-4 mb-8">
         <p className="text-xs text-muted-foreground font-titles">{dateLabelDay}, {dateLabelDate}</p>
         <h1 className="mt-4 text-4xl font-light font-hero">{greeting}</h1>
@@ -188,7 +188,7 @@ export default function Home() {
         {tasks.map((task) => {
           return (
             <Link href={`/tasks/${task.id}`} key={task.id}>
-              <article className={`max-h-22 p-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+              <article className={`max-h-22 py-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
                 <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
                   <Circle size={16} className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                 </button>
@@ -239,7 +239,7 @@ export default function Home() {
               {notes.map((note) => {
                 return (
                   <Link href={`/notes/${note.id}`} key={note.id}>
-                    <article className="max-h-22 p-2 mb-2 flex flex-row border-b-1">
+                    <article className="max-h-22 py-2 mb-2 flex flex-row border-b-1">
                       <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         <h4 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           {note.title}

@@ -189,7 +189,7 @@ export default function NotesOverview() {
   if (!notes) return null;
 
   return (
-    <div className="h-full px-4 flex flex-col">
+    <div className="h-full flex flex-col">
       <section className="grid grid-cols-2 border-b-1 pb-2">
         <button
           className={`${quickFilter === "pinned" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
@@ -234,7 +234,7 @@ export default function NotesOverview() {
             {notes.map((note) => {
               return (
                 <Link href={`/notes/${note.id}`} key={note.id}>
-                  <article className="max-h-22 p-2 mb-2 flex flex-row border-b-1">
+                  <article className="max-h-22 py-2 mb-2 flex flex-row border-b-1">
                     <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <h4 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {note.title}

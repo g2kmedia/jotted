@@ -6,7 +6,7 @@ export default function OverviewLayout(
 ) {
     return (
         <div className="flex flex-col h-full">
-            <header className="shrink-0 mx-2 mb-2">
+            <header className="shrink-0 mb-2">
                 <TopNavbar />
             </header>
 

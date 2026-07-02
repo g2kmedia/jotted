@@ -75,7 +75,18 @@ export default function RootLayout({
             <SyncHandler />
             {children}
           </SerwistProvider>
-          <Toaster position="top-center" richColors />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              classNames: {
+                toast: "bg-background! text-foreground! border! border-muted!",
+                success: "[&_svg]:text-[#6E8B5B]!",
+                error: "[&_svg]:text-[#A14B3D]!",
+                info: "[&_svg]:text-[#7A7167]!",
+                warning: "[&_svg]:text-[#B57A2A]!"
+              }
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

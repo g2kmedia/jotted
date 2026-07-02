@@ -47,7 +47,7 @@ export default function TopNavbar() {
     }
 
     return (
-        <nav className="h-16 px-2 flex justify-between items-center text-foreground">
+        <nav className="h-16 flex justify-between items-center text-foreground">
             {!isSearchOpen &&
                 <Link href={"/"} className="hover:cursor-pointer">
                     <Logo />
@@ -85,7 +85,7 @@ export default function TopNavbar() {
                     onClick={() => setIsSearchOpen(true)}
                 />
             ) : (
-                <span className="text-muted-foreground">Offline</span>
+                <p className="text-sm text-muted-foreground">OFFLINE</p>
             )
             )}
         </nav>

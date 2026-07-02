@@ -221,7 +221,7 @@ export default function TaskEditorPage(
 
     return (
         <>
-            <nav className="mx-2 px-2 h-16 flex flex-col items-center border-b-1 border-foreground bg-background">
+            <nav className="mx-2 px-2 h-16 flex flex-col items-center border-b-1 bg-background">
                 <ul className="h-full flex justify-between items-center w-full">
                     <li>
                         <Link href={"/tasks"}>
@@ -253,7 +253,7 @@ export default function TaskEditorPage(
                 </ul>
             </nav>
 
-            <div className="h-6 my-1 py-1 flex items-center justify-center bg-background text-muted-foreground/50">
+            <div className="h-6 my-1 py-1 lg:pr-5 flex items-center justify-center bg-background text-muted-foreground/50">
                 {saveStatus === "synced" && <CloudCheck />}
                 {saveStatus === "saved" && <Save />}
                 {!saveStatus && <span>{'\u00A0'}</span>}

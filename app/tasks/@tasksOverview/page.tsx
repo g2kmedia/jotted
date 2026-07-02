@@ -250,7 +250,7 @@ export default function TasksOverview() {
   if (!tasks) return null;
 
   return (
-    <div className="h-full px-4 flex flex-col">
+    <div className="h-full flex flex-col">
       <section className="grid grid-cols-2 gap-y-2 border-b-1 pb-2">
         <button
           className={`${quickFilter === "today" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
@@ -323,7 +323,7 @@ export default function TasksOverview() {
             {tasks.map((task) => {
               return (
                 <Link href={`/tasks/${task.id}`} key={task.id}>
-                  <article className={`max-h-22 p-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
+                  <article className={`max-h-22 py-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
                     <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
                       <Circle size={16} className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
                     </button>

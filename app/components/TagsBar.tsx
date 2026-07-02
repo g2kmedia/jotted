@@ -20,11 +20,11 @@ export default function TagsBar(
     }, [tags, activeTags]);
 
     return (
-        <section className={`flex min-h-16 mb-6 overflow-x-auto ${className}`}>
+        <section className={`flex min-h-16 overflow-x-auto ${className}`}>
             {sortedTags.map((tag) => (
                 <button
                     key={tag}
-                    className={`${activeTags.includes(tag) ? "text-accent" : "text-secondary-foreground hover:text-accent"} p-2.5 whitespace-nowrap cursor-pointer`}
+                    className={`${activeTags.includes(tag) ? "text-accent" : "text-secondary-foreground hover:text-accent"} pr-4 whitespace-nowrap cursor-pointer`}
                     onClick={() => onTagSelect(tag)}
                 >
                     #{tag}
