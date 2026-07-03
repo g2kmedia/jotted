@@ -16,13 +16,17 @@ export default function TagsInput(
     }
 
     return (
-        <input
-            ref={inputRef}
-            type="text"
-            defaultValue={tags?.map(tag => "#" + tag).join(" ")}
-            placeholder="add #tags..."
-            onBlur={handleSubmit}
-            className={`w-full p-2 pr-2 text-right font-light text-secondary-foreground outline-hidden peer ${className}`}
-        />
+        <>
+            <label htmlFor="tags-input" className="sr-only"></label>
+            <input
+                id="tags-input"
+                ref={inputRef}
+                type="text"
+                defaultValue={tags?.map(tag => "#" + tag).join(" ")}
+                placeholder="add #tags..."
+                onBlur={handleSubmit}
+                className={`w-full p-2 pr-2 text-right font-light text-secondary-foreground outline-hidden peer ${className}`}
+            />
+        </>
     );
 };

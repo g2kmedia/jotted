@@ -20,7 +20,7 @@ export default function TagsBar(
     }, [tags, activeTags]);
 
     return (
-        <section className={`flex min-h-16 overflow-x-auto ${className}`}>
+        <nav aria-label="tags" className={`flex min-h-16 overflow-x-auto ${className}`}>
             {sortedTags.map((tag) => (
                 <button
                     key={tag}
@@ -30,6 +30,6 @@ export default function TagsBar(
                     #{tag}
                 </button>
             ))}
-        </section>
+        </nav>
     );
 }

@@ -239,7 +239,7 @@ export default function NoteEditorPage(
 
     return (
         <div className="h-full w-full flex flex-col">
-            <nav
+            <header
                 className="mx-2 px-2 h-16 shrink-0 flex flex-col items-center border-b-1 bg-background">
                 <ul className="h-full w-full flex justify-between items-center">
                     <li>
@@ -271,7 +271,7 @@ export default function NoteEditorPage(
                         />
                     </li>
                 </ul>
-            </nav>
+            </header>
 
             <div className="h-6 my-1 py-1 lg:pr-5 flex items-center justify-center bg-background text-muted-foreground/50">
                 {saveStatus === "synced" && <CloudCheck />}
