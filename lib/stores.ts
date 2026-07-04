@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { localNote, localTask } from "./types";
+import { offlineSaveAndSync } from "./sync";
+import { toast } from "sonner";
 
 // Tasks
 type TaskState = {
@@ -7,7 +9,7 @@ type TaskState = {
     taskCounts: { today: number, week: number, scheduled: number, later: number, completed: number, trashed: number },
     lastQueriedRecord: { id: string, updated_at: string } | null
     hasMore: boolean
-    quickFilter: "today" | "week" | "scheduled" | "later" | "completed" | "trashed" | null
+    quickFilter: string | null
     tags: string[],
 }
 
@@ -20,9 +22,10 @@ type TaskActions = {
     setHasMore: (value: boolean) => void
     setQuickFilter: (filter: TaskState["quickFilter"]) => void
     setTags: (tags: string[]) => void
+    completeTask: (id: string, isCompleted: number) => void
 }
 
-export const useTaskStore = create<TaskState & TaskActions>()((set) => ({
+export const useTaskStore = create<TaskState & TaskActions>()((set, get) => ({
     // State
     tasks: null,
     taskCounts: { today: 0, week: 0, scheduled: 0, later: 0, completed: 0, trashed: 0 },
@@ -64,7 +67,21 @@ export const useTaskStore = create<TaskState & TaskActions>()((set) => ({
     setLastQueriedRecord: (record) => set({ lastQueriedRecord: record }),
     setHasMore: (value) => set({ hasMore: value }),
     setQuickFilter: (filter) => set({ quickFilter: filter }),
-    setTags: (tags) => set({ tags: tags })
+    setTags: (tags) => set({ tags: tags }),
+
+    completeTask: async (id, isCompleted) => {
+        const newStatus = isCompleted ? 0 : 1;
+
+        get().updateTask(id, { is_completed: newStatus });
+
+        try {
+            await offlineSaveAndSync(id, "tasks", "update", { is_completed: newStatus });
+        } catch (error) {
+            // Rollback on error
+            get().updateTask(id, { is_completed: isCompleted ? 1 : 0 });
+            toast.error("Failed to update task");
+        }
+    }
 }));
 
 
@@ -74,7 +91,7 @@ type NoteState = {
     noteCounts: { pinned: number, trashed: number },
     lastQueriedRecord: { id: string, updated_at: string } | null
     hasMore: boolean
-    quickFilter: "pinned" | "trashed" | null
+    quickFilter: string | null
     tags: string[]
 }
 

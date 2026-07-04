@@ -1,16 +1,22 @@
 "use client"
 
+import QuickFilterButton from "@/app/components/QuickFilterButton";
 import { SearchResult } from "@/lib/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+const SEARCH_QUICK_FILTERS = [
+    { key: "notes", label: "NOTES" },
+    { key: "tasks", label: "TASKS" }
+];
+
 export default function SearchResults() {
     const searchParams = useSearchParams();
     const term = searchParams.get("term");
 
-    const [quickFilter, setQuickFilter] = useState<"notes" | "tasks" | null>(null);
+    const [quickFilter, setQuickFilter] = useState<string | null>(null);
     const [resultsCount, setResultsCount] = useState({ notes: 0, tasks: 0 });
     const [results, setResults] = useState<SearchResult[] | null>(null);
 
@@ -59,20 +65,15 @@ export default function SearchResults() {
     return (
         <div className="h-full flex flex-col">
             <section className="grid grid-cols-2 gap-y-2 border-b-1 pb-2">
-                <button
-                    className={`${quickFilter === "notes" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-                    onClick={() => setQuickFilter(prev => prev === "notes" ? null : "notes")}
-                >
-                    <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{resultsCount.notes}</h1>
-                    <h2 className="text-left text-muted-foreground">NOTES</h2>
-                </button>
-                <button
-                    className={`${quickFilter === "tasks" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-                    onClick={() => setQuickFilter(prev => prev === "tasks" ? null : "tasks")}
-                >
-                    <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{resultsCount.tasks}</h1>
-                    <h2 className="text-left text-muted-foreground">TASKS</h2>
-                </button>
+                {SEARCH_QUICK_FILTERS.map(f => (
+                    <QuickFilterButton
+                        key={f.key}
+                        active={quickFilter === f.key}
+                        count={resultsCount[f.key as keyof typeof resultsCount]}
+                        label={f.label}
+                        onClick={() => setQuickFilter(quickFilter === f.key ? null : f.key)}
+                    />
+                ))}
             </section>
 
             <section className="h-full">

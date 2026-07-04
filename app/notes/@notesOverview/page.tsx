@@ -1,12 +1,18 @@
 "use client"
 
+import NoteItem from "@/app/components/NoteItem";
+import QuickFilterButton from "@/app/components/QuickFilterButton";
 import TagsBar from "@/app/components/TagsBar";
 import { getAllNotesLocally, getAllNotesTagsLocally, getNoteCountsLocally } from "@/lib/indexeddb";
 import { useNoteStore, useTagsStore } from "@/lib/stores";
 import { localNote } from "@/lib/types";
-import { PencilLine, Pin, SearchCode } from "lucide-react";
-import Link from "next/link";
+import { PencilLine, SearchCode } from "lucide-react";
 import { useEffect } from "react";
+
+const NOTE_QUICK_FILTERS = [
+  { key: "pinned", label: "PINNED" },
+  { key: "trashed", label: "TRASHED" }
+];
 
 export default function NotesOverview() {
   const {
@@ -191,20 +197,15 @@ export default function NotesOverview() {
   return (
     <div className="h-full flex flex-col">
       <section className="grid grid-cols-2 border-b-1 pb-2">
-        <button
-          className={`${quickFilter === "pinned" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "pinned" ? null : "pinned")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{noteCounts.pinned}</h1>
-          <h2 className="text-left text-muted-foreground">PINNED</h2>
-        </button>
-        <button
-          className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} text-left border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{noteCounts.trashed}</h1>
-          <h2 className="text-left text-muted-foreground">TRASHED</h2>
-        </button>
+        {NOTE_QUICK_FILTERS.map(f => (
+          <QuickFilterButton
+            key={f.key}
+            active={quickFilter === f.key}
+            count={noteCounts[f.key as keyof typeof noteCounts]}
+            label={f.label}
+            onClick={() => setQuickFilter(quickFilter === f.key ? null : f.key)}
+          />
+        ))}
       </section>
 
       {quickFilter !== "trashed"
@@ -231,27 +232,9 @@ export default function NotesOverview() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {notes.map((note) => {
-              return (
-                <Link href={`/notes/${note.id}`} key={note.id}>
-                  <article className="max-h-22 py-2 mb-2 flex flex-row border-b-1">
-                    <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      <h4 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {note.title}
-                        {note.is_pinned === 1 && <span><Pin size={14} className="ml-2 text-secondary-foreground" /></span>}
-                      </h4>
-                      {note.tags &&
-                        <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {note.tags.map((tag, index) => (
-                            <li key={index}>#{tag}</li>
-                          ))}
-                        </ul>
-                      }
-                    </div>
-                  </article>
-                </Link>
-              );
-            })}
+            {notes.map((note) => (
+              <NoteItem key={note.id} note={note} />
+            ))}
             {hasMore
               ? <button onClick={() => loadNotes()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
               : <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>

@@ -1,19 +1,12 @@
 "use client"
 
 import { getAllNotesLocally, getAllTasksLocally } from "@/lib/indexeddb";
-import { offlineSaveAndSync } from "@/lib/sync";
 import { localNote, localTask } from "@/lib/types";
-import { Circle, CircleCheck, Pin } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import { DateTime } from "luxon";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-
-const TASK_PRIORITY_LABELS: Record<number, string> = {
-  1: "High",
-  2: "Medium",
-  3: "Low"
-};
+import TaskItem from "../components/TaskItem";
+import NoteItem from "../components/NoteItem";
 
 const now = DateTime.now();
 const hour = now.hour;
@@ -127,36 +120,6 @@ export default function Home() {
     loadNotes();
   }, []);
 
-  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, isCompleted: number): Promise<void> => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const newCompletedStatus = isCompleted === 0 ? 1 : 0;
-
-    // Optimistically update UI
-    setTasks(prev => prev ? prev.map(task => {
-      return task.id === id ? { ...task, is_completed: newCompletedStatus } : task;
-    }
-    ) : prev);
-
-    try {
-      await offlineSaveAndSync(
-        id,
-        "tasks",
-        "update",
-        { is_completed: newCompletedStatus }
-      );
-    } catch (error) {
-      // Rollback on error
-      setTasks(prev => prev ? prev.map(task => {
-        return task.id === id ? { ...task, is_completed: isCompleted } : task;
-      }
-      ) : prev);
-
-      toast.error("Failed to update task");
-    }
-  }
-
   if (!tasks || !notes) return null;
 
   return (
@@ -185,46 +148,9 @@ export default function Home() {
             </div>
           }
         </div>
-        {tasks.map((task) => {
-          return (
-            <Link href={`/tasks/${task.id}`} key={task.id}>
-              <article className={`max-h-22 py-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
-                <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
-                  <Circle size={16} className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
-                </button>
-                <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <h4 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h4>
-                  <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {task.due_date && (() => {
-                      const dueDate = new Date(task.due_date);
-                      const dueDateLuxon = DateTime.fromJSDate(dueDate);
-
-                      if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
-                        return <li className={`uppercase ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</li>;
-                      }
-
-                      return (
-                        <>
-                          <li className={`uppercase ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</li>
-                          <li className={`${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
-                        </>
-                      );
-                    }
-                    )()}
-                    {task.priority && (
-                      <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
-                    )}
-                  </ul>
-                  <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {task.tags?.map((tag, index) => (
-                      <li key={index}>#{tag}</li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
-            </Link>
-          );
-        })}
+        {tasks.map((task) => (
+          <TaskItem key={task.id} task={task} now={now} />
+        ))}
       </section>
 
       <section className="mt-4">
@@ -236,27 +162,9 @@ export default function Home() {
               <div className="w-10 h-1 my-2 bg-accent"></div>
             </div>
             <section>
-              {notes.map((note) => {
-                return (
-                  <Link href={`/notes/${note.id}`} key={note.id}>
-                    <article className="max-h-22 py-2 mb-2 flex flex-row border-b-1">
-                      <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        <h4 className="flex items-center text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {note.title}
-                          {note.is_pinned === 1 && <span><Pin size={14} className="ml-2 text-secondary-foreground" /></span>}
-                        </h4>
-                        {note.tags &&
-                          <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                            {note.tags.map((tag, index) => (
-                              <li key={index}>#{tag}</li>
-                            ))}
-                          </ul>
-                        }
-                      </div>
-                    </article>
-                  </Link>
-                );
-              })}
+              {notes.map((note) => (
+                <NoteItem key={note.id} note={note} />
+              ))}
             </section>
           </>
         }

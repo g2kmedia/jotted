@@ -1,20 +1,22 @@
 "use client"
 
-import Link from "next/link";
-import { Circle, SearchCode, PencilLine } from 'lucide-react';
+import { SearchCode, PencilLine } from 'lucide-react';
 import { useEffect } from "react";
 import { DateTime } from "luxon";
-import { toast } from "sonner";
 import TagsBar from "@/app/components/TagsBar";
 import { getAllTasksLocally, getAllTasksTagsLocally, getTaskCountsLocally } from "@/lib/indexeddb";
-import { offlineSaveAndSync } from "@/lib/sync";
 import { useTagsStore, useTaskStore } from "@/lib/stores";
+import TaskItem from "@/app/components/TaskItem";
+import QuickFilterButton from '@/app/components/QuickFilterButton';
 
-const TASK_PRIORITY_LABELS: Record<number, string> = {
-  1: "High",
-  2: "Medium",
-  3: "Low"
-};
+const TASK_QUICK_FILTERS = [
+  { key: "today", label: "TODAY" },
+  { key: "week", label: "THIS WEEK" },
+  { key: "scheduled", label: "SCHEDULED" },
+  { key: "later", label: "LATER" },
+  { key: "completed", label: "COMPLETED" },
+  { key: "trashed", label: "TRASHED" }
+];
 
 const now = DateTime.now();
 
@@ -29,7 +31,6 @@ export default function TasksOverview() {
     setTasks,
     setTaskCounts,
     appendNewTasks,
-    updateTask,
     setLastQueriedRecord,
     setHasMore,
     setQuickFilter,
@@ -217,83 +218,20 @@ export default function TasksOverview() {
     loadTags();
   }, [quickFilter, activeTags]);
 
-  const completeTask = async (e: React.MouseEvent<HTMLButtonElement>, id: string, newStatus: number): Promise<void> => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const currentCompletedStatus = newStatus === 0 ? 0 : 1;
-    const newCompletedStatus = newStatus === 0 ? 1 : 0;
-
-    // Optimistically update UI
-    updateTask(id, { is_completed: newCompletedStatus });
-
-    const tags = tasks?.find(t => t.id === id)?.tags;
-
-    try {
-      await offlineSaveAndSync(
-        id,
-        "tasks",
-        "update",
-        {
-          is_completed: newCompletedStatus,
-          tags: tags
-        }
-      );
-    } catch (error) {
-      // Rollback on error
-      updateTask(id, { is_completed: currentCompletedStatus })
-
-      toast.error("Failed to update task");
-    }
-  }
-
   if (!tasks) return null;
 
   return (
     <div className="h-full flex flex-col">
       <section className="grid grid-cols-2 gap-y-2 border-b-1 pb-2">
-        <button
-          className={`${quickFilter === "today" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "today" ? null : "today")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.today}</h1>
-          <h2 className="text-left text-muted-foreground">TODAY</h2>
-        </button>
-        <button
-          className={`${quickFilter === "week" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "week" ? null : "week")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.week}</h1>
-          <h2 className="text-left text-muted-foreground">THIS WEEK</h2>
-        </button>
-        <button
-          className={`${quickFilter === "scheduled" ? "border-accent" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "scheduled" ? null : "scheduled")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.scheduled}</h1>
-          <h2 className="text-left text-muted-foreground">SCHEDULED</h2>
-        </button>
-        <button
-          className={`${quickFilter === "later" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "later" ? null : "later")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.later}</h1>
-          <h2 className="text-left text-muted-foreground">LATER</h2>
-        </button>
-        <button
-          className={`${quickFilter === "completed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "completed" ? null : "completed")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.completed}</h1>
-          <h2 className="text-left text-muted-foreground">COMPLETED</h2>
-        </button>
-        <button
-          className={`${quickFilter === "trashed" ? "border-accent text-foreground" : "border-transparent text-muted-foreground"} border-b-4 cursor-pointer hover:border-accent`}
-          onClick={() => setQuickFilter(quickFilter === "trashed" ? null : "trashed")}
-        >
-          <h1 className="text-4xl font-hero text-left font-extrabold text-accent">{taskCounts.trashed}</h1>
-          <h2 className="text-left text-muted-foreground">TRASHED</h2>
-        </button>
+        {TASK_QUICK_FILTERS.map(f => (
+          <QuickFilterButton
+            key={f.key}
+            active={quickFilter === f.key}
+            count={taskCounts[f.key as keyof typeof taskCounts]}
+            label={f.label}
+            onClick={() => setQuickFilter(quickFilter === f.key ? null : f.key)}
+          />
+        ))}
       </section>
 
       {quickFilter !== "trashed"
@@ -320,48 +258,9 @@ export default function TasksOverview() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {tasks.map((task) => {
-              return (
-                <Link href={`/tasks/${task.id}`} key={task.id}>
-                  <article className={`max-h-22 py-2 mb-2 flex flex-row border-b-1 ${task.is_completed === 1 ? "text-muted-foreground" : ""}`}>
-                    <button onClick={(e) => completeTask(e, task.id, task.is_completed)}>
-                      <Circle size={16} className={`mr-2 ${task.is_completed === 1 ? "fill-foreground" : ""} hover:fill-foreground cursor-pointer`} />
-                    </button>
-                    <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      <h4 className="text-lg mb-1 whitespace-nowrap overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{task.title}</h4>
-                      <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {task.due_date && (() => {
-                          const dueDate = new Date(task.due_date);
-                          const dueDateLuxon = DateTime.fromJSDate(dueDate);
-
-                          if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
-                            return <li className={`uppercase ${dueDateLuxon.startOf("day") < now.startOf("day") ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</li>;
-                          }
-
-                          return (
-                            <>
-                              <li className={`uppercase ${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</li>
-                              <li className={`${dueDateLuxon < now ? "text-destructive" : ""}`}>{dueDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</li>
-                            </>
-                          );
-                        }
-                        )()}
-                        {task.priority && (
-                          <li>{TASK_PRIORITY_LABELS[task.priority]}</li>
-                        )}
-                      </ul>
-                      {task.tags &&
-                        <ul className="flex gap-2 text-xs font-light text-secondary-foreground overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          {task.tags.map((tag, index) => (
-                            <li key={index}>#{tag}</li>
-                          ))}
-                        </ul>
-                      }
-                    </div>
-                  </article>
-                </Link>
-              );
-            })}
+            {tasks.map((task) => (
+              <TaskItem key={task.id} task={task} now={now} />
+            ))}
             {hasMore
               ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
               : <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>

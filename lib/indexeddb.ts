@@ -187,7 +187,7 @@ export const getNoteLocally = async (noteId: string): Promise<localNote | undefi
 }
 
 export const getAllNotesLocally = async (
-    quickFilter: "pinned" | "trashed" | null = null,
+    quickFilter: string | null = null,
     lastQueriedRecord: { id: string; updated_at: string } | null = null,
     tags: string[] = [],
     limit = 20
