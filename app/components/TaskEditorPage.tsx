@@ -26,7 +26,7 @@ export default function TaskEditorPage(
     const [saveStatus, setSaveStatus] = useState<"synced" | "saved" | null>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-    const titleRef = useRef<HTMLInputElement>(null);
+    const titleRef = useRef<HTMLTextAreaElement>(null);
     const pendingUpdatesRef = useRef<Partial<localTask>>({});
 
     const handleTagsUpdate = useTagsUpdate({ recordType: "tasks", recordId: taskId, setTags, setSaveStatus });
@@ -50,6 +50,13 @@ export default function TaskEditorPage(
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (titleRef.current) {
+            titleRef.current.style.height = "auto";
+            titleRef.current.style.height = titleRef.current.scrollHeight + "px";
+        }
+    }, [task?.title]);
 
     useEffect(() => {
         const loadTask = async (): Promise<void> => {
@@ -263,14 +270,14 @@ export default function TaskEditorPage(
                 <TagsInput tags={tags} onBlur={handleTagsUpdate} />
                 <form onChange={handleTaskChange} className="flex flex-col">
                     <label htmlFor="title"></label>
-                    <input
+                    <textarea
                         ref={titleRef}
                         id="title"
                         name="title"
-                        type="text"
                         defaultValue={task.title}
                         placeholder="Title"
-                        className="w-full mt-2 mb-10 py-2 font-titles font-bold text-3xl outline-none"
+                        rows={1}
+                        className="w-full mt-2 mb-10 py-2 font-titles font-bold text-3xl resize-none outline-none"
                     />
 
                     <label htmlFor="content" className="text-muted-foreground">DESCRIPTION</label>

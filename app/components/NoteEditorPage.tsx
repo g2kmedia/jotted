@@ -287,7 +287,7 @@ export default function NoteEditorPage(
                     onChange={handleTitleChange}
                     placeholder="Enter a title"
                     rows={1}
-                    className="w-full my-3 pl-13 text-3xl font-titles font-bold resize-none focus-visible:outline-none"
+                    className="w-full my-3 pl-13 text-3xl font-titles font-bold resize-none outline-none"
                 />
                 <Editor initialContent={note.content as Block[]} onChange={handleContentChange} />
             </article>
