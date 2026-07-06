@@ -1,12 +1,12 @@
 "use client"
 
 import { getAllNotesLocally, getAllTasksLocally } from "@/lib/indexeddb";
-import { localNote, localTask } from "@/lib/types";
 import { CircleCheck } from "lucide-react";
 import { DateTime } from "luxon";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import TaskItem from "../components/TaskItem";
 import NoteItem from "../components/NoteItem";
+import { useNoteStore, useTaskStore } from "@/lib/stores";
 
 const now = DateTime.now();
 const hour = now.hour;
@@ -17,8 +17,8 @@ const dateLabelDate = now.toFormat("MMMM d").toUpperCase();
 const greeting = hour < 12 ? "Good morning." : hour < 18 ? "Good afternoon." : "Good evening.";
 
 export default function Home() {
-  const [tasks, setTasks] = useState<localTask[] | null>(null);
-  const [notes, setNotes] = useState<localNote[] | null>(null);
+  const { tasks, setTasks } = useTaskStore();
+  const { notes, setNotes } = useNoteStore();
 
   const loadTasks = async (): Promise<void> => {
     if (navigator.onLine) {
