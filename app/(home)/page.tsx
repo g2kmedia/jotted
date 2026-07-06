@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import TaskItem from "../components/TaskItem";
 import NoteItem from "../components/NoteItem";
 import { useNoteStore, useTaskStore } from "@/lib/stores";
+import { localNote } from "@/lib/types";
 
 const now = DateTime.now();
 const hour = now.hour;
@@ -89,7 +90,14 @@ export default function Home() {
           return;
         }
 
-        setNotes(newNotes);
+        const parsedNotes = newNotes.map((note: localNote) => ({
+          ...note,
+          content: typeof note.content === "string" && note.content !== ""
+            ? JSON.parse(note.content)
+            : note.content
+        }));
+
+        setNotes(parsedNotes);
 
       } catch (error) {
         console.error("Failed to load notes from server:", error);
