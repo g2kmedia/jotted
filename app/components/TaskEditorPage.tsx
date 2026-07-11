@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { deleteTaskLocally, getTaskLocally, queueChanges, saveTaskLocally } from "@/lib/indexeddb";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { toast } from "sonner";
-import Link from "next/link";
 import { ArrowLeft, CalendarOff, CircleCheck, CloudCheck, RotateCcw, Save, Trash2 } from "lucide-react";
 import TagsInput from "@/app/components/TagsInput";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
@@ -231,9 +230,13 @@ export default function TaskEditorPage(
             <header className="mx-2 px-2 h-16 flex flex-col items-center border-b-1 bg-background">
                 <ul className="h-full flex justify-between items-center w-full">
                     <li>
-                        <Link href={"/tasks"}>
-                            <ArrowLeft className="hover:cursor-pointer lg:hidden" />
-                        </Link>
+                        <ArrowLeft
+                            className="hover:cursor-pointer lg:hidden"
+                            onClick={() => {
+                                if (window.history.length > 1) router.back();
+                                else router.push("/tasks");
+                            }}
+                        />
                     </li>
                     <li>
                         {task.is_trashed === 0 ? (

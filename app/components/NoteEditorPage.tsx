@@ -8,11 +8,11 @@ import { useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hook
 import { deleteNoteLocally, getNoteLocally, queueChanges, saveNoteLocally } from "@/lib/indexeddb";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { toast } from "sonner";
-import Link from "next/link";
 import { Editor } from "@/app/components/DynamicEditor";
 import { ArrowLeft, Trash2, RotateCcw, Pin, Save, CloudCheck } from "lucide-react";
 import ConfirmDeleteDialog from "@/app/components/ConfirmDeleteDialog";
 import TagsInput from "@/app/components/TagsInput";
+import { useRouter } from "next/navigation";
 
 const extractPlaintextFromBlocks = (blocks: Block[]): string => {
     if (!blocks || blocks.length === 0) return "";
@@ -65,6 +65,8 @@ export default function NoteEditorPage(
     const note = notes?.find((n) => n.id === noteId) ?? null;
     const noteRef = useRef(note);
     noteRef.current = note;
+
+    const router = useRouter();
 
     useEffect(() => {
         titleRef.current?.focus();
@@ -243,9 +245,13 @@ export default function NoteEditorPage(
                 className="mx-2 px-2 h-16 shrink-0 flex flex-col items-center border-b-1 bg-background">
                 <ul className="h-full w-full flex justify-between items-center">
                     <li>
-                        <Link href={"/notes"}>
-                            <ArrowLeft className="hover:cursor-pointer lg:hidden" />
-                        </Link>
+                        <ArrowLeft
+                            className="hover:cursor-pointer lg:hidden"
+                            onClick={() => {
+                                if (window.history.length > 1) router.back();
+                                else router.push("/notes");
+                            }}
+                        />
                     </li>
                     <li>
                         {note.is_trashed === 0 ? (
