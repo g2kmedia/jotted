@@ -401,10 +401,10 @@ export const getTaskCountsLocally = async (): Promise<{
     const index = store.index("incompleted_due");
     const completedTrashed = store.index("completed_trashed");
 
-    const now = DateTime.now().setZone("UTC");
-    const endOfToday = now.endOf("day").toISO();
-    const endOfWeek = now.endOf("week").toISO();
-    const nextWeekStart = now.plus({ weeks: 1 }).startOf('week').toISO();
+    const now = DateTime.now();
+    const endOfToday = now.endOf("day").toUTC().toISO();
+    const endOfWeek = now.endOf("week").toUTC().toISO();
+    const nextWeekStart = now.plus({ weeks: 1 }).startOf('week').toUTC().toISO();
 
     const counts = {
         today: 0,
@@ -414,7 +414,7 @@ export const getTaskCountsLocally = async (): Promise<{
         completed: 0,
         trashed: 0
     };
-
+    console.log(endOfToday)
     counts.today = await requestToPromise(index.count(IDBKeyRange.upperBound([0, 0, endOfToday])));
     counts.week = await requestToPromise(index.count(IDBKeyRange.upperBound([0, 0, endOfWeek])));
 
