@@ -1,5 +1,7 @@
 import { toast } from "sonner";
-import { deleteNoteLocally, deleteTaskLocally, getPendingChanges, getSyncCursor, markSynced, queueChanges, saveNoteLocally, saveTaskLocally, setSyncCursor } from "./indexeddb"
+import { getPendingChanges, getSyncCursor, markSynced, queueChanges, setSyncCursor } from "./indexeddb";
+import { deleteTaskLocally, saveTaskLocally } from "./tasks";
+import { deleteNoteLocally, saveNoteLocally } from "./notes";
 import { localNote, localTask } from "./types";
 
 export const offlineSaveAndSync = async (

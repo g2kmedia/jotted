@@ -4,7 +4,7 @@ import { SearchCode, PencilLine } from 'lucide-react';
 import { useEffect } from "react";
 import { DateTime } from "luxon";
 import TagsBar from "@/app/components/TagsBar";
-import { getAllTasksLocally, getAllTasksTagsLocally, getTaskCountsLocally } from "@/lib/indexeddb";
+import { getAllTasksLocally, getAllTasksTagsLocally, getTaskCountsLocally } from "@/lib/tasks";
 import { useTagsStore, useTaskStore } from "@/lib/stores";
 import TaskItem from "@/app/components/TaskItem";
 import QuickFilterButton from '@/app/components/QuickFilterButton';

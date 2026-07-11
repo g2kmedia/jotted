@@ -1,4 +1,4 @@
-import { db } from "./database";
+import { db } from "./sqlite";
 import cron from "node-cron";
 import { getAllTasks } from "./tasks";
 import { sendPushToAll } from "./push-server";

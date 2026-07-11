@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { db } from "@/lib/database";
+import { db } from "@/lib/sqlite";
 import { DateTime } from "luxon";
 
 interface TagRow {

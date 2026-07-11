@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { db } from "./database";
+import { db } from "./sqlite";
 
 export function initVapidKeys(): void {
     let row = db.prepare("SELECT value FROM settings WHERE key = ?")

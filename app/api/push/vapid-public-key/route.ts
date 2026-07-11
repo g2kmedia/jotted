@@ -1,4 +1,4 @@
-import { db } from "@/lib/database";
+import { db } from "@/lib/sqlite";
 
 export async function GET() {
     const row = db.prepare("SELECT value FROM settings WHERE key = ?")

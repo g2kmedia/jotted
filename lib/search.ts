@@ -1,4 +1,4 @@
-import { db } from "@/lib/database";
+import { db } from "@/lib/sqlite";
 import { SearchResult } from "./types";
 
 export function searchAll(searchTerm: string): SearchResult[] {

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/database";
+import { db } from "@/lib/sqlite";
 
 export async function POST(
     request: NextRequest

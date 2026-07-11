@@ -1,7 +1,9 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { deleteNoteLocally, deleteTaskLocally, queueChanges, saveNoteLocally, saveTaskLocally } from "./indexeddb";
+import { queueChanges } from "./indexeddb";
+import { deleteTaskLocally, saveTaskLocally } from "./tasks";
+import { deleteNoteLocally, saveNoteLocally } from "./notes";
 import { offlineSaveAndSync, syncPendingChanges } from "./sync";
 import { useNoteStore, useTaskStore } from "./stores";
 

@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { db } from "./database";
+import { db } from "./sqlite";
 
 export async function sendPushToAll(
     payload: { title: string; body: string; url?: string }

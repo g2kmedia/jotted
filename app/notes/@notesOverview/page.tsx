@@ -3,7 +3,7 @@
 import NoteItem from "@/app/components/NoteItem";
 import QuickFilterButton from "@/app/components/QuickFilterButton";
 import TagsBar from "@/app/components/TagsBar";
-import { getAllNotesLocally, getAllNotesTagsLocally, getNoteCountsLocally } from "@/lib/indexeddb";
+import { getAllNotesLocally, getAllNotesTagsLocally, getNoteCountsLocally } from "@/lib/notes";
 import { useNoteStore, useTagsStore } from "@/lib/stores";
 import { localNote } from "@/lib/types";
 import { PencilLine, SearchCode } from "lucide-react";
