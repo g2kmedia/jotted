@@ -11,7 +11,7 @@ import { localNote } from "@/lib/types";
 
 const now = DateTime.now();
 const hour = now.hour;
-const endOfDay = now.endOf("day").toISO();
+const endOfDay = now.endOf("day").toUTC().toISO();
 
 const dateLabelDay = now.toFormat("cccc").toUpperCase();
 const dateLabelDate = now.toFormat("MMMM d").toUpperCase();

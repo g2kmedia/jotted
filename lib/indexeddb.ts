@@ -313,6 +313,7 @@ export const getAllTasksLocally = async (
             allTasks = [...trashedReq1, ...trashedReq2];
             break;
         case "today":
+            console.log(dueDate)
             const todayReq = index.getAll(IDBKeyRange.upperBound([0, 0, dueDate]));
             allTasks = await requestToPromise(todayReq);
             break;

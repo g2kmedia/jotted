@@ -19,6 +19,8 @@ const TASK_QUICK_FILTERS = [
 ];
 
 const now = DateTime.now();
+const endOfDay = now.endOf("day").toUTC().toISO();
+const endOfWeek = now.endOf("week").toUTC().toISO();
 
 export default function TasksOverview() {
   const {
@@ -63,11 +65,9 @@ export default function TasksOverview() {
 
       switch (quickFilter) {
         case "today":
-          const endOfDay = now.endOf("day").toISO();
           url.searchParams.set("due_date_end", endOfDay);
           break;
         case "week":
-          const endOfWeek = now.endOf("week").toISO();
           url.searchParams.set("due_date_end", endOfWeek);
           break;
         case "scheduled":
@@ -116,8 +116,8 @@ export default function TasksOverview() {
     } else {
       try {
         let dueDate: string | null = null;
-        quickFilter === "today" ? dueDate = now.endOf("day").toISO() : null;
-        quickFilter === "week" ? dueDate = now.endOf("week").toISO() : null;
+        quickFilter === "today" ? dueDate = endOfDay : null;
+        quickFilter === "week" ? dueDate = endOfWeek : null;
 
         const results = await getAllTasksLocally(
           quickFilter,
