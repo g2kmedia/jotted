@@ -13,8 +13,8 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { localNote, localTask } from "@/lib/types";
 import { queueChanges } from "@/lib/indexeddb";
-import { saveTaskLocally } from "@/lib/tasks";
-import { saveNoteLocally } from "@/lib/notes";
+import { saveTaskLocally } from "@/lib/tasks-client";
+import { saveNoteLocally } from "@/lib/notes-client";
 import { syncPendingChanges } from "@/lib/sync";
 
 export default function CreateBtn({ className }: { className?: string }) {

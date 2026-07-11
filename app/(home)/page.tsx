@@ -1,7 +1,7 @@
 "use client"
 
-import { getAllTasksLocally } from "@/lib/tasks";
-import { getAllNotesLocally } from "@/lib/notes";
+import { getAllTasksLocally } from "@/lib/tasks-client";
+import { getAllNotesLocally } from "@/lib/notes-client";
 import { CircleCheck } from "lucide-react";
 import { DateTime } from "luxon";
 import { useEffect } from "react";

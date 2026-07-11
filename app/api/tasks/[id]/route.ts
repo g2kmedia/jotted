@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { deleteTask, getTask, updateTask } from "@/lib/tasks";
+import { deleteTask, getTask, updateTask } from "@/lib/tasks-server";
 import { getTaskTags, updateTaskTags } from '@/lib/tags';
 import { db } from '@/lib/sqlite';
 

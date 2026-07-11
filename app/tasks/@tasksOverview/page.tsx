@@ -2,12 +2,12 @@
 
 import { SearchCode, PencilLine } from 'lucide-react';
 import { useEffect } from "react";
-import { DateTime } from "luxon";
 import TagsBar from "@/app/components/TagsBar";
-import { getAllTasksLocally, getAllTasksTagsLocally, getTaskCountsLocally } from "@/lib/tasks";
+import { getAllTasksTagsLocally, getTaskCountsLocally, loadAllTasks } from "@/lib/tasks-client";
 import { useTagsStore, useTaskStore } from "@/lib/stores";
 import TaskItem from "@/app/components/TaskItem";
 import QuickFilterButton from '@/app/components/QuickFilterButton';
+import { DateTime } from 'luxon';
 
 const TASK_QUICK_FILTERS = [
   { key: "today", label: "TODAY" },
@@ -19,135 +19,20 @@ const TASK_QUICK_FILTERS = [
 ];
 
 const now = DateTime.now();
-const endOfDay = now.endOf("day").toUTC().toISO();
-const endOfWeek = now.endOf("week").toUTC().toISO();
 
 export default function TasksOverview() {
   const {
     tasks,
     taskCounts,
-    lastQueriedRecord,
     hasMore,
     quickFilter,
     tags,
-    setTasks,
     setTaskCounts,
-    appendNewTasks,
-    setLastQueriedRecord,
-    setHasMore,
     setQuickFilter,
     setTags
   } = useTaskStore();
 
   const { activeTags, toggleActiveTag } = useTagsStore();
-
-  const loadTasks = async (resetStates = false): Promise<void> => {
-    if (resetStates) {
-      setTasks(null);
-      setLastQueriedRecord(null);
-      setHasMore(true);
-    }
-
-    if (!hasMore && !resetStates) return;
-
-    if (navigator.onLine) {
-      const url = new URL("/api/tasks", window.location.origin);
-
-      if (quickFilter === "completed") {
-        url.searchParams.set("is_completed", "1");
-        url.searchParams.set("is_trashed", "0");
-      } else if (quickFilter === "trashed") {
-        url.searchParams.set("is_trashed", "1");
-      } else {
-        url.searchParams.set("is_completed", "0");
-        url.searchParams.set("is_trashed", "0");
-      }
-
-      switch (quickFilter) {
-        case "today":
-          url.searchParams.set("due_date_end", endOfDay);
-          break;
-        case "week":
-          url.searchParams.set("due_date_end", endOfWeek);
-          break;
-        case "scheduled":
-          url.searchParams.set("has_due_date", "true");
-          break;
-        case "later":
-          url.searchParams.set("has_due_date", "false");
-          break;
-      }
-
-      if (lastQueriedRecord && !resetStates) {
-        url.searchParams.set("last_queried_record", JSON.stringify(lastQueriedRecord));
-      }
-
-      if (activeTags.length > 0) {
-        url.searchParams.set("tags", activeTags.join());
-      }
-
-      try {
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch tasks: ${res.status}`);
-        }
-
-        const { tasks: newTasks } = await res.json();
-
-        if (!newTasks || newTasks.length === 0) {
-          setHasMore(false);
-
-          if (resetStates || !tasks) {
-            setTasks([]);
-          }
-
-          return;
-        }
-
-        resetStates || !tasks ? setTasks(newTasks) : appendNewTasks(newTasks);
-
-        const lastRecord = newTasks[newTasks.length - 1];
-        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
-
-      } catch (error) {
-        console.error("Failed to load tasks from server:", error);
-      }
-    } else {
-      try {
-        let dueDate: string | null = null;
-        quickFilter === "today" ? dueDate = endOfDay : null;
-        quickFilter === "week" ? dueDate = endOfWeek : null;
-
-        const results = await getAllTasksLocally(
-          quickFilter,
-          dueDate,
-          resetStates ? null : lastQueriedRecord,
-          activeTags,
-          20
-        );
-
-        const newTasks = results;
-
-        if (!newTasks || newTasks.length === 0) {
-          setHasMore(false);
-
-          if (resetStates || !tasks) {
-            setTasks([]);
-          }
-
-          return;
-        }
-
-        resetStates || !tasks ? setTasks(newTasks) : appendNewTasks(newTasks);
-
-        const lastRecord = newTasks[newTasks.length - 1];
-        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
-      } catch (error) {
-        console.error("Failed to load tasks locally:", error);
-      }
-    }
-  }
 
   const loadTaskCounts = async (): Promise<void> => {
     if (navigator.onLine) {
@@ -214,7 +99,7 @@ export default function TasksOverview() {
   }, []);
 
   useEffect(() => {
-    loadTasks(true); // Reset states/query params
+    loadAllTasks(true, now); // Reset states/query params
     loadTags();
   }, [quickFilter, activeTags]);
 
@@ -262,7 +147,7 @@ export default function TasksOverview() {
               <TaskItem key={task.id} task={task} now={now} />
             ))}
             {hasMore
-              ? <button onClick={() => loadTasks()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
+              ? <button onClick={() => loadAllTasks(false, now)} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
               : <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>
             }
           </div>

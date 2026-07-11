@@ -1,4 +1,4 @@
-import { getNoteCounts } from "@/lib/notes";
+import { getNoteCounts } from "@/lib/notes-server";
 import { NextRequest } from "next/server";
 
 export async function GET(

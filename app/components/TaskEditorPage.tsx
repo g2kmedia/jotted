@@ -6,7 +6,7 @@ import type { localTask } from "@/lib/types";
 import { useDebouncedCallback, useDeleteRecord, useTagsUpdate } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { queueChanges } from "@/lib/indexeddb";
-import { deleteTaskLocally, getTaskLocally, saveTaskLocally } from "@/lib/tasks";
+import { deleteTaskLocally, getTaskLocally, saveTaskLocally } from "@/lib/tasks-client";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { toast } from "sonner";
 import { ArrowLeft, CalendarOff, CircleCheck, CloudCheck, RotateCcw, Save, Trash2 } from "lucide-react";

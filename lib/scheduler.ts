@@ -1,6 +1,6 @@
 import { db } from "./sqlite";
 import cron from "node-cron";
-import { getAllTasks } from "./tasks";
+import { getAllTasks } from "./tasks-server";
 import { sendPushToAll } from "./push-server";
 
 // Cleanup function for old trashed SQL records

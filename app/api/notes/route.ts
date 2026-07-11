@@ -1,4 +1,4 @@
-import { createNote, getAllNotes } from "@/lib/notes";
+import { createNote, getAllNotes } from "@/lib/notes-server";
 import { NextRequest } from "next/server";
 
 export async function POST(

@@ -1,4 +1,4 @@
-import { createTask, getAllTasks } from "@/lib/tasks";
+import { createTask, getAllTasks } from "@/lib/tasks-server";
 import { NextRequest } from "next/server";
 
 export async function POST(

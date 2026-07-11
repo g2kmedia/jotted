@@ -6,7 +6,7 @@ import { useNoteStore } from "@/lib/stores";
 import { useEffect, useRef, useState } from "react";
 import { useDeleteRecord, useTagsUpdate, useDebouncedCallback } from "@/lib/hooks";
 import { queueChanges } from "@/lib/indexeddb";
-import { deleteNoteLocally, getNoteLocally, saveNoteLocally } from "@/lib/notes";
+import { deleteNoteLocally, getNoteLocally, saveNoteLocally } from "@/lib/notes-client";
 import { offlineSaveAndSync, syncPendingChanges } from "@/lib/sync";
 import { toast } from "sonner";
 import { Editor } from "@/app/components/DynamicEditor";

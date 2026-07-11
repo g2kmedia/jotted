@@ -1,5 +1,5 @@
 import { db } from "@/lib/sqlite";
-import { deleteNote, getNote, updateNote } from "@/lib/notes";
+import { deleteNote, getNote, updateNote } from "@/lib/notes-server";
 import { getNoteTags, updateNoteTags } from "@/lib/tags";
 import { NextRequest } from "next/server";
 

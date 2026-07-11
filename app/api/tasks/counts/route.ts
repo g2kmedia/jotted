@@ -1,4 +1,4 @@
-import { getTaskCounts } from "@/lib/tasks";
+import { getTaskCounts } from "@/lib/tasks-server";
 import { NextRequest } from "next/server";
 
 export async function GET(
