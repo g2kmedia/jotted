@@ -19,7 +19,7 @@ export const loadAllTasks = async (
         setTasks,
         appendNewTasks,
         setLastQueriedRecord,
-        setHasMore
+        setHasMore,
     } = useTaskStore.getState();
 
     const quickFilter = quickFilterOverride ?? storeQuickFilter;
@@ -105,6 +105,68 @@ export const loadAllTasks = async (
         setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
     } catch (error) {
         console.error(`Failed to load tasks ${navigator.onLine ? "from server" : "locally"}:`, error);
+    }
+}
+
+export const loadTaskCounts = async (userTimezone: string): Promise<void> => {
+    const { setTaskCounts } = useTaskStore.getState();
+
+    if (navigator.onLine) {
+        try {
+            const url = new URL("/api/tasks/counts", window.location.origin);
+            url.searchParams.set("timezone", userTimezone);
+
+            const res = await fetch(url, { method: "GET" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch task counts: ${res.status}`);
+            }
+
+            const counts = await res.json();
+            setTaskCounts(counts);
+        } catch (error) {
+            console.error("Failed to load task counts from server:", error);
+        }
+    } else {
+        try {
+            const counts = await getTaskCountsLocally();
+            setTaskCounts(counts);
+        } catch (error) {
+            console.error("Failed to load task counts locally:", error);
+        }
+    }
+}
+
+export const loadAllTasksTags = async (): Promise<void> => {
+    const { setTags } = useTaskStore.getState();
+
+    if (navigator.onLine) {
+        try {
+            const url = new URL("/api/tasks/tags", window.location.origin);
+            url.searchParams.set("is_completed", "0");
+            url.searchParams.set("is_trashed", "0");
+
+            const res = await fetch(url, { method: "GET" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch tags: ${res.status}`);
+            }
+
+            const { tags } = await res.json();
+            setTags(tags);
+
+        } catch (error) {
+            console.error("Failed to load tags from server:", error);
+        }
+    } else {
+        try {
+            const tags = await getAllTasksTagsLocally();
+
+            setTags(tags);
+
+        } catch (error) {
+            console.error("Failed to load tags locally:", error);
+        }
     }
 }
 

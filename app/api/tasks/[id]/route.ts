@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { deleteTask, getTask, updateTask } from "@/lib/tasks-server";
-import { getTaskTags, updateTaskTags } from '@/lib/tags';
+import { getTaskTags, updateTaskTags } from '@/lib/tags-server';
 import { db } from '@/lib/sqlite';
 
 export async function GET(

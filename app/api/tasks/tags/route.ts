@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getAllTasksTags } from "@/lib/tags";
+import { getAllTasksTags } from "@/lib/tags-server";
 
 export async function GET(request: NextRequest) {
     try {

@@ -1,6 +1,6 @@
 import { db } from "@/lib/sqlite";
 import { deleteNote, getNote, updateNote } from "@/lib/notes-server";
-import { getNoteTags, updateNoteTags } from "@/lib/tags";
+import { getNoteTags, updateNoteTags } from "@/lib/tags-server";
 import { NextRequest } from "next/server";
 
 export async function GET(

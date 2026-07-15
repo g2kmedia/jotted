@@ -3,7 +3,7 @@
 import { SearchCode, PencilLine } from 'lucide-react';
 import { useEffect } from "react";
 import TagsBar from "@/app/components/TagsBar";
-import { getAllTasksTagsLocally, getTaskCountsLocally, loadAllTasks } from "@/lib/tasks-client";
+import { loadAllTasks, loadAllTasksTags, loadTaskCounts } from "@/lib/tasks-client";
 import { useTagsStore, useTaskStore } from "@/lib/stores";
 import TaskItem from "@/app/components/TaskItem";
 import QuickFilterButton from '@/app/components/QuickFilterButton';
@@ -27,80 +27,20 @@ export default function TasksOverview() {
     hasMore,
     quickFilter,
     tags,
-    setTaskCounts,
     setQuickFilter,
-    setTags
   } = useTaskStore();
 
   const { activeTags, toggleActiveTag } = useTagsStore();
 
-  const loadTaskCounts = async (): Promise<void> => {
-    if (navigator.onLine) {
-      try {
-        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-        const url = new URL("/api/tasks/counts", window.location.origin);
-        url.searchParams.set("timezone", userTimezone);
-
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch task counts: ${res.status}`);
-        }
-
-        const counts = await res.json();
-        setTaskCounts(counts);
-      } catch (error) {
-        console.error("Failed to load task counts from server:", error);
-      }
-    } else {
-      try {
-        const counts = await getTaskCountsLocally();
-        setTaskCounts(counts);
-      } catch (error) {
-        console.error("Failed to load task counts locally:", error);
-      }
-    }
-  }
-
-  const loadTags = async (): Promise<void> => {
-    if (navigator.onLine) {
-      try {
-        const url = new URL("/api/tasks/tags", window.location.origin);
-        url.searchParams.set("is_completed", "0");
-        url.searchParams.set("is_trashed", "0");
-
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch tags: ${res.status}`);
-        }
-
-        const { tags } = await res.json();
-        setTags(tags);
-
-      } catch (error) {
-        console.error("Failed to load tags from server:", error);
-      }
-    } else {
-      try {
-        const tags = await getAllTasksTagsLocally();
-
-        setTags(tags);
-
-      } catch (error) {
-        console.error("Failed to load tags locally:", error);
-      }
-    }
-  }
-
   useEffect(() => {
-    loadTaskCounts();
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    loadTaskCounts(userTimezone);
   }, []);
 
   useEffect(() => {
     loadAllTasks(true, now); // Reset states/query params
-    loadTags();
+    loadAllTasksTags();
   }, [quickFilter, activeTags]);
 
   if (!tasks) return null;
