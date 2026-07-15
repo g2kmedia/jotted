@@ -1,6 +1,6 @@
 "use client"
 
-import { getAllTasksLocally } from "@/lib/tasks-client";
+import { loadAllTasks } from "@/lib/tasks-client";
 import { getAllNotesLocally } from "@/lib/notes-client";
 import { CircleCheck } from "lucide-react";
 import { DateTime } from "luxon";
@@ -12,65 +12,14 @@ import { localNote } from "@/lib/types";
 
 const now = DateTime.now();
 const hour = now.hour;
-const endOfDay = now.endOf("day").toUTC().toISO();
 
 const dateLabelDay = now.toFormat("cccc").toUpperCase();
 const dateLabelDate = now.toFormat("MMMM d").toUpperCase();
 const greeting = hour < 12 ? "Good morning." : hour < 18 ? "Good afternoon." : "Good evening.";
 
 export default function Home() {
-  const { tasks, setTasks } = useTaskStore();
+  const { tasks } = useTaskStore();
   const { notes, setNotes } = useNoteStore();
-
-  const loadTasks = async (): Promise<void> => {
-    if (navigator.onLine) {
-      const url = new URL("/api/tasks", window.location.origin);
-      url.searchParams.set("is_completed", "0");
-      url.searchParams.set("is_trashed", "0");
-      url.searchParams.set("due_date_end", endOfDay);
-
-      try {
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch tasks: ${res.status}`);
-        }
-
-        const { tasks: tasksToday } = await res.json();
-
-        if (tasksToday.length === 0) {
-          setTasks([]);
-          return;
-        }
-
-        setTasks(tasksToday);
-
-      } catch (error) {
-        console.error("Failed to load tasks from server:", error);
-      }
-    } else {
-      try {
-        const tasksToday = await getAllTasksLocally(
-          "today",
-          endOfDay,
-          null,
-          [],
-          100
-        );
-
-        if (tasksToday.length === 0) {
-          setTasks([]);
-          return;
-        }
-
-        const sortByDueDate = tasksToday.sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
-        setTasks(sortByDueDate);
-
-      } catch (error) {
-        console.error("Failed to load tasks locally:", error);
-      }
-    }
-  }
 
   const loadNotes = async (): Promise<void> => {
     if (navigator.onLine) {
@@ -125,7 +74,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    loadTasks();
+    loadAllTasks(true, now, undefined, true, "today");
     loadNotes();
   }, []);
 

@@ -8,18 +8,21 @@ export const loadAllTasks = async (
     resetStates = false,
     now: DateTime,
     limit = 20,
-    sortByDueDate = false
+    sortByDueDate = false,
+    quickFilterOverride?: string
 ): Promise<void> => {
     const {
         tasks,
         lastQueriedRecord,
         hasMore,
-        quickFilter,
+        quickFilter: storeQuickFilter,
         setTasks,
         appendNewTasks,
         setLastQueriedRecord,
         setHasMore
     } = useTaskStore.getState();
+
+    const quickFilter = quickFilterOverride ?? storeQuickFilter;
 
     const { activeTags } = useTagsStore.getState();
 
