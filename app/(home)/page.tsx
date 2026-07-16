@@ -1,14 +1,13 @@
 "use client"
 
 import { loadAllTasks } from "@/lib/tasks-client";
-import { getAllNotesLocally } from "@/lib/notes-client";
+import { loadAllNotes } from "@/lib/notes-client";
 import { CircleCheck } from "lucide-react";
 import { DateTime } from "luxon";
 import { useEffect } from "react";
 import TaskItem from "../components/TaskItem";
 import NoteItem from "../components/NoteItem";
 import { useNoteStore, useTaskStore } from "@/lib/stores";
-import { localNote } from "@/lib/types";
 
 const now = DateTime.now();
 const hour = now.hour;
@@ -19,63 +18,11 @@ const greeting = hour < 12 ? "Good morning." : hour < 18 ? "Good afternoon." : "
 
 export default function Home() {
   const { tasks } = useTaskStore();
-  const { notes, setNotes } = useNoteStore();
-
-  const loadNotes = async (): Promise<void> => {
-    if (navigator.onLine) {
-      const url = new URL("/api/notes", window.location.origin);
-      url.searchParams.set("is_pinned", "1");
-
-      try {
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch notes: ${res.status}`);
-        }
-
-        const { notes: newNotes } = await res.json();
-
-        if (newNotes === 0) {
-          setNotes([]);
-          return;
-        }
-
-        const parsedNotes = newNotes.map((note: localNote) => ({
-          ...note,
-          content: typeof note.content === "string" && note.content !== ""
-            ? JSON.parse(note.content)
-            : note.content
-        }));
-
-        setNotes(parsedNotes);
-
-      } catch (error) {
-        console.error("Failed to load notes from server:", error);
-      }
-    } else {
-      try {
-        const pinnedNotes = await getAllNotesLocally(
-          "pinned",
-          null,
-          [],
-          50
-        );
-
-        if (pinnedNotes.length === 0) {
-          setNotes([]);
-        }
-
-        setNotes(pinnedNotes);
-
-      } catch (error) {
-        console.error("Failed to load notes locally:", error);
-      }
-    }
-  }
+  const { notes } = useNoteStore();
 
   useEffect(() => {
     loadAllTasks(true, now, undefined, true, "today");
-    loadNotes();
+    loadAllNotes(true, undefined, "pinned");
   }, []);
 
   if (!tasks || !notes) return null;
