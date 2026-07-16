@@ -3,9 +3,8 @@
 import NoteItem from "@/app/components/NoteItem";
 import QuickFilterButton from "@/app/components/QuickFilterButton";
 import TagsBar from "@/app/components/TagsBar";
-import { getAllNotesLocally, getAllNotesTagsLocally, getNoteCountsLocally } from "@/lib/notes-client";
+import { loadAllNotes, loadAllNotesTags, loadNoteCounts } from "@/lib/notes-client";
 import { useNoteStore, useTagsStore } from "@/lib/stores";
-import { localNote } from "@/lib/types";
 import { PencilLine, SearchCode } from "lucide-react";
 import { useEffect } from "react";
 
@@ -18,178 +17,21 @@ export default function NotesOverview() {
   const {
     notes,
     noteCounts,
-    lastQueriedRecord,
     hasMore,
     quickFilter,
     tags,
-    setNotes,
-    setNoteCounts,
-    appendNewNotes,
-    setLastQueriedRecord,
-    setHasMore,
     setQuickFilter,
-    setTags
   } = useNoteStore();
 
   const { activeTags, toggleActiveTag } = useTagsStore();
-
-  const loadNotes = async (resetStates = false): Promise<void> => {
-    if (resetStates) {
-      setNotes(null);
-      setLastQueriedRecord(null);
-      setHasMore(true);
-    }
-
-    if (!hasMore && !resetStates) return;
-
-    if (navigator.onLine) {
-      const url = new URL("/api/notes", window.location.origin);
-
-      if (quickFilter === "pinned") {
-        url.searchParams.set("is_pinned", "1");
-        url.searchParams.set("is_trashed", "0");
-      } else if (quickFilter === "trashed") {
-        url.searchParams.set("is_trashed", "1");
-      } else {
-        url.searchParams.set("is_trashed", "0");
-      }
-
-      if (lastQueriedRecord && !resetStates) {
-        url.searchParams.set("last_queried_record", JSON.stringify(lastQueriedRecord));
-      }
-
-      if (activeTags.length > 0) {
-        url.searchParams.set("tags", activeTags.join());
-      }
-
-      try {
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch notes: ${res.status}`);
-        }
-
-        const { notes: newNotes } = await res.json();
-
-        if (!newNotes || newNotes.length === 0) {
-          setHasMore(false);
-
-          if (resetStates || !notes) {
-            setNotes([]);
-          }
-
-          return;
-        }
-
-        const parsedNotes = newNotes.map((note: localNote) => ({
-          ...note,
-          content: typeof note.content === "string" && note.content !== ""
-            ? JSON.parse(note.content)
-            : note.content
-        }));
-
-        resetStates || !notes ? setNotes(parsedNotes) : appendNewNotes(parsedNotes);
-
-        const lastRecord = newNotes[newNotes.length - 1];
-        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
-
-      } catch (error) {
-        console.error("Failed to load notes from server:", error);
-      }
-    } else {
-      try {
-        const results = await getAllNotesLocally(
-          quickFilter,
-          resetStates ? null : lastQueriedRecord,
-          activeTags,
-          20
-        );
-
-        const newNotes = results;
-
-        if (!newNotes || newNotes.length === 0) {
-          setHasMore(false);
-
-          if (resetStates || !notes) {
-            setNotes([]);
-          }
-
-          return;
-        }
-
-        resetStates || !notes ? setNotes(newNotes) : appendNewNotes(newNotes);
-
-        const lastRecord = newNotes[newNotes.length - 1];
-        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
-      } catch (error) {
-        console.error("Failed to load notes locally:", error);
-      }
-    }
-  }
-
-  const loadNoteCounts = async (): Promise<void> => {
-    if (navigator.onLine) {
-      try {
-        const url = new URL("/api/notes/counts", window.location.origin);
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch note counts: ${res.status}`);
-        }
-
-        const counts = await res.json();
-        setNoteCounts(counts);
-      } catch (error) {
-        console.error("Failed to load note counts from server:", error);
-      }
-    } else {
-      try {
-        const counts = await getNoteCountsLocally();
-        setNoteCounts(counts);
-      } catch (error) {
-        console.error("Failed to load note counts locally:", error);
-      }
-    }
-  }
-
-  const loadTags = async (): Promise<void> => {
-    if (navigator.onLine) {
-      try {
-        const url = new URL("/api/notes/tags", window.location.origin);
-        url.searchParams.set("is_trashed", "0");
-
-        const res = await fetch(url, { method: "GET" });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch tags: ${res.status}`);
-        }
-
-        const { tags } = await res.json();
-
-        setTags(tags);
-
-      } catch (error) {
-        console.error("Failed to load tags from server:", error);
-      }
-    } else {
-      try {
-        const tags = await getAllNotesTagsLocally();
-
-        setTags(tags);
-
-      } catch (error) {
-        console.error("Failed to load tags locally:", error);
-      }
-    }
-  }
 
   useEffect(() => {
     loadNoteCounts();
   }, []);
 
   useEffect(() => {
-    loadNotes(true); // Reset states/query params
-    loadTags();
+    loadAllNotes(true); // Reset states/query params
+    loadAllNotesTags();
   }, [quickFilter, activeTags]);
 
   if (!notes) return null;
@@ -236,7 +78,7 @@ export default function NotesOverview() {
               <NoteItem key={note.id} note={note} />
             ))}
             {hasMore
-              ? <button onClick={() => loadNotes()} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
+              ? <button onClick={() => loadAllNotes(false)} className="w-fit mx-auto p-4 mb-30 lg:mb-3 text-center font-titles border-foreground hover:cursor-pointer hover:border-b-1 hover:border-accent">Load More</button>
               : <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>
             }
           </div>

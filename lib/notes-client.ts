@@ -1,6 +1,152 @@
 import type { localNote } from "./types";
 import { openDB, pruneIfNeeded, requestToPromise } from "./indexeddb";
+import { useNoteStore, useTagsStore } from "./stores";
 
+// Frontend fetching
+export const loadAllNotes = async (
+    resetStates = false,
+    limit = 20,
+    quickFilterOverride?: string
+): Promise<void> => {
+    const {
+        notes,
+        lastQueriedRecord,
+        hasMore,
+        quickFilter: storeQuickFilter,
+        setNotes,
+        appendNewNotes,
+        setLastQueriedRecord,
+        setHasMore
+    } = useNoteStore.getState();
+
+    const quickFilter = quickFilterOverride ?? storeQuickFilter;
+
+    const { activeTags } = useTagsStore.getState();
+
+    if (resetStates) {
+        setNotes(null);
+        setLastQueriedRecord(null);
+        setHasMore(true);
+    }
+
+    if (!hasMore && !resetStates) return;
+
+    try {
+        let newNotes;
+
+        if (navigator.onLine) {
+            const url = new URL("/api/notes", window.location.origin);
+
+            if (quickFilter === "pinned") {
+                url.searchParams.set("is_pinned", "1");
+                url.searchParams.set("is_trashed", "0");
+            } else if (quickFilter === "trashed") {
+                url.searchParams.set("is_trashed", "1");
+            } else {
+                url.searchParams.set("is_trashed", "0");
+            }
+
+            if (lastQueriedRecord && !resetStates) {
+                url.searchParams.set("last_queried_record", JSON.stringify(lastQueriedRecord));
+            }
+
+            if (activeTags.length > 0) {
+                url.searchParams.set("tags", activeTags.join());
+            }
+
+            url.searchParams.set("limit", String(limit));
+
+            const res = await fetch(url, { method: "GET" });
+            if (!res.ok) throw new Error(`Failed to fetch notes: ${res.status}`);
+            const rawNotes = (await res.json()).notes;
+
+            newNotes = rawNotes.map((note: localNote) => ({
+                ...note,
+                content: typeof note.content === "string" && note.content !== ""
+                    ? JSON.parse(note.content)
+                    : note.content
+            }));
+        } else {
+            newNotes = await getAllNotesLocally(
+                quickFilter,
+                resetStates ? null : lastQueriedRecord,
+                activeTags,
+                limit
+            );
+        }
+
+        if (!newNotes || newNotes.length === 0) {
+            setHasMore(false);
+            if (resetStates || !notes) setNotes([]);
+            return;
+        }
+
+        resetStates || !notes ? setNotes(newNotes) : appendNewNotes(newNotes);
+
+        const lastRecord = newNotes[newNotes.length - 1];
+        setLastQueriedRecord({ id: lastRecord.id, updated_at: lastRecord.updated_at });
+    } catch (error) {
+        console.error(`Failed to load notes ${navigator.onLine ? "from server" : "locally"}:`, error);
+    }
+}
+
+export const loadNoteCounts = async (): Promise<void> => {
+    const { setNoteCounts } = useNoteStore.getState();
+
+    if (navigator.onLine) {
+        try {
+            const url = new URL("/api/notes/counts", window.location.origin);
+            const res = await fetch(url, { method: "GET" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch note counts: ${res.status}`);
+            }
+
+            const counts = await res.json();
+            setNoteCounts(counts);
+        } catch (error) {
+            console.error("Failed to load note counts from server:", error);
+        }
+    } else {
+        try {
+            const counts = await getNoteCountsLocally();
+            setNoteCounts(counts);
+        } catch (error) {
+            console.error("Failed to load note counts locally:", error);
+        }
+    }
+}
+
+export const loadAllNotesTags = async (): Promise<void> => {
+    const { setTags } = useNoteStore.getState();
+
+    if (navigator.onLine) {
+        try {
+            const url = new URL("/api/notes/tags", window.location.origin);
+            url.searchParams.set("is_trashed", "0");
+
+            const res = await fetch(url, { method: "GET" });
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch tags: ${res.status}`);
+            }
+
+            const { tags } = await res.json();
+            setTags(tags);
+        } catch (error) {
+            console.error("Failed to load tags from server:", error);
+        }
+    } else {
+        try {
+            const tags = await getAllNotesTagsLocally();
+            setTags(tags);
+        } catch (error) {
+            console.error("Failed to load tags locally:", error);
+        }
+    }
+}
+
+// IndexedDB
 const MAX_NOTES = 50;
 
 export const getNoteLocally = async (noteId: string): Promise<localNote | undefined> => {

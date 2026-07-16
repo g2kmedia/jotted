@@ -154,16 +154,13 @@ export const loadAllTasksTags = async (): Promise<void> => {
 
             const { tags } = await res.json();
             setTags(tags);
-
         } catch (error) {
             console.error("Failed to load tags from server:", error);
         }
     } else {
         try {
             const tags = await getAllTasksTagsLocally();
-
             setTags(tags);
-
         } catch (error) {
             console.error("Failed to load tags locally:", error);
         }
