@@ -91,6 +91,8 @@ export default function NoteEditorPage(
 
     useEffect(() => {
         const loadNote = async (): Promise<void> => {
+            if (noteRef.current) return; // already part of the state
+
             if (navigator.onLine) {
                 try {
                     const res = await fetch(`/api/notes/${noteId}`, { method: "GET" });

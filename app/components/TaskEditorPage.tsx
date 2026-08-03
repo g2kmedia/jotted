@@ -60,6 +60,8 @@ export default function TaskEditorPage(
 
     useEffect(() => {
         const loadTask = async (): Promise<void> => {
+            if (taskRef.current) return; // already part of the state
+
             if (navigator.onLine) {
                 try {
                     const res = await fetch(`/api/tasks/${taskId}`, { method: "GET" });
