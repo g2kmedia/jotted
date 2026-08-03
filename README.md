@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+![Screenshot](./screenshot.png)
+
+**One place for everything on your mind. Think it, jot it, keep it.**
+
+***
+
+The goal of jotted is to have a single self-hostable app that has all the information a user might be looking for, eliminating the need to have two separate apps. It tries to keep things simple and easy-to-use without compromising on features.
+
+## Features
+
+* Rich Text Editor with Markdown support and Slash menu ("/")
+* Offline support
+* Push Notifications for tasks
+* Full text search
+* Tags to organize notes and tasks
+* PWA support (Progressive Web App)
+* Dark mode
+* Self-hosting first
+* Single Docker container
+
+## Tech Stack
+
+* Next.js (React) - framework
+* TypeScript
+* Tailwind
+* better-sqlite3 – database
+* BlockNote – rich text editor
+* Zustand – state management
+* Serwist – PWA/service worker
+* web-push – push notifications
+* Radix UI
+* node-cron - backend tasks scheduling
+* Luxon – date/time handling
+
+## Bugs & Issues
+
+The app is new and under active development, and I don't have the ability to test on every device. So there are likely still bugs. Feel free to report any issues you run into, and I'll try to fix them as soon as possible.
+
+## Upcoming Features
+
+Planned features and their progress can be seen in the [Projects](../../projects) section of this repo.
 
 ## Getting Started
 
-First, run the development server:
+### Docker Compose
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```yaml
+services:
+    jotted:
+        image: ghcr.io/g2kmedia/jotted:latest
+        container_name: jotted
+        ports:
+            - "3000:3000"
+        volumes:
+            - /path/to/data:/app/data # location for DB and uploaded files
+        restart: unless-stopped
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### Run development server
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Runs the app at `http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+*Note*: `SerwistProvider` is set to `disable={process.env.NODE_ENV === "development"}` in `layout.tsx`, so the service worker (PWA/offline support) is disabled by default in dev mode.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To test the service worker locally, use:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev-serwist
+```
 
-## Deploy on Vercel
+This builds the service worker in watch mode alongside `next dev`. (*Note*: it will still be disabled unless you also adjust or remove the disable condition in `layout.tsx`.)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Testing on other devices (e.g. phone on the same network)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Add your local IP to `allowedDevOrigins` in `next.config.ts`, then access the app via `http://<your-local-ip>:3000`.
+
+#### Building for production
+
+```bash
+npm run build
+npm run start
+```
+
+This builds a standalone Next.js server (`output: "standalone"`) along with the Serwist service worker.
+
+## Why I built it?
+For many years now, I have been using some sort of note-taking solution to organize my day, plan things and keep track of important information. Throughout these years I've used Google Keep, Evernote, OneNote, Notion, Apple Notes, Apple Reminders, flatnotes and have tried out other solutions that I did not keep for a significant amount of time. All of these are great apps but I always found myself missing some features or thinking that the app had too many features that made it more complex than needed. 
+
+In the end I wanted to have something that had a nice rich text editor, combined notes and reminders into one and had a good desktop browser as well as mobile version.
