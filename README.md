@@ -93,4 +93,4 @@ This builds a standalone Next.js server (`output: "standalone"`) along with the 
 ## Why I built it?
 For many years now, I have been using some sort of note-taking solution to organize my day, plan things and keep track of important information. Throughout these years I've used Google Keep, Evernote, OneNote, Notion, Apple Notes, Apple Reminders, flatnotes and have tried out other solutions that I did not keep for a significant amount of time. All of these are great apps but I always found myself missing some features or thinking that the app had too many features that made it more complex than needed. 
 
-In the end I wanted to have something that had a nice rich text editor, combined notes and reminders into one and had a good desktop browser as well as mobile version.
+In the end I wanted to have something that had a nice rich text editor, combined notes and reminders into one and had a good desktop browser as well as mobile experience.
