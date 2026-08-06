@@ -36,6 +36,13 @@ The goal of jotted is to have a single self-hostable app that has all the inform
 
 The app is new and under active development, and I don't have the ability to test on every device. So there are likely still bugs. Feel free to report any issues you run into, and I'll try to fix them as soon as possible.
 
+## Quirks & Defaults
+
+* Currently in order to activate the notifications, you have to enable them upon the first launch of the app on that client device. If you don't do that, you will have to remove and re-add the app on that device (aka delete cache & cookies for desktop/browser or remove and re-install PWA for mobile).
+* Trashed notes & tasks will be completely deleted after 30 days in the trash (based on the last modified date).
+
+All of these will be address in a later release and the user will be able to change the behavior in the future.
+
 ## Upcoming Features
 
 Planned features and their progress can be seen in the [Projects](../../projects) section of this repo.
