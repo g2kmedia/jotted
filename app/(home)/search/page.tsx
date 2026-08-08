@@ -76,27 +76,30 @@ export default function SearchResults() {
                 ))}
             </section>
 
-            <section className="h-full">
+            <section className="h-full overflow-y-auto">
                 {displayResults.length === 0 ? (
                     <p className="text-center mt-20">No results found</p>
                 ) : (
-                    displayResults.map(item => (
-                        <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>
-                            <article className="max-h-22 py-2 mb-2 flex flex-row items-center border-b-1">
-                                <p className="mr-2 text-xs text-secondary-foreground capitalize">{item.type}</p>
-                                <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                    <h4
-                                        className="text-lg mb-1"
-                                        dangerouslySetInnerHTML={{ __html: item.title || "" }}
-                                    />
-                                    <p
-                                        className="text-sm font-light text-muted-foreground"
-                                        dangerouslySetInnerHTML={{ __html: item.content as string || "" }}
-                                    />
-                                </div>
-                            </article>
-                        </Link>
-                    ))
+                    <>
+                        {displayResults.map(item => (
+                            <Link href={`/${item.type}/${item.id}`} key={`${item.type}-${item.id}`}>
+                                <article className="max-h-22 py-2 mb-2 flex flex-row items-center border-b-1">
+                                    <p className="mr-2 text-xs text-secondary-foreground capitalize">{item.type}</p>
+                                    <div className="flex flex-col justify-between overflow-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                        <h4
+                                            className="text-lg mb-1"
+                                            dangerouslySetInnerHTML={{ __html: item.title || "" }}
+                                        />
+                                        <p
+                                            className="text-sm font-light text-muted-foreground"
+                                            dangerouslySetInnerHTML={{ __html: item.content as string || "" }}
+                                        />
+                                    </div>
+                                </article>
+                            </Link>
+                        ))}
+                        <p className="p-4 mb-30 lg:mb-3 text-center font-titles">That's all!</p>
+                    </>
                 )}
             </section>
         </div>
