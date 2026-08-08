@@ -60,7 +60,11 @@ export default function TaskEditorPage(
 
     useEffect(() => {
         const loadTask = async (): Promise<void> => {
-            if (taskRef.current) return; // already part of the state
+            // already part of the state
+            if (taskRef.current && task) {
+                setTags(task.tags);
+                return;
+            } 
 
             if (navigator.onLine) {
                 try {

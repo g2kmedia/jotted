@@ -91,7 +91,11 @@ export default function NoteEditorPage(
 
     useEffect(() => {
         const loadNote = async (): Promise<void> => {
-            if (noteRef.current) return; // already part of the state
+            // already part of the state
+            if (noteRef.current && note) {
+                setTags(note.tags);
+                return;
+            }
 
             if (navigator.onLine) {
                 try {
