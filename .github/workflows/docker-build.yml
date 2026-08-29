@@ -40,10 +40,10 @@ jobs:
       with:
         context: .
         platforms: linux/amd64
-        push: true
         no-cache: true
         provenance: false
         sbom: false
+        outputs: type=image,push=true,oci-mediatypes=false
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.package_version.outputs.version }}
