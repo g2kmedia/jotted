@@ -45,15 +45,20 @@ export async function uploadFile(file: File): Promise<string> {
     }
 }
 
-export async function deleteUploadedFile(files: string[]): Promise<void> {
-    if (files.length > 0) {
-        const res = await fetch("/api/uploads/delete", {
-            method: "POST",
-            body: JSON.stringify({ files: files })
-        });
+export async function deleteUploadedFile(fileUrls: string[]): Promise<void> {
+    try {
+        if (fileUrls.length > 0) {
+            const res = await fetch("/api/uploads/delete", {
+                method: "POST",
+                body: JSON.stringify({ files: fileUrls })
+            });
 
-        if (!res.ok) {
-            console.error("Failed to delete files:", res.status)
+            if (!res.ok) {
+                console.error("Failed to delete files:", res.status);
+            }
         }
+    } catch (error) {
+        console.error("Failed to delete files:", error);
+        throw error;
     }
 }

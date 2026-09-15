@@ -3,7 +3,7 @@ import { localNote, localTask } from "./types";
 const DB_NAME = "jotted";
 const DB_VERSION = 2;
 
-interface PendingChanges {
+export interface PendingChanges {
     recordId: string;
     recordType: "notes" | "tasks";
     operation: "create" | "update" | "delete";
@@ -56,9 +56,9 @@ export const openDB = (): Promise<IDBDatabase> => {
     });
 }
 
-const MAX_TASKS_DAYS = 30;
+export const MAX_TASKS_DAYS = 30;
 
-const isDueWithinDays = (date: string | undefined): boolean => {
+export const isDueWithinDays = (date: string | undefined): boolean => {
     if (!date) return false;
 
     const due = new Date(date);
@@ -70,7 +70,7 @@ const isDueWithinDays = (date: string | undefined): boolean => {
     return diffDays >= 0 && diffDays <= MAX_TASKS_DAYS;
 }
 
-const isOverdueUncompleted = (dueDate: string | undefined, isCompleted: number): boolean => {
+export const isOverdueUncompleted = (dueDate: string | undefined, isCompleted: number): boolean => {
     if (!dueDate || isCompleted === 1) return false;
 
     const due = new Date(dueDate);
