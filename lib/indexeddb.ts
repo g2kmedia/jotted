@@ -140,6 +140,7 @@ export const queueChanges = async (change: Omit<PendingChanges, "timestamp" | "s
     const mergedChanges = {
         ...(alreadyExists || change),
         recordId: change.recordId, // Explicitly preserve key due to issues with IndexedDB otherwise
+        operation: change.operation,
         data: { ...alreadyExists?.data, ...change.data },
         timestamp: Date.now(),
         synced: false
